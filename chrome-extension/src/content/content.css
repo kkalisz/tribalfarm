@@ -1,0 +1,77 @@
+/* Tribal Farm Content Styles */
+
+.tribal-farm-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    border-left: 1px solid #ccc;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+    width: 300px;
+    z-index: 9999;
+    padding: 20px;
+    display: none;
+}
+
+.tribal-farm-overlay.visible {
+    display: block;
+}
+
+.tribal-farm-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    display: none;
+}
+
+.tribal-farm-notification.visible {
+    display: block;
+}
+
+.tribal-farm-button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+.tribal-farm-button:hover {
+    background: #45a049;
+}
+
+.tribal-farm-input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.tribal-farm-error {
+    color: #f44336;
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+.tribal-farm-side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 25%;
+    height: 100vh;
+    background-color: red;
+    z-index: 9999;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+}

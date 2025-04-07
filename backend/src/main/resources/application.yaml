@@ -1,0 +1,17 @@
+ktor:
+  application:
+    modules:
+      - com.bngdev.tribalfarm.ApplicationKt.module
+  deployment:
+    port: 8080
+
+database:
+  driverClass: "org.postgresql.Driver"
+  url: "jdbc:postgresql://localhost:5432/tribal_farm"
+  user: ${?DB_USER}
+  password: ${?DB_PASSWORD}
+  poolSize: 3
+  maxPoolSize: 10
+  connectionTimeout: 30000
+  idleTimeout: 600000
+  maxLifetime: 1800000
