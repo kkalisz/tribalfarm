@@ -56,6 +56,22 @@ describe('ContentScript', () => {
         });
     });
 
+    describe('UI Initialization', () => {
+        test('should create and initialize side panel correctly', () => {
+            // The side panel should be created during ContentScript initialization
+            const sidePanel = document.getElementById('tribal-farm-side-panel');
+
+            // Verify panel exists
+            expect(sidePanel).not.toBeNull();
+
+            // Verify panel has correct class
+            expect(sidePanel?.className).toBe('tribal-farm-side-panel');
+
+            // Verify panel is in document body
+            expect(document.body.contains(sidePanel)).toBe(true);
+        });
+    });
+
     describe('Content Extraction', () => {
         test('should extract table content correctly', async () => {
             // Setup test table

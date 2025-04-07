@@ -1,6 +1,8 @@
 // Content script for Tribal Farm Chrome Extension
-import { DOMUtils } from './domUtils';
-import { overlayManager } from './overlayManager';
+import {DOMUtils} from './domUtils';
+import {overlayManager} from './overlayManager';
+import './content.css';
+
 
 interface ElementSelectionOptions {
     text?: string;
@@ -17,17 +19,25 @@ export class ContentScript {
     private static readonly SELECTOR_TIMEOUT = 100;
 
     private constructor() {
-        console.log('Content script initialized');
+        console.log('[DEBUG_LOG] Content script constructor called');
         this.setupCleanup();
         this.initializeDomainSpecificUI();
+        console.log('[DEBUG_LOG] Content script initialization completed');
     }
 
     private initializeDomainSpecificUI() {
         const currentDomain = window.location.hostname;
-        if (currentDomain === 'plemiona.pl') {
+        console.log(window.location.hostname)
+        if (currentDomain === 'plemiona.pl' || true) {
             const sideDiv = document.createElement('div');
             sideDiv.id = 'tribal-farm-side-panel';
             sideDiv.className = 'tribal-farm-side-panel';
+            const button = document.createElement("button");
+            button.textContent = "hello"
+            button.onclick = function (){
+
+            }
+            sideDiv.appendChild(button)
             document.body.appendChild(sideDiv);
         }
     }
@@ -324,7 +334,6 @@ export class ContentScript {
 
 // Initialize the content script only in browser environment
 if (typeof window !== 'undefined') {
-    const contentScript = ContentScript.getInstance();
     // Export for external usage
-    (window as any).tribalFarmContent = contentScript;
+    (window as any).tribalFarmContent = ContentScript.getInstance();
 }

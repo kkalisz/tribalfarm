@@ -1,21 +1,61 @@
 /* Tribal Farm Content Styles */
 
-.tribal-farm-overlay {
+.tribal-farm-overlay-background {
     position: fixed;
     top: 0;
-    right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    border-left: 1px solid #ccc;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    height: 100vh;
-    width: 300px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 9999;
-    padding: 20px;
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.tribal-farm-overlay-background.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tribal-farm-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    max-width: 90%;
+    z-index: 10000;
+    padding: 24px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+    transform: translate(-50%, -45%);
 }
 
 .tribal-farm-overlay.visible {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%);
+}
+
+.tribal-farm-overlay h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.tribal-farm-overlay p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666;
 }
 
 .tribal-farm-notification {
@@ -68,10 +108,12 @@
 .tribal-farm-side-panel {
     position: fixed;
     top: 0;
-    right: 0;
+    left: 0;
     width: 25%;
     height: 100vh;
-    background-color: red;
+    background-color: green;
     z-index: 9999;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    display: block !important;
+    visibility: visible !important;
 }

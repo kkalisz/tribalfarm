@@ -6,6 +6,7 @@ import { Notifications } from './components/Notifications';
 import { NotificationProvider, useNotifications } from './context/NotificationContext';
 import './styles/notifications.css';
 import {OverlayManager} from "../content/overlayManager";
+import {ContentScript} from "../content/content";
 
 type View = 'login' | 'register' | 'profile';
 
@@ -20,10 +21,6 @@ const AppContent: React.FC = () => {
   const { notifications, dismissNotification } = useNotifications();
 
   const handleShowRegister = () => {
-    OverlayManager.getInstance().showOverlay("1", {
-      duration: 0, message: "", targetElement: undefined, title: "elo"
-
-    })
     setCurrentView('register');
   };
 

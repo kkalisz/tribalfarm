@@ -25,6 +25,15 @@ export const Overlay: React.FC<OverlayProps> = ({
   const [container] = useState(() => {
     const div = document.createElement('div');
     div.className = 'tribal-farm-overlay-container';
+    div.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    `;
     return div;
   });
 
@@ -66,7 +75,7 @@ export const Overlay: React.FC<OverlayProps> = ({
   }, [onClose]);
 
   const overlayStyle: React.CSSProperties = {
-    position: 'absolute',
+    position: 'fixed',
     top: `${overlayPosition.top}px`,
     left: `${overlayPosition.left}px`,
     zIndex: 10000,
@@ -74,6 +83,7 @@ export const Overlay: React.FC<OverlayProps> = ({
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
     borderRadius: '4px',
     padding: '8px',
+    pointerEvents: 'auto',
     ...position && { top: `${position.top}px`, left: `${position.left}px` }
   };
 
