@@ -16,5 +16,6 @@ root.render(
 try {
   console.log('content script loaded');
 } catch (e) {
+  console.log('ups');
   console.error(e);
 }
