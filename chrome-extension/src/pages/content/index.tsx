@@ -36,7 +36,7 @@ export const SidebarContainer = () => {
 };
 
 // Function to check if the current domain matches our pattern
-function isValidDomain(): boolean {
+export function isValidDomain(): boolean {
   const hostname = window.location.hostname;
 
   // Check if it's a plemiona.pl domain
@@ -73,7 +73,7 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
   }
 }
 
-function initializeContentScript() {
+export function initializeContentScript() {
   try {
     console.log('Initializing content script with local Tailwind CSS and Shadow DOM');
 
