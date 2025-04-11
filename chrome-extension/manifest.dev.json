@@ -9,11 +9,12 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "style.css",
         "contentStyle.css",
         "dev-icon-128.png",
         "dev-icon-32.png"
       ],
-      "matches": []
+      "matches": ["https://*.plemiona.pl/*"]
     }
   ]
 }
