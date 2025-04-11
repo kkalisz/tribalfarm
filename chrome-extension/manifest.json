@@ -35,6 +35,7 @@
     {
       "resources": [
         "style.css",
+        "tailwind-content.css",
         "icon-128.png",
         "icon-32.png"
       ],

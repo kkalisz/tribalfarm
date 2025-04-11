@@ -1,176 +1,137 @@
-# Tribal Farm - Chrome Extension with Backend Service Development Plan
 
-## Project Overview
-The project aims to create a Chrome extension that can interact with web pages and communicate with a backend service. The system will consist of two main components:
-1. Chrome Extension
-2. Backend Service (Kotlin-based)
+# Browser Extension Automation Architecture
 
-## Technical Requirements
+## ✅ Project Overview
 
-### Chrome Extension Requirements
-- [ ] DOM manipulation capabilities
-- [ ] Element click simulation
-- [ ] Page content reading
-- [ ] Custom UI overlay functionality
-- [ ] WebSocket communication with backend
-- [ ] Secure communication handling
-- [ ] Extension configuration management
+We are building a **browser extension** to automate interactions with a browser-based game (similar to TribalWars). The extension communicates with a **backend server via WebSocket**. The game reloads the page after each action, so the extension must be resilient to full page reloads and loss of in-memory state.
 
-### Backend Service Requirements
-- [ ] WebSocket server implementation
-- [ ] API endpoints for extension communication
-- [ ] Authentication and authorization
-- [ ] Data processing and storage
-- [ ] Scalable architecture
-- [ ] Error handling and logging
+---
 
-## Project Structure
+## 🧱 High-Level Architecture
 
+### 1. Browser Extension
+
+#### a. Content Script
+- Injected into the game page.
+- Responsible for:
+  - Parsing the DOM.
+  - Executing UI actions (clicks, inputs).
+  - Detecting validation failures, modals, and popups.
+  - Sending updates to the service worker.
+  - Resuming processing after reloads.
+
+#### b. Service Worker (Persistent Background Script)
+- Maintains a persistent WebSocket connection with the backend.
+- Routes messages to/from the content script.
+- Tracks the current command and its status.
+- Handles command queuing and retry/resume logic.
+- Listens for reconnection from the content script after reloads.
+
+#### c. Extension UI (Optional)
+- Can be a popup or sidebar for debugging, status display, or manual overrides.
+
+### 2. Backend Server
+
+- WebSocket server managing multiple client (extension) sessions.
+- Sends action commands (e.g., `attack`, `sendResources`) with unique `actionId`.
+- Receives status updates (`in-progress`, `done`, `error`, `popup`, `validationFailed`).
+- Maintains action queue and can react to partial completion or retries.
+
+---
+
+## 🔁 Handling Page Reloads
+
+### Strategy:
+Use the service worker to persist command state and re-synchronize with the content script after reload.
+
+### Implementation:
+- Before navigation (via `window.beforeunload`), the content script notifies the service worker.
+- On content script re-injection (after reload):
+  - It announces itself to the service worker.
+  - Requests current active command.
+  - Validates page state and resumes/adjusts execution.
+
+---
+
+## 📡 Communication Protocol
+
+- All messages use structured JSON:
+```json
+{
+  "type": "command" | "status" | "event" | "error",
+  "actionId": "string",
+  "payload": { ... },
+  "timestamp": "ISO-8601",
+  "correlationId": "optional"
+}
 ```
-tribal-farm/
-├── backend/                 # Backend service module
-│   ├── src/
-│   │   ├── main/
-│   │   └── test/
-│   └── build.gradle.kts
-│
-├── chrome-extension/        # Chrome extension module
-│   ├── src/
-│   │   ├── background/
-│   │   ├── content/
-│   │   ├── popup/
-│   │   └── manifest.json
-│   ├── tests/
-│   └── package.json
-│
-└── shared/                 # Shared code/types
-    └── src/
-```
 
-## Implementation Steps
+- Common types:
+  - `command`: Sent from backend to execute an action.
+  - `status`: Sent from plugin (e.g., `done`, `error`, `interrupted`).
+  - `event`: For detected popups, modals, state changes.
+  - `ack`: To confirm message receipt and progress.
 
-### 1. Project Setup
-- [x] Configure multi-module Gradle project
-- [x] Set up Chrome extension module structure
-- [x] Configure build tools and dependencies
-- [x] Set up development environment
-- [x] Configure code quality tools (ESLint, ktlint)
+---
 
-### 2. Backend Service Implementation
-- [x] Set up Kotlin backend project
-  - [x] Configure WebSocket server
-  - [x] Implement basic endpoints
-  - [x] Set up database integration
-- [x] Implement WebSocket handlers
-  - [x] Connection management
-  - [x] Message processing
-  - [x] Error handling
-- [x] Implement authentication system
-  - [x] User management
-  - [x] Session handling
-- [x] Create API documentation
+## ⚙️ Implementation Steps
 
-### 3. Chrome Extension Implementation
-- [x] Create extension manifest
-- [x] Implement background service
-  - [x] WebSocket client
-  - [x] Message handling
-  - [x] State management
-- [ ] Implement content scripts
-  - [x] DOM manipulation utilities
-  - [x] Element selection and clicking
-  - [x] Page content extraction
-- [x] Create UI components based on React
-  - [x] Popup interface
-  - [x] Page overlays
-  - [x] User notifications
-- [ ] Implement extension settings
+### 🧩 Extension
 
-### 4. Testing Implementation
-- [ ] Backend testing
-  - [ ] Unit tests
-  - [ ] Integration tests
-  - [ ] WebSocket communication tests
-- [ ] Chrome extension testing
-  - [ ] Unit tests for utilities
-  - [ ] Integration tests
-  - [ ] UI component tests
-- [ ] End-to-end testing
-  - [ ] Communication tests
-  - [ ] Feature tests
-  - [ ] Performance tests
+#### Manifest
+- Use `manifest_version: 3`.
+- Permissions: `scripting`, `tabs`, `activeTab`, `<game-domain>`, `storage`, `webRequest`.
 
-### 5. Security Implementation
-- [ ] Implement secure communication
-- [ ] Add data validation
-- [ ] Implement rate limiting
-- [ ] Add error handling
-- [ ] Security testing
+#### Content Script
+- [ ] Injected into the game domain.
+- [ ] Parses DOM, performs UI actions.
+- [ ] Sends periodic DOM state to service worker.
+- [ ] Detects modals/popups/errors/validation blocks.
+- [ ] Listens for messages from service worker (via `chrome.runtime.onMessage`).
+- [ ] Implements `onBeforeUnload` to inform service worker.
+- [ ] Stores transient state in `sessionStorage`.
 
-### 6. Documentation
-- [ ] API documentation
-- [ ] Setup instructions
-- [ ] Usage documentation
-- [ ] Development guidelines
-- [ ] Deployment guide
+#### Service Worker
+- [ ] Maintains WebSocket connection to backend.
+- [ ] Forwards commands to content script.
+- [ ] Tracks current action + `actionId`.
+- [ ] Buffers commands if content script not available.
+- [ ] On content script reload:
+  - Sends resume command with action context.
+  - Waits for confirmation of progress or error.
 
-### 7. Deployment Setup
-- [ ] Configure CI/CD pipeline
-- [ ] Set up staging environment
-- [ ] Create deployment scripts
-- [ ] Configure monitoring
-- [ ] Create backup strategy
+### 🛠 Backend
 
-## Testing Strategy
+- [ ] WebSocket server managing clients (browser instances).
+- [ ] Sends JSON commands to browser clients.
+- [ ] Waits for responses: `ack`, `done`, `error`.
+- [ ] Requeues command if interrupted (e.g., timeout).
+- [ ] Can detect state stalling (e.g., due to modal).
+- [ ] Logs all state transitions.
 
-### Backend Testing
-- [ ] Unit tests for all business logic
-- [ ] Integration tests for API endpoints
-- [ ] WebSocket communication tests
-- [ ] Load testing
-- [ ] Security testing
+---
 
-### Chrome Extension Testing
-- [ ] Unit tests for utilities
-- [ ] Component tests
-- [ ] End-to-end tests
-- [ ] Cross-browser compatibility tests
-- [ ] Performance testing
+## 🛡 Error Handling
 
-## Deployment Considerations
+### Connection loss
+- Reconnect WebSocket in service worker with exponential backoff.
+- Resume or retry last command upon reconnect.
 
-### Backend Deployment
-- [ ] Server requirements
-- [ ] Database setup
-- [ ] Environment configuration
-- [ ] Monitoring setup
-- [ ] Backup strategy
+### Page reload
+- Use `sessionStorage` or service worker state to resume execution.
 
-### Chrome Extension Deployment
-- [ ] Chrome Web Store requirements
-- [ ] Version management
-- [ ] Update strategy
-- [ ] User data migration plan
+### Validation failed
+- Send status update with reason and current DOM snapshot (if needed).
 
-## Development Guidelines
-- Follow Git flow branching strategy
-- Code review requirements
-- Testing requirements
-- Documentation requirements
-- Security guidelines
+### Unexpected popup
+- Detect modal via DOM observer, send to backend for handling.
+- Backend can optionally pause queue or send override command.
 
-## Progress Tracking
-- Regular progress reviews
-- Task completion verification
-- Performance monitoring
-- Issue tracking
-- Documentation updates
+---
 
-## Timeline Considerations
-- Project setup: 1 week
-- Backend development: 3-4 weeks
-- Chrome extension development: 3-4 weeks
-- Testing: 2-3 weeks
-- Documentation and deployment: 1-2 weeks
+## 🧪 Testing & Debugging
 
-Note: This is a living document that should be updated as the project progresses and new requirements or considerations are discovered.
+- Include debug mode (on extension popup or UI) to:
+  - View current command.
+  - Manually trigger DOM snapshots.
+  - Override or cancel active actions.

@@ -7,7 +7,7 @@ export const SidebarContainer = () => {
   console.log('SidebarContainer');
   return (
     <div
-      className="fixed top-0 left-0 w-screen h-screen pointer-events-none bg-amber-200"
+      className="fixed top-0 left-0 w-screen h-screen pointer-events-none"
       style={{ zIndex: 99999 }}
     >
       {/* Left Sidebar */}
@@ -75,7 +75,7 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 
 function initializeContentScript() {
   try {
-    console.log('Initializing content script with Tailwind via Play CDN and Shadow DOM');
+    console.log('Initializing content script with local Tailwind CSS and Shadow DOM');
 
     // Create a container and attach a shadow DOM
     const container = document.createElement('div');
@@ -85,12 +85,12 @@ function initializeContentScript() {
 
     console.log('Shadow root created and attached to container');
 
-    // Dynamically load Tailwind's CDN stylesheet into the shadow DOM
+    // Load the local tailwind-content.css file instead of CDN
     const linkElement = document.createElement('link');
     linkElement.setAttribute('rel', 'stylesheet');
     linkElement.setAttribute(
       'href',
-      'https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css'
+      chrome.runtime.getURL('tailwind-content.css')
     );
     shadowRoot.appendChild(linkElement);
 
@@ -102,12 +102,14 @@ function initializeContentScript() {
     container.style.zIndex = '999999'; // Very high z-index to ensure visibility
     container.style.pointerEvents = 'none';
 
-    console.log('Tailwind CSS loaded via CDN into shadow root');
+    console.log('Tailwind CSS loaded from local file into shadow root');
 
     // Create a div inside the shadowRoot to serve as the React root container
     const shadowRootContent = document.createElement('div');
     shadowRootContent.id = '__shadow-content';
+    shadowRootContent.className = 'my-extension'; // Add the namespace class for Tailwind styles
 
+    // Set positioning and dimensions
     shadowRootContent.style.position = 'fixed';
     shadowRootContent.style.bottom = '0';
     shadowRootContent.style.left = '0';
@@ -130,4 +132,3 @@ function initializeContentScript() {
     console.error('Error initializing content script:', err);
   }
 }
-
