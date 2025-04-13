@@ -198,14 +198,41 @@ export function initializeContentScript() {
 
     console.log('Shadow root created and attached to container');
 
-    // Load the local tailwind-content.css file instead of CDN
-    // const linkElement = document.createElement('link');
-    // linkElement.setAttribute('rel', 'stylesheet');
-    // linkElement.setAttribute(
-    //     'href',
-    //     chrome.runtime.getURL('style.css')
-    // );
-    // shadowRoot.appendChild(linkElement);
+    // Load Tailwind CSS into the shadow DOM
+    const loadTailwindCSS = async () => {
+      try {
+        // First try to load the compiled Tailwind CSS from assets directory
+        const tailwindCssUrl = chrome.runtime.getURL('assets/tailwind-rkQ3FTm7.css');
+        const response = await fetch(tailwindCssUrl);
+
+        if (response.ok) {
+          const cssText = await response.text();
+          const styleElement = document.createElement('style');
+          styleElement.textContent = cssText;
+          shadowRoot.appendChild(styleElement);
+          console.log('Tailwind CSS loaded from compiled file into shadow root');
+        } else {
+          // Fallback to style.css if the compiled file is not found
+          const styleUrl = chrome.runtime.getURL('style.css');
+          const styleResponse = await fetch(styleUrl);
+
+          if (styleResponse.ok) {
+            const cssText = await styleResponse.text();
+            const styleElement = document.createElement('style');
+            styleElement.textContent = cssText;
+            shadowRoot.appendChild(styleElement);
+            console.log('Tailwind CSS loaded from style.css into shadow root');
+          } else {
+            console.error('Failed to load Tailwind CSS');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Tailwind CSS:', error);
+      }
+    };
+
+    // Start loading the CSS
+    loadTailwindCSS();
 
     container.style.position = 'fixed';
     container.style.bottom = '0';
@@ -214,8 +241,6 @@ export function initializeContentScript() {
     container.style.height = '100vh';
     container.style.zIndex = '999999'; // Very high z-index to ensure visibility
     container.style.pointerEvents = 'none';
-
-    console.log('Tailwind CSS loaded from local file into shadow root');
 
     // Create a div inside the shadowRoot to serve as the React root container
     const shadowRootContent = document.createElement('div');

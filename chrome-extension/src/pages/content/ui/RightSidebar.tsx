@@ -18,7 +18,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             className={`fixed top-0 right-0 h-full overflow-auto w-1/4`}
             style={{pointerEvents: rightSidebarVisible ? "auto" : "none"}}
         >
-            <div className="absolute top-4 right-20" style={{pointerEvents: "auto"}}>
+            <div className="p-2 flex-row justify-end ml-auto" style={{pointerEvents: "auto"}}>
                 <SidebarToggleButton
                     isVisible={rightSidebarVisible}
                     onClick={() => setRightSidebarVisible(!rightSidebarVisible)}

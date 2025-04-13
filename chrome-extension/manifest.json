@@ -45,6 +45,7 @@
     {
       "resources": [
         "style.css",
+        "assets/*",
         "icon-128.png",
         "icon-32.png"
       ],
