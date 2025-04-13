@@ -1,6 +1,7 @@
 import React from "react";
 import {CommandMessage} from "@src/shared/types";
 import {Transition} from "@headlessui/react";
+import { SidebarToggleButton } from "./SidebarToggleButton";
 
 interface LeftSidebarProps {
     leftSidebarVisible: boolean;
@@ -18,17 +19,16 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                                                             lastEvent
                                                         }) => {
     return (
-        <div className="fixed h-full top-0 left-0 w-1/4" style={{pointerEvents: 'auto'}}>
+        <div className="fixed h-full top-0 left-0 w-1/4"
+             style={{pointerEvents: leftSidebarVisible ? 'auto' : 'none'}}
+        >
             {/* Toggle Button - Always visible in the same position */}
             <div className="absolute top-4 left-4">
-                <button
-                    className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-1 px-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
+                <SidebarToggleButton
+                    isVisible={leftSidebarVisible}
                     onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
-                    aria-expanded={leftSidebarVisible}
-                    aria-label={leftSidebarVisible ? "Collapse sidebar" : "Expand sidebar"}
-                >
-                    {leftSidebarVisible ? '◀' : '▶'}
-                </button>
+                    position="left"
+                />
             </div>
 
             {/* Sidebar Content - Completely hidden when not visible */}

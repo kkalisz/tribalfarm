@@ -1,5 +1,6 @@
 import React from "react";
 import {Transition} from "@headlessui/react";
+import {SidebarToggleButton} from "@pages/content/ui/SidebarToggleButton";
 
 interface RightSidebarProps {
     rightSidebarVisible: boolean;
@@ -15,17 +16,14 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     return (
         <div
             className={`fixed top-0 right-0 h-full overflow-auto w-1/4`}
-            style={{pointerEvents: 'auto'}}
+            style={{pointerEvents: rightSidebarVisible ? 'auto' : 'none'}}
         >
             <div className="absolute top-4 right-20">
-                <button
-                    className="bg-green-700 hover:bg-green-800 text-white font-bold py-1 px-2 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
+                <SidebarToggleButton
+                    isVisible={rightSidebarVisible}
                     onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
-                    aria-expanded={rightSidebarVisible}
-                    aria-label={rightSidebarVisible ? "Collapse logs sidebar" : "Expand logs sidebar"}
-                >
-                    {rightSidebarVisible ? '▶' : '◀'}
-                </button>
+                    position="right"
+                />
             </div>
 
             {/* Sidebar Content - Completely hidden when not visible */}
