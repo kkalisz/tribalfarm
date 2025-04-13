@@ -14,44 +14,26 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                                                           }) => {
     return (
         <div
-            className={`fixed top-0 right-0 h-full bg-green-500 bg-opacity-80 text-white overflow-auto transition-all duration-300 ease-in-out ${rightSidebarVisible ? 'w-1/4' : 'w-10'}`}
+            className={`fixed top-0 right-0 h-full overflow-auto w-1/4`}
             style={{pointerEvents: 'auto'}}
         >
-            <div className="p-4">
-                {/* Headless UI Button with better accessibility */}
+            <div className="absolute top-4 right-20">
                 <button
-                    className="top-2 left-2 bg-green-700 hover:bg-green-800 text-white font-bold py-1 px-2 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
+                    className="bg-green-700 hover:bg-green-800 text-white font-bold py-1 px-2 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
                     onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
                     aria-expanded={rightSidebarVisible}
                     aria-label={rightSidebarVisible ? "Collapse logs sidebar" : "Expand logs sidebar"}
                 >
                     {rightSidebarVisible ? '▶' : '◀'}
                 </button>
+            </div>
 
-                {/* Transition for collapsed state */}
-                <Transition
-                    show={!rightSidebarVisible}
-                    enter="transition-opacity duration-2000"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="transition-opacity duration-2000"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
+            {/* Sidebar Content - Completely hidden when not visible */}
+            {rightSidebarVisible && (
+                <div
+                    className="h-full bg-green-500 bg-opacity-80 text-white overflow-auto transition-all duration-300 ease-in-out w-full"
                 >
-                    <div className="rotate-90 mt-20 whitespace-nowrap">Logs</div>
-                </Transition>
-
-                {/* Transition for expanded state */}
-                <Transition
-                    show={rightSidebarVisible}
-                    enter="transition-opacity duration-2000"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="transition-opacity duration-2000"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div>
+                    <div className="p-4 mt-10">
                         <h2 className="font-bold text-lg">Logs</h2>
                         <div className="mt-2 text-sm">
                             {logs.map((log, index) => (
@@ -59,8 +41,8 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                             ))}
                         </div>
                     </div>
-                </Transition>
-            </div>
+                </div>
+            )}
         </div>
     );
 };
