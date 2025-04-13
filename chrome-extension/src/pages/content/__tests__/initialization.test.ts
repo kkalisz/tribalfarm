@@ -86,7 +86,7 @@ describe('initializeContentScript', () => {
     expect(mockLinkElement.setAttribute).toHaveBeenCalledWith('rel', 'stylesheet');
     expect(mockLinkElement.setAttribute).toHaveBeenCalledWith(
       'href',
-      chrome.runtime.getURL('tailwind-content.css')
+      chrome.runtime.getURL('style.css')
     );
 
     // Check if link was added to shadow root

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Message, CommandMessage, StatusMessage, EventMessage } from '../../shared/types';
 import {isValidDomain} from "@src/shared/helpers/isValidDomain";
 import {SidebarContainer} from "@pages/content/ui/SidebarContainer";
-
+//import '@assets/styles/tailwind.css';
 
 
 // Execute a command on the page
@@ -193,19 +193,19 @@ export function initializeContentScript() {
     // Create a container and attach a shadow DOM
     const container = document.createElement('div');
     container.id = '__root-extension-container';
-    const shadowRoot = container.attachShadow({ mode: 'open' });
+    const shadowRoot = container.attachShadow({mode: 'open'});
     document.body.appendChild(container);
 
     console.log('Shadow root created and attached to container');
 
     // Load the local tailwind-content.css file instead of CDN
-    const linkElement = document.createElement('link');
-    linkElement.setAttribute('rel', 'stylesheet');
-    linkElement.setAttribute(
-      'href',
-      chrome.runtime.getURL('tailwind-content.css')
-    );
-    shadowRoot.appendChild(linkElement);
+    // const linkElement = document.createElement('link');
+    // linkElement.setAttribute('rel', 'stylesheet');
+    // linkElement.setAttribute(
+    //     'href',
+    //     chrome.runtime.getURL('style.css')
+    // );
+    // shadowRoot.appendChild(linkElement);
 
     container.style.position = 'fixed';
     container.style.bottom = '0';
@@ -238,7 +238,7 @@ export function initializeContentScript() {
     // Mount the React app inside the shadowRoot container
     const root = createRoot(shadowRootContent);
     console.log(`React app created ${!!root}`);
-    root.render(<SidebarContainer />);
+    root.render(<SidebarContainer/>);
 
     console.log('React app successfully rendered with Tailwind in Shadow DOM');
   } catch (err) {

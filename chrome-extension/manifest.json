@@ -34,6 +34,9 @@
       ],
       "js": [
         "src/pages/content/index.tsx"
+      ],
+      "css": [
+        "style.css"
       ]
     }
   ],
@@ -42,7 +45,6 @@
     {
       "resources": [
         "style.css",
-        "tailwind-content.css",
         "icon-128.png",
         "icon-32.png"
       ],
