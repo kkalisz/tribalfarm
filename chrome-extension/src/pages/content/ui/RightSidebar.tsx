@@ -16,9 +16,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     return (
         <div
             className={`fixed top-0 right-0 h-full overflow-auto w-1/4`}
-            style={{pointerEvents: rightSidebarVisible ? 'auto' : 'none'}}
+            style={{pointerEvents: rightSidebarVisible ? "auto" : "none"}}
         >
-            <div className="absolute top-4 right-20">
+            <div className="absolute top-4 right-20" style={{pointerEvents: "auto"}}>
                 <SidebarToggleButton
                     isVisible={rightSidebarVisible}
                     onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
@@ -30,6 +30,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             {rightSidebarVisible && (
                 <div
                     className="h-full bg-green-500 bg-opacity-80 text-white overflow-auto transition-all duration-300 ease-in-out w-full"
+                    style={{pointerEvents: 'auto'}}
                 >
                     <div className="p-4 mt-10">
                         <h2 className="font-bold text-lg">Logs</h2>

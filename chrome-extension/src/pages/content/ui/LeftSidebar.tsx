@@ -20,10 +20,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                                                         }) => {
     return (
         <div className="fixed h-full top-0 left-0 w-1/4"
-             style={{pointerEvents: leftSidebarVisible ? 'auto' : 'none'}}
+             style={{pointerEvents: leftSidebarVisible ? "auto" : "none"}}
         >
             {/* Toggle Button - Always visible in the same position */}
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-4 left-4" style={{pointerEvents: "auto"}}>
                 <SidebarToggleButton
                     isVisible={leftSidebarVisible}
                     onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
@@ -35,6 +35,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             {leftSidebarVisible && (
                 <div 
                     className="h-full bg-blue-500 bg-opacity-80 text-white overflow-auto transition-all duration-300 ease-in-out w-full"
+                    style={{pointerEvents: 'auto'}}
                 >
                     <div className="p-4 mt-10">
                         <h2 className="font-bold text-lg">Tribal Farm Status</h2>
