@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { SidebarContainer } from './index';
+import { SidebarContainer } from '../index';
 
 describe('SidebarContainer Component', () => {
   it('renders left and right sidebars', () => {

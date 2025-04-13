@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { initializeContentScript } from './index';
+import { initializeContentScript } from '../index';
 
 describe('initializeContentScript', () => {
   // Mock DOM elements and methods
