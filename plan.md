@@ -5,19 +5,23 @@ We are building a **browser extension** to automate interactions with a browser-
 This implementation plan outlines the steps needed to complete the browser extension automation system for interacting with a browser-based game. The system consists of two main components:
 1. A Chrome extension that interacts with the game
 2. A backend server that communicates with the extension via WebSocket
+3. Backed server should be able to handle multiple extension instances
+4. Backend module is places in backend folder, extension module is placed in chrome-extension folder
+5. If we can use external dependencies to simplify work let use them
+6. we should have tests for parts that are possible to test
 
 ## Implementation Tasks
 
 ### Phase 1: Foundation Setup
 
 #### Chrome Extension Core
-- [ ] Update manifest.json with required permissions
+- [x] Update manifest.json with required permissions
   - Add `storage`, `scripting`, `webRequest` permissions
   - Add background service worker entry point
-- [ ] Implement basic message types and interfaces
+- [x] Implement basic message types and interfaces
   - Create message types matching the communication protocol
   - Implement type definitions for commands, status updates, events
-- [ ] Set up communication channels between components
+- [x] Set up communication channels between components
   - Implement message passing between content script and service worker
 
 #### Backend Core
@@ -31,28 +35,28 @@ This implementation plan outlines the steps needed to complete the browser exten
 ### Phase 2: Core Functionality
 
 #### Service Worker Implementation
-- [ ] Implement WebSocket connection management
+- [x] Implement WebSocket connection management
   - Create persistent connection to backend
   - Implement reconnection with exponential backoff
   - Add connection status tracking
-- [ ] Implement command queue management
+- [x] Implement command queue management
   - Create storage for pending and in-progress commands
   - Implement command tracking with status updates
   - Add command retry logic
-- [ ] Implement content script communication
+- [x] Implement content script communication
   - Add message routing to active tabs
   - Implement tab tracking for multi-window support
 
 #### Content Script Implementation
-- [ ] Implement DOM parsing functionality
+- [x] Implement DOM parsing functionality
   - Create selectors for game elements
   - Implement state extraction from DOM
   - Add validation for expected page structure
-- [ ] Implement UI action execution
+- [x] Implement UI action execution
   - Create functions for clicks, inputs, form submissions
   - Add validation for action results
   - Implement error detection
-- [ ] Implement page reload handling
+- [x] Implement page reload handling
   - Add `beforeunload` event listener
   - Implement state persistence in `sessionStorage`
   - Add reconnection logic after page reload
