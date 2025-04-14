@@ -201,8 +201,8 @@ export function initializeContentScript() {
     // Load Tailwind CSS into the shadow DOM
     const loadTailwindCSS = async () => {
       try {
-        // First try to load the compiled Tailwind CSS from assets directory
-        const tailwindCssUrl = chrome.runtime.getURL('assets/tailwind-rkQ3FTm7.css');
+        // Load the compiled Tailwind CSS with static filename
+        const tailwindCssUrl = chrome.runtime.getURL('assets/tailwind.css');
         const response = await fetch(tailwindCssUrl);
 
         if (response.ok) {

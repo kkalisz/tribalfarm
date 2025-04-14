@@ -1,6 +1,7 @@
 import React from "react";
 import {Transition} from "@headlessui/react";
 import {SidebarToggleButton} from "@pages/content/ui/SidebarToggleButton";
+import TribalCard from "@src/shared/ui/TribalCard";
 
 interface RightSidebarProps {
     rightSidebarVisible: boolean;
@@ -18,7 +19,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             className={`fixed top-0 right-0 h-full overflow-auto w-1/4`}
             style={{pointerEvents: rightSidebarVisible ? "auto" : "none"}}
         >
-            <div className="p-2 flex-row justify-end ml-auto" style={{pointerEvents: "auto"}}>
+            <div className="p-2 flex flex-row justify-end" style={{pointerEvents: "auto"}}>
                 <SidebarToggleButton
                     isVisible={rightSidebarVisible}
                     onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
@@ -29,17 +30,17 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             {/* Sidebar Content - Completely hidden when not visible */}
             {rightSidebarVisible && (
                 <div
-                    className="h-full bg-green-500 bg-opacity-80 text-white overflow-auto transition-all duration-300 ease-in-out w-full"
+                    className="h-full text-white overflow-auto"
                     style={{pointerEvents: 'auto'}}
                 >
-                    <div className="p-4 mt-10">
+                    <TribalCard className="p-4 mt-10">
                         <h2 className="font-bold text-lg">Logs</h2>
                         <div className="mt-2 text-sm">
                             {logs.map((log, index) => (
                                 <p key={index}>{log}</p>
                             ))}
                         </div>
-                    </div>
+                    </TribalCard>
                 </div>
             )}
         </div>

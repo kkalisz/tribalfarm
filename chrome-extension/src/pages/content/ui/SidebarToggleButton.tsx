@@ -1,5 +1,6 @@
 import React from "react";
 import {twMerge} from "tailwind-merge";
+import {Button} from "@headlessui/react";
 
 interface SidebarToggleButtonProps {
   isVisible: boolean;
@@ -25,13 +26,13 @@ export const SidebarToggleButton: React.FC<SidebarToggleButtonProps> = ({
     : `Expand ${position} sidebar`;
 
   return (
-    <button
-      className={twMerge("text-white font-bold py-1 px-2 rounded focus:outline-none focus:ring-2 focus:ring-green-300 pointer-events-auto", className)}
+    <Button
+      className={twMerge("text-amber-100 bg-yellow-300 font-bold rounded-md border-2 border-amber-950 shadow-inner h-8 w-8 hover:bg-amber-700", className)}
       onClick={onClick}
       aria-expanded={isVisible}
       aria-label={defaultAriaLabel}
     >
       {icon}
-    </button>
+    </Button>
   );
 };
