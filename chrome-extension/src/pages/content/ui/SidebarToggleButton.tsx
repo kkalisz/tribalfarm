@@ -1,19 +1,16 @@
 import React from "react";
-import {twMerge} from "tailwind-merge";
-import {Button} from "@headlessui/react";
+import { Button } from "@chakra-ui/react";
 
 interface SidebarToggleButtonProps {
   isVisible: boolean;
   onClick: () => void;
   position: "left" | "right";
-  className?: string;
 }
 
 export const SidebarToggleButton: React.FC<SidebarToggleButtonProps> = ({
   isVisible,
   onClick,
-  position,
-    className
+  position
 }) => {
   // Determine the icon based on position and visibility
   const icon = position === "left" 
@@ -27,7 +24,16 @@ export const SidebarToggleButton: React.FC<SidebarToggleButtonProps> = ({
 
   return (
     <Button
-      className={twMerge("text-amber-100 bg-yellow-300 font-bold rounded-md border-2 border-amber-950 shadow-inner h-8 w-8 hover:bg-amber-700", className)}
+      color="amber.100"
+      bg="yellow.300"
+      fontWeight="bold"
+      borderRadius="md"
+      borderWidth="2px"
+      borderColor="amber.950"
+      boxShadow="inner"
+      h="8"
+      w="8"
+      _hover={{ bg: "amber.700" }}
       onClick={onClick}
       aria-expanded={isVisible}
       aria-label={defaultAriaLabel}

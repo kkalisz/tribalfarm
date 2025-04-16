@@ -34,9 +34,6 @@
       ],
       "js": [
         "src/pages/content/index.tsx"
-      ],
-      "css": [
-        "style.css"
       ]
     }
   ],
@@ -44,7 +41,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "style.css",
         "assets/*",
         "icon-128.png",
         "icon-32.png"

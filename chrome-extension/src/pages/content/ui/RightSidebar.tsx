@@ -1,5 +1,5 @@
 import React from "react";
-import {Transition} from "@headlessui/react";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import {SidebarToggleButton} from "@pages/content/ui/SidebarToggleButton";
 import TribalCard from "@src/shared/ui/TribalCard";
 
@@ -15,34 +15,39 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                                                               logs
                                                           }) => {
     return (
-        <div
-            className={`fixed top-0 right-0 h-full overflow-auto w-1/4`}
-            style={{pointerEvents: rightSidebarVisible ? "auto" : "none"}}
+        <Box
+            position="fixed"
+            top="0"
+            right="0"
+            height="full"
+            overflowY="auto"
+            width="25%"
+            pointerEvents={rightSidebarVisible ? "auto" : "none"}
         >
-            <div className="p-2 flex flex-row justify-end" style={{pointerEvents: "auto"}}>
+            <Flex p={2} justifyContent="flex-end" pointerEvents="auto">
                 <SidebarToggleButton
                     isVisible={rightSidebarVisible}
                     onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
                     position="right"
                 />
-            </div>
+            </Flex>
 
             {/* Sidebar Content - Completely hidden when not visible */}
             {rightSidebarVisible && (
-                <div
-                    className="h-full text-white overflow-auto"
-                    style={{pointerEvents: 'auto'}}
+                <Box
+                    height="full"
+                    overflowY="auto"
+                    pointerEvents="auto"
                 >
-                    <TribalCard className="p-4 mt-10">
-                        <h2 className="font-bold text-lg">Logs</h2>
-                        <div className="mt-2 text-sm">
+                    <TribalCard title="Logs">
+                        <Box mt={2} fontSize="sm">
                             {logs.map((log, index) => (
-                                <p key={index}>{log}</p>
+                                <Text key={index}>{log}</Text>
                             ))}
-                        </div>
+                        </Box>
                     </TribalCard>
-                </div>
+                </Box>
             )}
-        </div>
+        </Box>
     );
 };

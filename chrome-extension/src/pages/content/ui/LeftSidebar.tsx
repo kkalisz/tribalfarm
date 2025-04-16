@@ -1,7 +1,7 @@
 import React from "react";
 import {CommandMessage} from "@src/shared/types";
-import {Transition} from "@headlessui/react";
 import { SidebarToggleButton } from "./SidebarToggleButton";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 
 interface LeftSidebarProps {
     leftSidebarVisible: boolean;
@@ -19,42 +19,52 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                                                             lastEvent
                                                         }) => {
     return (
-        <div className="fixed h-full top-0 left-0 w-1/4"
-             style={{pointerEvents: leftSidebarVisible ? "auto" : "none"}}
+        <Box 
+            position="fixed" 
+            height="full" 
+            top="0" 
+            left="0" 
+            width="25%" 
+            pointerEvents={leftSidebarVisible ? "auto" : "none"}
         >
             {/* Toggle Button - Always visible in the same position */}
-            <div className="absolute top-4 left-4" style={{pointerEvents: "auto"}}>
+            <Box position="absolute" top="4" left="4" pointerEvents="auto">
                 <SidebarToggleButton
                     isVisible={leftSidebarVisible}
                     onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
                     position="left"
                 />
-            </div>
+            </Box>
 
             {/* Sidebar Content - Completely hidden when not visible */}
             {leftSidebarVisible && (
-                <div 
-                    className="h-full bg-blue-500 bg-opacity-80 text-white overflow-auto transition-all duration-300 ease-in-out w-full"
-                    style={{pointerEvents: 'auto'}}
+                <Box 
+                    height="full" 
+                    bg="blue.500" 
+                    color="white"
+                    overflowY="auto" 
+                    transition="all 0.3s ease-in-out" 
+                    width="full"
+                    pointerEvents="auto"
                 >
-                    <div className="p-4 mt-10">
-                        <h2 className="font-bold text-lg">Tribal Farm Status</h2>
-                        <div className="mt-2">
-                            <p><strong>Status:</strong> {commandStatus}</p>
+                    <Box p={4} mt={10}>
+                        <Heading fontWeight="bold" fontSize="lg">Tribal Farm Status</Heading>
+                        <Box mt={2}>
+                            <Text><strong>Status:</strong> {commandStatus}</Text>
                             {currentCommand && (
-                                <div className="mt-2">
-                                    <p><strong>Current Command:</strong></p>
-                                    <p>Action: {currentCommand.payload.action}</p>
-                                    <p>ID: {currentCommand.actionId}</p>
-                                </div>
+                                <Box mt={2}>
+                                    <Text><strong>Current Command:</strong></Text>
+                                    <Text>Action: {currentCommand.payload.action}</Text>
+                                    <Text>ID: {currentCommand.actionId}</Text>
+                                </Box>
                             )}
                             {lastEvent && (
-                                <p className="mt-2"><strong>Last Event:</strong> {lastEvent}</p>
+                                <Text mt={2}><strong>Last Event:</strong> {lastEvent}</Text>
                             )}
-                        </div>
-                    </div>
-                </div>
+                        </Box>
+                    </Box>
+                </Box>
             )}
-        </div>
+        </Box>
     );
 };

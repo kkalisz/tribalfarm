@@ -1,7 +1,29 @@
 import React, { useState } from 'react';
 import logo from '@assets/img/logo.svg';
 import { useGuiSettings } from '@src/shared/hooks/useGuiSettings';
-import { Switch, Tab, Dialog, Transition } from '@headlessui/react';
+import { 
+  Box, 
+  Flex, 
+  Image, 
+  Tabs, 
+  TabList, 
+  Tab, 
+  TabPanels, 
+  TabPanel, 
+  Switch, 
+  Button, 
+  Modal, 
+  ModalOverlay, 
+  ModalContent, 
+  ModalHeader, 
+  ModalBody, 
+  ModalFooter,
+  Text,
+  Link,
+  Heading,
+  FormControl,
+  FormLabel
+} from '@chakra-ui/react';
 
 export default function Popup() {
   const { gui } = useGuiSettings();
@@ -12,128 +34,118 @@ export default function Popup() {
   };
 
   return (
-    <div className="absolute top-0 left-0 right-0 bottom-0 text-center h-full p-3 bg-gray-800">
-      <header className="flex flex-col items-center justify-center text-white">
-        <img src={logo} className="h-36 pointer-events-none animate-spin-slow" alt="logo" />
+    <Box position="absolute" top="0" left="0" right="0" bottom="0" textAlign="center" height="full" p={3} bg="gray.800">
+      <Flex as="header" flexDirection="column" alignItems="center" justifyContent="center" color="white">
+        <Image src={logo} height="36" pointerEvents="none" animation="spin 20s linear infinite" alt="logo" />
 
         {/* Tabs for different sections */}
-        <div className="w-full max-w-md px-2 py-4 sm:px-0">
-          <Tab.Group>
-            <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
+        <Box width="full" maxWidth="md" px={2} py={4} sx={{ sm: { px: 0 } }}>
+          <Tabs variant="enclosed" colorScheme="blue">
+            <TabList mb={2} spacing={1} p={1} borderRadius="xl" bg="blue.900" opacity={0.2}>
               <Tab 
-                className={({ selected }) =>
-                  `w-full rounded-lg py-2 text-sm font-medium leading-5 
-                  ${selected ? 'bg-blue-500 text-white shadow' : 'text-blue-100 hover:bg-blue-800/30 hover:text-white'}`
-                }
+                width="full" 
+                borderRadius="lg" 
+                py={2} 
+                fontSize="sm" 
+                fontWeight="medium" 
+                _selected={{ bg: "blue.500", color: "white", boxShadow: "md" }}
+                _hover={{ bg: "blue.800", color: "white" }}
+                color="blue.100"
               >
                 Settings
               </Tab>
               <Tab 
-                className={({ selected }) =>
-                  `w-full rounded-lg py-2 text-sm font-medium leading-5 
-                  ${selected ? 'bg-blue-500 text-white shadow' : 'text-blue-100 hover:bg-blue-800/30 hover:text-white'}`
-                }
+                width="full" 
+                borderRadius="lg" 
+                py={2} 
+                fontSize="sm" 
+                fontWeight="medium" 
+                _selected={{ bg: "blue.500", color: "white", boxShadow: "md" }}
+                _hover={{ bg: "blue.800", color: "white" }}
+                color="blue.100"
               >
                 About
               </Tab>
-            </Tab.List>
-            <Tab.Panels className="mt-2">
-              <Tab.Panel className="rounded-xl bg-gray-700 p-3 text-white">
-                <div className="mt-2 flex items-center justify-between">
-                  <span>Show GUI</span>
+            </TabList>
+            <TabPanels>
+              <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
+                <Flex mt={2} alignItems="center" justifyContent="space-between">
+                  <FormLabel htmlFor="show-gui" mb={0}>Show GUI</FormLabel>
                   <Switch
-                    checked={gui.visible}
-                    onChange={handleShowGUIChange}
-                    className={`${
-                      gui.visible ? 'bg-blue-500' : 'bg-gray-500'
-                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                  >
-                    <span className="sr-only">Show GUI</span>
-                    <span
-                      className={`${
-                        gui.visible ? 'translate-x-6' : 'translate-x-1'
-                      } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                    />
-                  </Switch>
-                </div>
-                <button
+                    id="show-gui"
+                    isChecked={gui.visible}
+                    onChange={(e) => handleShowGUIChange(e.target.checked)}
+                    colorScheme="blue"
+                    size="md"
+                  />
+                </Flex>
+                <Button
                   onClick={() => setIsDialogOpen(true)}
-                  className="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  mt={4}
+                  borderRadius="md"
+                  bg="blue.500"
+                  px={4}
+                  py={2}
+                  color="white"
+                  _hover={{ bg: "blue.600" }}
+                  _focus={{ outline: "none", ring: 2, ringColor: "blue.500" }}
                 >
                   More Info
-                </button>
-              </Tab.Panel>
-              <Tab.Panel className="rounded-xl bg-gray-700 p-3 text-white">
-                <p className="text-sm">
-                  This is a Chrome extension built with React, TypeScript, and Tailwind CSS.
-                </p>
-                <p className="mt-2 text-sm">
-                  UI components powered by Headless UI.
-                </p>
-                <a
-                  className="mt-2 block text-blue-400"
-                  href="https://headlessui.com"
+                </Button>
+              </TabPanel>
+              <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
+                <Text fontSize="sm">
+                  This is a Chrome extension built with React, TypeScript, and Chakra UI.
+                </Text>
+                <Text mt={2} fontSize="sm">
+                  UI components powered by Chakra UI.
+                </Text>
+                <Link
+                  mt={2}
+                  display="block"
+                  color="blue.400"
+                  href="https://chakra-ui.com"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Learn more about Headless UI
-                </a>
-              </Tab.Panel>
-            </Tab.Panels>
-          </Tab.Group>
-        </div>
-      </header>
+                  Learn more about Chakra UI
+                </Link>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Box>
+      </Flex>
 
-      {/* Dialog for additional information */}
-      <Transition show={isDialogOpen} as={React.Fragment}>
-        <Dialog 
-          open={isDialogOpen} 
-          onClose={() => setIsDialogOpen(false)}
-          className="fixed inset-0 z-10 overflow-y-auto"
-        >
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
+      {/* Modal for additional information */}
+      <Modal isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+        <ModalOverlay />
+        <ModalContent bg="gray.700" color="white" mx={4}>
+          <ModalHeader>GUI Settings Information</ModalHeader>
+          <ModalBody>
+            <Text fontSize="sm">
+              Enabling the GUI will show the sidebar interfaces on the webpage.
+            </Text>
+            <Text mt={4} fontSize="sm">
+              The left sidebar shows status information, while the right sidebar displays logs.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              onClick={() => setIsDialogOpen(false)}
+              mt={2}
+              borderRadius="md"
+              bg="blue.500"
+              px={4}
+              py={2}
+              color="white"
+              _hover={{ bg: "blue.600" }}
+              _focus={{ outline: "none", ring: 2, ringColor: "blue.500" }}
             >
-              <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-            </Transition.Child>
-
-            <Transition.Child
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <div className="relative mx-auto max-w-md rounded-lg bg-gray-700 p-6 text-white">
-                <Dialog.Title className="text-lg font-medium">
-                  GUI Settings Information
-                </Dialog.Title>
-                <Dialog.Description className="mt-2 text-sm">
-                  Enabling the GUI will show the sidebar interfaces on the webpage.
-                </Dialog.Description>
-
-                <p className="mt-4 text-sm">
-                  The left sidebar shows status information, while the right sidebar displays logs.
-                </p>
-
-                <button
-                  onClick={() => setIsDialogOpen(false)}
-                  className="mt-6 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Got it, thanks!
-                </button>
-              </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
-    </div>
+              Got it, thanks!
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
 }

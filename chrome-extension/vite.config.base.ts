@@ -1,10 +1,9 @@
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { ManifestV3Export } from '@crxjs/vite-plugin';
-import tailwindcss from "@tailwindcss/vite";
-import { defineConfig, BuildOptions } from 'vite';
+import {resolve} from 'path';
+import {ManifestV3Export} from '@crxjs/vite-plugin';
+import {defineConfig, BuildOptions} from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths'
-import { stripDevIcons, crxI18n, copyTailwindCss } from './custom-vite-plugins';
+import {stripDevIcons, crxI18n} from './custom-vite-plugins';
 import manifest from './manifest.json';
 import devManifest from './manifest.dev.json';
 import pkg from './package.json';
@@ -19,37 +18,33 @@ export const baseManifest = {
     version: pkg.version,
     ...(isDev ? devManifest : {} as ManifestV3Export),
     ...(localize ? {
-      name: '__MSG_extName__',
-      description: '__MSG_extDescription__',
-      default_locale : 'en'
+        name: '__MSG_extName__',
+        description: '__MSG_extDescription__',
+        default_locale: 'en'
     } : {})
 } as ManifestV3Export
 
 export const baseBuildOptions: BuildOptions = {
-  sourcemap: isDev,
-  emptyOutDir: !isDev,
-  rollupOptions: {
-    output: {
-      assetFileNames: (assetInfo) => {
-        // For Tailwind CSS, use a static name
-        if (assetInfo.name && assetInfo.name.includes('tailwind')) {
-          return 'assets/tailwind.css';
+    sourcemap: isDev,
+    emptyOutDir: !isDev,
+    rollupOptions: {
+        output: {
+            assetFileNames: 'assets/[name]-[hash].[ext]'
         }
-        // For other assets, use the default naming with hash
-        return 'assets/[name]-[hash].[ext]';
-      }
     }
-  }
 }
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tsconfigPaths(),
-    react(),
-    stripDevIcons(isDev),
-    crxI18n({ localize, src: './src/locales' }),
-    copyTailwindCss(),
-  ],
-  publicDir: resolve(__dirname, 'public'),
+    plugins: [
+        tsconfigPaths(),
+        react(),
+        stripDevIcons(isDev),
+        crxI18n({localize, src: './src/locales'}),
+    ],
+    publicDir: resolve(__dirname, 'public'),
+    server: {
+        watch: {
+            usePolling: true,
+        },
+    },
 });

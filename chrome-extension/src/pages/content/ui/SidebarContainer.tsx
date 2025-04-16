@@ -4,6 +4,7 @@ import {useCommandsData} from "@pages/content/hooks/useCommandsData";
 import {LeftSidebar} from "@pages/content/ui/LeftSidebar";
 import {RightSidebar} from "@pages/content/ui/RightSidebar";
 import {useGuiSettings} from "@src/shared/hooks/useGuiSettings";
+import { Box } from "@chakra-ui/react";
 
 /** React Component for the Sidebar Views */
 export const SidebarContainer = () => {
@@ -23,11 +24,16 @@ export const SidebarContainer = () => {
         setupDOMObserver();
     }, []);
 
-    // Always render the container div to keep the logic running
+    // Always render the container to keep the logic running
     return (
-        <div
-            className="fixed top-0 left-0 w-screen h-screen pointer-events-none"
-            style={{ zIndex: 99999 }}
+        <Box
+            position="fixed"
+            top="0"
+            left="0"
+            width="100vw"
+            height="100vh"
+            pointerEvents="none"
+            zIndex={99999}
         >
             {/* Only render the UI components if showGUI is true */}
             {gui.visible && (
@@ -49,6 +55,6 @@ export const SidebarContainer = () => {
                     />
                 </>
             )}
-        </div>
+        </Box>
     );
 };
