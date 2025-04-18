@@ -1,67 +1,89 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import logo from '@assets/img/logo.svg';
-import { useGuiSettings } from '@src/shared/hooks/useGuiSettings';
-import { 
-  Box, 
-  Flex, 
-  Image, 
-  Tabs, 
-  TabList, 
-  Tab, 
-  TabPanels, 
-  TabPanel, 
-  Switch, 
-  Button, 
-  Modal, 
-  ModalOverlay, 
-  ModalContent, 
-  ModalHeader, 
-  ModalBody, 
-  ModalFooter,
-  Text,
+import {useGuiSettings} from '@src/shared/hooks/useGuiSettings';
+import {
+  Box,
+  Button,
+  Flex,
+  FormLabel,
+  Image,
   Link,
-  Heading,
-  FormControl,
-  FormLabel
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Switch,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text
 } from '@chakra-ui/react';
+import {usePluginSettings} from "@src/shared/hooks/usePluginSettings";
+
+interface SettingsSwitchProps {
+  label: string;
+  name: string;
+  enabled: boolean;
+  onChange: (value: boolean) => void;
+}
+
+const SettingsSwitch: React.FC<SettingsSwitchProps> = ({label, name, enabled, onChange}) => {
+  return (
+    <Flex mt={2} alignItems="center" justifyContent="space-between">
+      <FormLabel htmlFor={name} mb={0}>{label}</FormLabel>
+      <Switch
+        id={name}
+        isChecked={enabled}
+        onChange={(e) => onChange(e.target.checked)}
+        colorScheme="blue"
+        size="md"
+      />
+    </Flex>
+  );
+};
 
 export default function Popup() {
   const { gui } = useGuiSettings();
+  const { plugin } = usePluginSettings();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleShowGUIChange = (checked: boolean) => {
+  const handleShowGUIChange2 = (checked: boolean) => {
     gui.setVisible(checked);
   };
 
   return (
     <Box position="absolute" top="0" left="0" right="0" bottom="0" textAlign="center" height="full" p={3} bg="gray.800">
       <Flex as="header" flexDirection="column" alignItems="center" justifyContent="center" color="white">
-        <Image src={logo} height="36" pointerEvents="none" animation="spin 20s linear infinite" alt="logo" />
+        <Image src={logo} height="36" pointerEvents="none" animation="spin 20s linear infinite" alt="logo"/>
 
         {/* Tabs for different sections */}
-        <Box width="full" maxWidth="md" px={2} py={4} sx={{ sm: { px: 0 } }}>
+        <Box width="full" maxWidth="md" px={2} py={4} sx={{sm: {px: 0}}}>
           <Tabs variant="enclosed" colorScheme="blue">
-            <TabList mb={2} spacing={1} p={1} borderRadius="xl" bg="blue.900" opacity={0.2}>
-              <Tab 
-                width="full" 
-                borderRadius="lg" 
-                py={2} 
-                fontSize="sm" 
-                fontWeight="medium" 
-                _selected={{ bg: "blue.500", color: "white", boxShadow: "md" }}
-                _hover={{ bg: "blue.800", color: "white" }}
+            <TabList mb={2} p={1} borderRadius="xl" bg="blue.900" opacity={0.2}>
+              <Tab
+                width="full"
+                borderRadius="lg"
+                py={2}
+                fontSize="sm"
+                fontWeight="medium"
+                _selected={{bg: "blue.500", color: "white", boxShadow: "md"}}
+                _hover={{bg: "blue.800", color: "white"}}
                 color="blue.100"
               >
                 Settings
               </Tab>
-              <Tab 
-                width="full" 
-                borderRadius="lg" 
-                py={2} 
-                fontSize="sm" 
-                fontWeight="medium" 
-                _selected={{ bg: "blue.500", color: "white", boxShadow: "md" }}
-                _hover={{ bg: "blue.800", color: "white" }}
+              <Tab
+                width="full"
+                borderRadius="lg"
+                py={2}
+                fontSize="sm"
+                fontWeight="medium"
+                _selected={{bg: "blue.500", color: "white", boxShadow: "md"}}
+                _hover={{bg: "blue.800", color: "white"}}
                 color="blue.100"
               >
                 About
@@ -69,16 +91,8 @@ export default function Popup() {
             </TabList>
             <TabPanels>
               <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
-                <Flex mt={2} alignItems="center" justifyContent="space-between">
-                  <FormLabel htmlFor="show-gui" mb={0}>Show GUI</FormLabel>
-                  <Switch
-                    id="show-gui"
-                    isChecked={gui.visible}
-                    onChange={(e) => handleShowGUIChange(e.target.checked)}
-                    colorScheme="blue"
-                    size="md"
-                  />
-                </Flex>
+                <SettingsSwitch onChange={plugin.setVisible} label={'Enable plugin'} name={'settings-enabled'} enabled={gui.visible}/>
+                <SettingsSwitch onChange={gui.setVisible} label={'Show gui'} name={'settings-gui'} enabled={gui.visible}/>
                 <Button
                   onClick={() => setIsDialogOpen(true)}
                   mt={4}
@@ -87,8 +101,8 @@ export default function Popup() {
                   px={4}
                   py={2}
                   color="white"
-                  _hover={{ bg: "blue.600" }}
-                  _focus={{ outline: "none", ring: 2, ringColor: "blue.500" }}
+                  _hover={{bg: "blue.600"}}
+                  _focus={{outline: "none", ring: 2, ringColor: "blue.500"}}
                 >
                   More Info
                 </Button>
@@ -118,7 +132,7 @@ export default function Popup() {
 
       {/* Modal for additional information */}
       <Modal isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-        <ModalOverlay />
+        <ModalOverlay/>
         <ModalContent bg="gray.700" color="white" mx={4}>
           <ModalHeader>GUI Settings Information</ModalHeader>
           <ModalBody>
@@ -138,8 +152,8 @@ export default function Popup() {
               px={4}
               py={2}
               color="white"
-              _hover={{ bg: "blue.600" }}
-              _focus={{ outline: "none", ring: 2, ringColor: "blue.500" }}
+              _hover={{bg: "blue.600"}}
+              _focus={{outline: "none", ring: 2, ringColor: "blue.500"}}
             >
               Got it, thanks!
             </Button>

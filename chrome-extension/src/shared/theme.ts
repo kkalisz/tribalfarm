@@ -2,16 +2,29 @@
 import { extendTheme } from '@chakra-ui/react';
 import { mode } from '@chakra-ui/theme-tools';
 
-// Define the custom theme colors and styles
+// Define the custom theme colors and styles based on Tribal Wars aesthetic
 const theme = extendTheme({
   colors: {
     tribal: {
-      card: '#f4e2c6',
-      cardHeader: '#dbc2a3',
-      cardBorder: 'red.600',
-      cardHeaderBorder: 'red.700',
-      cardText: '#3b2b1f',
-      cardHeaderText: '#4a2c1a',
+      // Primary colors from ui_plan.md
+      primaryBg: '#f4e2c6', // Light parchment
+      secondaryBg: '#dbc2a3', // Darker parchment for headers
+      primaryBorder: '#8b4513', // Saddle brown
+      secondaryBorder: '#a52a2a', // Brown/red for emphasis
+      primaryText: '#3b2b1f', // Dark brown
+      secondaryText: '#4a2c1a', // Slightly lighter brown for headers
+      accent: '#c19a6b', // Gold/bronze for highlights
+      hover: '#d4a76a', // Lighter gold for interactions
+      success: '#2e7d32', // Forest green
+      error: '#b71c1c', // Deep red
+
+      // Component-specific colors
+      card: '#f4e2c6', // Light parchment background
+      cardHeader: '#dbc2a3', // Darker parchment for headers
+      cardBorder: '#8b4513', // Saddle brown
+      cardHeaderBorder: '#a52a2a', // Brown/red for emphasis
+      cardText: '#3b2b1f', // Dark brown
+      cardHeaderText: '#4a2c1a', // Slightly lighter brown for headers
     },
     blue: {
       500: '#3b82f6', // Match Tailwind blue-500
@@ -22,6 +35,24 @@ const theme = extendTheme({
       800: '#1f2937', // Match Tailwind gray-800
     },
   },
+  fonts: {
+    // Typography settings from ui_plan.md
+    heading: "'Cinzel', serif", // A serif font that resembles medieval text
+    body: "'Merriweather', serif", // A more readable serif font for body text
+  },
+  fontSizes: {
+    xs: "10px", // Small text
+    sm: "12px", // Body text
+    md: "14px", // Body text
+    lg: "16px", // Headings
+    xl: "18px", // Headings
+    "2xl": "20px", // Headings
+    "3xl": "24px", // Headings
+  },
+  fontWeights: {
+    normal: 400, // Regular
+    bold: 700, // Bold
+  },
   components: {
     // Define custom component styles here
   },
@@ -29,6 +60,8 @@ const theme = extendTheme({
     global: () => ({
       body: {
         background: "", // or don't set it at all
+        fontFamily: "body",
+        color: "tribal.primaryText",
       },
     }),
   },

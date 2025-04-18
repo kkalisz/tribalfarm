@@ -1,6 +1,6 @@
 import {createRoot} from 'react-dom/client';
-import React, {useEffect, useState} from 'react';
-import {Message, CommandMessage, StatusMessage, EventMessage} from '../../shared/types';
+import React from 'react';
+import {CommandMessage} from '@src/shared/types';
 import {isValidDomain} from "@src/shared/helpers/isValidDomain";
 import {SidebarContainer} from "@pages/content/ui/SidebarContainer";
 import {ChakraProvider} from '@chakra-ui/react';
@@ -236,8 +236,7 @@ export function initializeContentScript() {
         console.log(`React app created ${!!root}`);
         root.render(
             <CacheProvider value={shadowCache}>
-
-                <ChakraProvider resetCSS={false}>
+                <ChakraProvider theme={theme} resetCSS={false}>
                     <SidebarContainer/>
                 </ChakraProvider>
             </CacheProvider>

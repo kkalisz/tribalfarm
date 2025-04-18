@@ -4,13 +4,14 @@ import { resolve } from 'path';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [react(), tsconfigPaths()] as any,
   test: {
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['./src/**/*.test.{ts,tsx}'],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',

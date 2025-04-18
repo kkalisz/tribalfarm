@@ -8,7 +8,6 @@ This implementation plan outlines the steps needed to complete the browser exten
 3. Backed server should be able to handle multiple extension instances
 4. Backend module is places in backend folder, extension module is placed in chrome-extension folder
 5. If we can use external dependencies to simplify work let use them
-6. we should have tests for parts that are possible to test
 
 ## Implementation Tasks
 
