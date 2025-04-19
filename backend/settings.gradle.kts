@@ -1,6 +1,4 @@
-rootProject.name = "tribal-farm"
-
-include("backend")
+rootProject.name = "tribalfarm-backend"
 
 pluginManagement {
     repositories {

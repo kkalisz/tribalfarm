@@ -7,9 +7,9 @@ ktor:
 
 database:
   driverClass: "org.postgresql.Driver"
-  url: "jdbc:postgresql://localhost:5432/tribal_farm"
-  user: ${?DB_USER}
-  password: ${?DB_PASSWORD}
+  url: ${DB_URL:"jdbc:postgresql://localhost:5432/tribal_farm"}
+  user: ${DB_USER:"postgres"}
+  password: ${DB_PASSWORD:"postgres"}
   poolSize: 3
   maxPoolSize: 10
   connectionTimeout: 30000
