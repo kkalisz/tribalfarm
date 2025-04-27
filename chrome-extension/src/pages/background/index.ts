@@ -1,4 +1,5 @@
-import { Message, CommandMessage, StatusMessage } from '../../shared/types';
+import { Message, CommandMessage, StatusMessage } from '@src/shared/types';
+import {logInfo} from "@src/shared/helpers/sendLog";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -14,23 +15,23 @@ let activeTabId: number | null = null;
 // Connect to WebSocket server
 function connectWebSocket() {
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-    console.log('WebSocket already connected or connecting');
+    logInfo('WebSocket already connected or connecting');
     return;
   }
 
   if (isConnecting) {
-    console.log('Connection already in progress');
+    logInfo('Connection already in progress');
     return;
   }
 
   isConnecting = true;
   const backendUrl = 'ws://localhost:8080/ws'; // Configure as needed
 
-  console.log(`Connecting to WebSocket at ${backendUrl}`);
+  logInfo(`Connecting to WebSocket at ${backendUrl}`);
   socket = new WebSocket(backendUrl);
 
   socket.onopen = () => {
-    console.log('WebSocket connection established');
+    logInfo('WebSocket connection established');
     isConnecting = false;
     reconnectAttempts = 0;
 
@@ -48,7 +49,7 @@ function connectWebSocket() {
   };
 
   socket.onclose = (event) => {
-    console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
+    logInfo(`WebSocket connection closed: ${event.code} ${event.reason}`);
     socket = null;
     isConnecting = false;
 
@@ -56,7 +57,7 @@ function connectWebSocket() {
     const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), maxReconnectDelay);
     reconnectAttempts++;
 
-    console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
+    logInfo(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
     setTimeout(connectWebSocket, delay);
   };
 
@@ -68,7 +69,7 @@ function connectWebSocket() {
 
 // Handle incoming messages from the WebSocket
 function handleIncomingMessage(message: Message) {
-  console.log('Received message:', message);
+  logInfo('Received message:', message);
 
   switch (message.type) {
     case 'command':
@@ -79,25 +80,25 @@ function handleIncomingMessage(message: Message) {
 
     case 'ack':
       // Handle acknowledgment
-      console.log('Command acknowledged:', message.actionId);
+      logInfo('Command acknowledged:', message.actionId);
       break;
 
     default:
-      console.log('Unhandled message type:', message.type);
+      logInfo('Unhandled message type:', message.type);
   }
 }
 
 // Forward command to the active content script
 function forwardCommandToContentScript(command: CommandMessage) {
   if (!activeTabId) {
-    console.log('No active tab, queuing command');
+    logInfo('No active tab, queuing command');
     commandQueue.push(command);
     return;
   }
 
   chrome.tabs.sendMessage(activeTabId, command)
     .then(response => {
-      console.log('Command forwarded to content script, response:', response);
+      logInfo('Command forwarded to content script, response:', response);
     })
     .catch(error => {
       console.error('Error forwarding command to content script:', error);
@@ -121,7 +122,7 @@ function processCommandQueue() {
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Message from content script:', message, 'Sender:', sender);
+  logInfo('Message from content script:', message, 'Sender:', sender);
 
   // Track the active tab
   if (sender.tab && sender.tab.id) {
@@ -130,7 +131,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Handle different message types
   if (message.type === 'contentScriptReady') {
-    console.log('Content script ready in tab', activeTabId);
+    logInfo('Content script ready in tab', activeTabId);
 
     // If there's a current command, send it to the newly ready content script
     if (currentCommand) {
@@ -148,7 +149,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     } else {
-      console.log('WebSocket not connected, reconnecting...');
+      logInfo('WebSocket not connected, reconnecting...');
       connectWebSocket();
     }
 
@@ -162,4 +163,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Initialize connection when the service worker starts
 connectWebSocket();
 
-console.log('Service worker initialized');
+logInfo('Service worker initialized');

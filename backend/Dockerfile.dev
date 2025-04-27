@@ -2,6 +2,9 @@ FROM openjdk:17-slim
 
 WORKDIR /app
 
+# Set Gradle user home to match the volume mount in docker-compose.dev.yml
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
+
 # Copy the source code including gradlew
 COPY . /app/
 
@@ -15,4 +18,6 @@ EXPOSE 8080
 ENV DEVELOPMENT=true
 
 # Command to run the application with continuous build for hot reloading
-CMD ["./gradlew", "run", "-t", "--args='-Dio.ktor.development=true'"]
+# The -t flag enables continuous build (watches for changes)
+# Setting development=true in the JVM args enables Ktor's development mode
+CMD ["./gradlew", "run", "-t", "--args=-Dio.ktor.development=true"]

@@ -3,6 +3,8 @@ import {CommandMessage} from "@src/shared/types";
 import {SidebarToggleButton} from "./SidebarToggleButton";
 import {Box, Flex, Heading, Text} from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
+import TribalButton from "@src/shared/ui/TribalButton";
+import {executeCommand} from "@pages/content";
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
@@ -44,6 +46,15 @@ export const LeftSidebar = ({
           pointerEvents="auto"
         >
           <TribalCard title="Status`">
+              <TribalButton onClick={() => executeCommand(
+                {
+                  actionId: "123", payload: {action: "navigate", parameters: {
+                    url: "https://pl213.plemiona.pl/game.php?village=46605&screen=place"
+                    }}, timestamp: Date.now().toString(), type: "command"
+                }
+              )}>
+                Test Navigate
+              </TribalButton>
               {currentCommand && (
                 <Box mt={2}>
                   <Text><strong>Current Command:</strong></Text>

@@ -19,11 +19,6 @@ export const SidebarContainer = () => {
     // Use custom hook for GUI settings
     const { leftSidebar, rightSidebar, gui } = useGuiSettings();
 
-    useEffect(() => {
-        // Set up DOM observer
-        setupDOMObserver();
-    }, []);
-
     // Always render the container to keep the logic running
     return (
         <Box

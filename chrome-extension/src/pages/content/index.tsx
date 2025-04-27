@@ -1,138 +1,16 @@
 import {createRoot} from 'react-dom/client';
 import React from 'react';
-import {CommandMessage} from '@src/shared/types';
 import {isValidDomain} from "@src/shared/helpers/isValidDomain";
 import {SidebarContainer} from "@pages/content/ui/SidebarContainer";
 import {ChakraProvider} from '@chakra-ui/react';
 import theme from '@src/shared/theme';
 import {CacheProvider} from '@emotion/react';
 import createCache from '@emotion/cache';
+import {executeCommand} from './execute';
+import {attachExecutor} from './execute/executor';
 
-
-// Execute a command on the page
-export async function executeCommand(command: CommandMessage): Promise<{ status: string, details?: any }> {
-    console.log(`Executing command: ${command.payload.action}`);
-
-    // Implement different actions based on the command
-    switch (command.payload.action) {
-        case 'click':
-            return await executeClickAction(command.payload.parameters);
-        case 'input':
-            return await executeInputAction(command.payload.parameters);
-        case 'navigate':
-            return await executeNavigateAction(command.payload.parameters);
-        case 'extract':
-            return await executeExtractAction(command.payload.parameters);
-        default:
-            // Simulate command execution for testing
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    if (Math.random() > 0.2) { // 80% success rate for testing
-                        resolve({status: 'done', details: {result: 'success'}});
-                    } else {
-                        reject({message: 'Command failed', details: {reason: 'random failure'}});
-                    }
-                }, 2000);
-            });
-    }
-}
-
-// Execute a click action
-async function executeClickAction(parameters: Record<string, any>): Promise<{ status: string, details?: any }> {
-    const {selector} = parameters;
-
-    if (!selector) {
-        throw {message: 'Missing selector parameter', details: {parameters}};
-    }
-
-    const element = document.querySelector(selector);
-    if (!element) {
-        throw {message: 'Element not found', details: {selector}};
-    }
-
-    try {
-        (element as HTMLElement).click();
-        return {status: 'done', details: {action: 'click', selector}};
-    } catch (error) {
-        throw {message: 'Click action failed', details: {error, selector}};
-    }
-}
-
-// Execute an input action
-async function executeInputAction(parameters: Record<string, any>): Promise<{ status: string, details?: any }> {
-    const {selector, value} = parameters;
-
-    if (!selector || value === undefined) {
-        throw {message: 'Missing required parameters', details: {parameters}};
-    }
-
-    const element = document.querySelector(selector) as HTMLInputElement;
-    if (!element) {
-        throw {message: 'Element not found', details: {selector}};
-    }
-
-    try {
-        element.value = value;
-        element.dispatchEvent(new Event('input', {bubbles: true}));
-        element.dispatchEvent(new Event('change', {bubbles: true}));
-        return {status: 'done', details: {action: 'input', selector, value}};
-    } catch (error) {
-        throw {message: 'Input action failed', details: {error, selector, value}};
-    }
-}
-
-// Execute a navigate action
-async function executeNavigateAction(parameters: Record<string, any>): Promise<{ status: string, details?: any }> {
-    const {url} = parameters;
-
-    if (!url) {
-        throw {message: 'Missing url parameter', details: {parameters}};
-    }
-
-    try {
-        window.location.href = url;
-        return {status: 'in-progress', details: {action: 'navigate', url}};
-    } catch (error) {
-        throw {message: 'Navigation action failed', details: {error, url}};
-    }
-}
-
-// Execute an extract action
-async function executeExtractAction(parameters: Record<string, any>): Promise<{ status: string, details?: any }> {
-    const {selector} = parameters;
-
-    if (!selector) {
-        throw {message: 'Missing selector parameter', details: {parameters}};
-    }
-
-    const elements = document.querySelectorAll(selector);
-    if (elements.length === 0) {
-        throw {message: 'Elements not found', details: {selector}};
-    }
-
-    try {
-        const extractedData = Array.from(elements).map(el => ({
-            text: el.textContent?.trim(),
-            html: el.innerHTML,
-            attributes: Array.from((el as Element).attributes).reduce((acc, attr) => {
-                acc[attr.name] = attr.value;
-                return acc;
-            }, {} as Record<string, string>)
-        }));
-
-        return {
-            status: 'done',
-            details: {
-                action: 'extract',
-                selector,
-                count: extractedData.length,
-                data: extractedData
-            }
-        };
-    } catch (error) {
-        throw {message: 'Extract action failed', details: {error, selector}};
-    }
-}
+// Re-export executeCommand for backward compatibility
+export {executeCommand};
 
 // DOM Observer to detect modals and popups
 export function setupDOMObserver() {
@@ -191,6 +69,9 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 
 export function initializeContentScript() {
     try {
+        attachExecutor();
+        setupDOMObserver();
+
         console.log('Initializing content script with Chakra UI and Shadow DOM');
 
         // Create a container and attach a shadow DOM

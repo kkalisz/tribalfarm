@@ -13,14 +13,16 @@ services:
     volumes:
       # Mount source code for hot reloading
       - ./src:/app/src
+      # Mount build directory for hot reloading compiled classes
+      - ./build:/app/build
       # Mount build files to avoid rebuilding dependencies
       - ./build.gradle.kts:/app/build.gradle.kts
       - ./settings.gradle.kts:/app/settings.gradle.kts
       - ./gradle.properties:/app/gradle.properties
       # Mount Gradle wrapper to ensure correct version
       - ./gradle/wrapper:/app/gradle/wrapper
-      # Mount Gradle cache to speed up builds
-      - gradle-cache:/home/gradle/.gradle
+      # Mount local .gradle folder to avoid downloading dependencies again
+      - ./.gradle:/home/gradle/.gradle
     depends_on:
       - postgres-dev
     networks:
@@ -45,4 +47,3 @@ networks:
 
 volumes:
   postgres-dev-data:
-  gradle-cache:

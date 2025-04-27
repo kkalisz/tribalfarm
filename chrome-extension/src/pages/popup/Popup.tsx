@@ -23,6 +23,9 @@ import {
   Text
 } from '@chakra-ui/react';
 import {usePluginSettings} from "@src/shared/hooks/usePluginSettings";
+import TribalButton from "@src/shared/ui/TribalButton";
+import TribalCard from "@src/shared/ui/TribalCard";
+import TribalSwitch from "@src/shared/ui/TribalSwitch";
 
 interface SettingsSwitchProps {
   label: string;
@@ -35,11 +38,10 @@ const SettingsSwitch: React.FC<SettingsSwitchProps> = ({label, name, enabled, on
   return (
     <Flex mt={2} alignItems="center" justifyContent="space-between">
       <FormLabel htmlFor={name} mb={0}>{label}</FormLabel>
-      <Switch
+      <TribalSwitch
         id={name}
         isChecked={enabled}
         onChange={(e) => onChange(e.target.checked)}
-        colorScheme="blue"
         size="md"
       />
     </Flex>
@@ -90,8 +92,8 @@ export default function Popup() {
               </Tab>
             </TabList>
             <TabPanels>
-              <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
-                <SettingsSwitch onChange={plugin.setVisible} label={'Enable plugin'} name={'settings-enabled'} enabled={gui.visible}/>
+              <TribalCard >
+                <SettingsSwitch onChange={plugin.setVisible} label={'Enable plugin'} name={'settings-enabled'} enabled={plugin.visible}/>
                 <SettingsSwitch onChange={gui.setVisible} label={'Show gui'} name={'settings-gui'} enabled={gui.visible}/>
                 <Button
                   onClick={() => setIsDialogOpen(true)}
@@ -106,7 +108,7 @@ export default function Popup() {
                 >
                   More Info
                 </Button>
-              </TabPanel>
+              </TribalCard>
               <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
                 <Text fontSize="sm">
                   This is a Chrome extension built with React, TypeScript, and Chakra UI.
