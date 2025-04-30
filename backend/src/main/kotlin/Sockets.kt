@@ -461,7 +461,7 @@ class Connection(val session: DefaultWebSocketSession) {
     /**
      * Send a message to this connection
      */
-    suspend fun send(message: WebSocketMessage) {
+    suspend fun                 send(message: WebSocketMessage) {
         val startTime = System.currentTimeMillis()
         lastActivity = startTime
 
