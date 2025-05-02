@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { CommandMessage } from "@src/shared/types";
-import { 
+import {
     getState, 
     subscribeToState, 
     addLog as addLogToState,
-    attachExecutor
 } from "@pages/content/execute/executor";
 
 export const useCommandsData = () => {

@@ -1,5 +1,7 @@
-import { Message, CommandMessage, StatusMessage } from '@src/shared/types';
-import {logInfo} from "@src/shared/helpers/sendLog";
+import { Message, CommandMessage } from '@src/shared/types';
+import { logInfo } from "@src/shared/helpers/sendLog";
+import { settingsStorage } from '@src/shared/services/settingsStorage';
+import { TabMessenger, orchestrateOnTab } from './TabMessenger';
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -9,8 +11,15 @@ const maxReconnectDelay = 30000; // 30 seconds
 
 // Command state
 let currentCommand: CommandMessage | null = null;
-let commandQueue: CommandMessage[] = [];
+const commandQueue: CommandMessage[] = [];
 let activeTabId: number | null = null;
+let activeTabMessenger: TabMessenger | null = null;
+
+// Auto scavenge state
+let autoScavengeInterval: number | null = null;
+const AUTO_SCAVENGE_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const SCAVENGE_PAGE_URL = "https://pl213.plemiona.pl/game.php?village=46605&screen=place&mode=scavenge";
+const SCAVENGE_BUTTON_SELECTOR = ".scavenge-option:not(.locked) button.btn-confirm-yes";
 
 // Connect to WebSocket server
 function connectWebSocket() {
@@ -89,21 +98,95 @@ function handleIncomingMessage(message: Message) {
 }
 
 // Forward command to the active content script
-function forwardCommandToContentScript(command: CommandMessage) {
+async function forwardCommandToContentScript(command: CommandMessage) {
   if (!activeTabId) {
     logInfo('No active tab, queuing command');
     commandQueue.push(command);
     return;
   }
 
-  chrome.tabs.sendMessage(activeTabId, command)
-    .then(response => {
-      logInfo('Command forwarded to content script, response:', response);
-    })
-    .catch(error => {
-      console.error('Error forwarding command to content script:', error);
-      commandQueue.push(command);
-    });
+  // Create or reuse TabMessenger for the active tab
+  if (!activeTabMessenger || activeTabMessenger.getTabId() !== activeTabId) {
+    if (activeTabMessenger) {
+      activeTabMessenger.dispose();
+    }
+    activeTabMessenger = new TabMessenger(activeTabId);
+  }
+
+  try {
+    // Use orchestrateOnTab for complex operations that might involve page reloads
+    if (command.payload.action === 'navigate' || command.payload.action === 'click') {
+      orchestrateOnTab(activeTabId, async (messenger) => {
+        logInfo(`Orchestrating ${command.payload.action} command on tab ${activeTabId}`);
+
+        // Send the command
+        const result = await messenger.send(
+          command.payload.action, 
+          command.payload.parameters
+        );
+
+        // If this is a navigation command, wait for the page to load
+        if (command.payload.action === 'navigate') {
+          await messenger.waitFor('event', 
+            (msg) => msg.type === 'event' && 
+                    msg.payload.eventType === 'stateChange' && 
+                    msg.payload.details.type === 'contentScriptReady',
+            30000
+          );
+        }
+
+        return result;
+      }).then(result => {
+        logInfo(`Command ${command.payload.action} orchestrated successfully:`, result);
+
+        // Forward the result to the WebSocket if connected
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          const statusMessage = {
+            type: 'status',
+            actionId: command.actionId,
+            timestamp: new Date().toISOString(),
+            correlationId: command.correlationId,
+            payload: {
+              status: 'done',
+              details: result
+            }
+          };
+          socket.send(JSON.stringify(statusMessage));
+        }
+      }).catch(error => {
+        console.error(`Error orchestrating ${command.payload.action} command:`, error);
+
+        // Forward the error to the WebSocket if connected
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          const errorMessage = {
+            type: 'error',
+            actionId: command.actionId,
+            timestamp: new Date().toISOString(),
+            correlationId: command.correlationId,
+            payload: {
+              message: error.message || 'Unknown error',
+              details: error
+            }
+          };
+          socket.send(JSON.stringify(errorMessage));
+        }
+      });
+    } else {
+      // For simpler commands, just use the TabMessenger directly
+      activeTabMessenger.send(
+        command.payload.action, 
+        command.payload.parameters
+      ).then(result => {
+        logInfo(`Command ${command.payload.action} executed successfully:`, result);
+      }).catch(error => {
+        console.error(`Error executing ${command.payload.action} command:`, error);
+        commandQueue.push(command);
+      });
+    }
+  } catch (error) {
+    console.error('Error forwarding command to content script:', error);
+    commandQueue.push(command);
+  }
 }
 
 // Process the command queue
@@ -160,7 +243,110 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
+// Function to check autoScavenge setting and start/stop interval
+async function checkAutoScavengeSetting() {
+  try {
+    const autoScavengeEnabled = await settingsStorage.getSetting<boolean>('autoScavenge', false);
+    logInfo(`Auto scavenge setting checked: ${autoScavengeEnabled}`);
+
+    if (autoScavengeEnabled) {
+      startAutoScavengeInterval();
+    } else {
+      stopAutoScavengeInterval();
+    }
+  } catch (error) {
+    console.error('Error checking auto scavenge setting:', error);
+  }
+}
+
+// Function to start auto scavenge interval
+function startAutoScavengeInterval() {
+  if (autoScavengeInterval !== null) {
+    logInfo('Auto scavenge interval already running');
+    return;
+  }
+
+  logInfo('Starting auto scavenge interval');
+  executeAutoScavengeAction(); // Execute immediately on start
+
+  // Set interval to execute every 5 minutes
+  autoScavengeInterval = window.setInterval(() => {
+    executeAutoScavengeAction();
+  }, AUTO_SCAVENGE_CHECK_INTERVAL);
+}
+
+// Function to stop auto scavenge interval
+function stopAutoScavengeInterval() {
+  if (autoScavengeInterval === null) {
+    logInfo('No auto scavenge interval running');
+    return;
+  }
+
+  logInfo('Stopping auto scavenge interval');
+  clearInterval(autoScavengeInterval);
+  autoScavengeInterval = null;
+}
+
+// Function to execute auto scavenge action
+function executeAutoScavengeAction() {
+  logInfo('Executing auto scavenge action');
+
+  if (!activeTabId) {
+    logInfo('No active tab, cannot execute auto scavenge action');
+    return;
+  }
+
+  // Use orchestrateOnTab for reliable execution across page reloads
+  orchestrateOnTab(activeTabId, async (messenger) => {
+    logInfo('Starting auto scavenge orchestration');
+
+    // Navigate to scavenge page
+    logInfo('Navigating to scavenge page');
+    await messenger.send('navigate', {
+      url: SCAVENGE_PAGE_URL
+    });
+
+    // Wait for page to load and content script to be ready
+    logInfo('Waiting for page to load after navigation');
+    await messenger.waitFor('event', 
+      (msg) => msg.type === 'event' && 
+              msg.payload.eventType === 'stateChange' && 
+              msg.payload.details.type === 'contentScriptReady',
+      30000
+    );
+
+    // Wait a bit more for the page to fully render
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Click the scavenge button
+    logInfo('Clicking scavenge button');
+    const result = await messenger.send('click', {
+      selector: SCAVENGE_BUTTON_SELECTOR
+    });
+
+    logInfo('Auto scavenge completed successfully', result);
+    return result;
+  }).catch(error => {
+    console.error('Error during auto scavenge orchestration:', error);
+  });
+}
+
+// Listen for changes to the autoScavenge setting
+settingsStorage.addListener('autoScavenge', (settings) => {
+  const autoScavengeEnabled = settings['autoScavenge'];
+  logInfo(`Auto scavenge setting changed: ${autoScavengeEnabled}`);
+
+  if (autoScavengeEnabled) {
+    startAutoScavengeInterval();
+  } else {
+    stopAutoScavengeInterval();
+  }
+});
+
 // Initialize connection when the service worker starts
 connectWebSocket();
+
+// Check auto scavenge setting on startup
+checkAutoScavengeSetting();
 
 logInfo('Service worker initialized');

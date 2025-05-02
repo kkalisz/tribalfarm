@@ -11,7 +11,6 @@ export const SidebarContainer = () => {
     // Use custom hook for command data
     const {
         currentCommand,
-        commandStatus,
         lastEvent,
         logs
     } = useCommandsData();
@@ -37,7 +36,6 @@ export const SidebarContainer = () => {
                     <LeftSidebar
                         leftSidebarVisible={leftSidebar.visible}
                         setLeftSidebarVisible={leftSidebar.setVisible}
-                        commandStatus={commandStatus}
                         currentCommand={currentCommand}
                         lastEvent={lastEvent}
                     />

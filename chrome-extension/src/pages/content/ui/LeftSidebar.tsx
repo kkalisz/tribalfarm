@@ -1,15 +1,15 @@
 import React from "react";
 import {CommandMessage} from "@src/shared/types";
 import {SidebarToggleButton} from "./SidebarToggleButton";
-import {Box, Flex, Heading, Text} from "@chakra-ui/react";
+import {Box, Flex, Switch, Text, FormControl, FormLabel} from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalButton from "@src/shared/ui/TribalButton";
 import {executeCommand} from "@pages/content";
+import {useFeatureSettings} from "@src/shared/hooks/useFeatureSettings";
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
   setLeftSidebarVisible: (visible: boolean) => Promise<void>;
-  commandStatus: string;
   currentCommand: CommandMessage | null;
   lastEvent: string;
 }
@@ -17,10 +17,12 @@ interface LeftSidebarProps {
 export const LeftSidebar = ({
                               leftSidebarVisible,
                               setLeftSidebarVisible,
-                              commandStatus,
                               currentCommand,
                               lastEvent
                             }: LeftSidebarProps) => {
+  // Use the feature settings hook to get and set the autoScavenge setting
+  const { autoScavenge } = useFeatureSettings();
+
   return (
     <Box
       position="fixed"
@@ -45,7 +47,23 @@ export const LeftSidebar = ({
           overflowY="hidden"
           pointerEvents="auto"
         >
-          <TribalCard title="Status`">
+          <TribalCard title="Features">
+            <FormControl display="flex" alignItems="center" mt={2}>
+              <FormLabel htmlFor="auto-scavenge" mb="0">
+                Auto Scavenge
+              </FormLabel>
+              <Switch 
+                id="auto-scavenge" 
+                isChecked={autoScavenge.enabled}
+                onChange={(e) => autoScavenge.setEnabled(e.target.checked)}
+              />
+            </FormControl>
+            <Text fontSize="xs" color="gray.500" mt={1}>
+              Automatically scavenges resources every 5 minutes
+            </Text>
+          </TribalCard>
+
+          <TribalCard title="Status">
               <TribalButton onClick={() => executeCommand(
                 {
                   actionId: "123", payload: {action: "navigate", parameters: {

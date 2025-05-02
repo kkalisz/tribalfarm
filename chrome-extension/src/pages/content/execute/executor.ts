@@ -1,105 +1,167 @@
 import {executeCommand} from "@pages/content";
 import { CommandMessage } from "@src/shared/types";
+import { stateManager } from "./StateManager";
 
-const ACTIONS_WITH_PAGE_REFRESH = ['navigate, click'];
+// Actions that might cause page refresh
+const ACTIONS_WITH_PAGE_REFRESH = ['navigate', 'click'];
 
-// State management outside of React
-let currentCommand: CommandMessage | null = null;
-let commandStatus: string = 'idle';
-let lastEvent: string = '';
-let logs: string[] = [];
-
-// Subscribers for state changes
-type StateSubscriber = () => void;
-const subscribers: StateSubscriber[] = [];
-
-// State setters
-export function setCurrentCommand(command: CommandMessage | null) {
-  currentCommand = command;
-  notifySubscribers();
-}
-
-export function setCommandStatus(status: string) {
-  commandStatus = status;
-  notifySubscribers();
-}
-
-export function setLastEvent(event: string) {
-  lastEvent = event;
-  notifySubscribers();
-}
-
-export function setLogs(newLogs: string[]) {
-  logs = newLogs;
-  notifySubscribers();
-}
-
-export function addLog(message: string) {
-  logs = [...logs, `${new Date().toLocaleTimeString()}: ${message}`];
-  notifySubscribers();
-}
-
-// Notify all subscribers when state changes
-function notifySubscribers() {
-  subscribers.forEach(subscriber => subscriber());
-}
-
-// Subscribe to state changes
-export function subscribeToState(callback: StateSubscriber) {
-  subscribers.push(callback);
-  return () => {
-    const index = subscribers.indexOf(callback);
-    if (index !== -1) {
-      subscribers.splice(index, 1);
-    }
-  };
-}
-
-// Get current state
-export function getState() {
-  return {
-    currentCommand,
-    commandStatus,
-    lastEvent,
-    logs
-  };
-}
+// Re-export state management functions from StateManager for backward compatibility
+export const setCurrentCommand = stateManager.setCurrentCommand.bind(stateManager);
+export const setCommandStatus = stateManager.setCommandStatus.bind(stateManager);
+export const setLogs = stateManager.setLogs.bind(stateManager);
+export const addLog = stateManager.addLog.bind(stateManager);
+export const subscribeToState = stateManager.subscribeToState.bind(stateManager);
+export const getState = stateManager.getState.bind(stateManager);
 
 // Attach executor to handle commands
 export function attachExecutor() {
   // Check for saved state on load
-  const savedState = sessionStorage.getItem('tribalFarmState');
-  if (savedState) {
-    try {
-      const parsed = JSON.parse(savedState);
-      setCurrentCommand(parsed.currentCommand);
-      setCommandStatus(parsed.commandStatus);
-      setLastEvent(parsed.lastEvent);
-      setLogs(parsed.logs || []);
-      addLog('Restored state after page reload');
-    } catch (e) {
-      console.error('Failed to parse saved state:', e);
+  if (stateManager.loadStateFromStorage()) {
+    addLog('Restored state after page reload');
+
+    // Clear the saved state to prevent reprocessing on future reloads
+    stateManager.clearStateFromStorage();
+
+    // Get the current state
+    const state = stateManager.getState();
+
+    // If we have a command that was in progress during reload, continue processing it
+    if (state.currentCommand && state.commandStatus === 'in-progress') {
+      const restoredCommand = state.currentCommand;
+      addLog(`Continuing command after reload: ${restoredCommand.payload.action}`);
+
+      // For navigate commands, we're already at the destination, so mark as complete
+      if (restoredCommand.payload.action === 'navigate') {
+        addLog('Navigation completed after reload');
+
+        // Send completion status to background
+        chrome.runtime.sendMessage({
+          type: 'status',
+          actionId: restoredCommand.actionId,
+          timestamp: new Date().toISOString(),
+          correlationId: restoredCommand.correlationId,
+          payload: {
+            status: 'done',
+            details: {
+              url: window.location.href,
+              title: document.title
+            }
+          }
+        });
+
+        // Also send a contentScriptReady event for orchestration
+        chrome.runtime.sendMessage({
+          type: 'event',
+          actionId: restoredCommand.actionId,
+          timestamp: new Date().toISOString(),
+          correlationId: restoredCommand.correlationId,
+          payload: {
+            eventType: 'stateChange',
+            details: {
+              type: 'contentScriptReady',
+              url: window.location.href
+            }
+          }
+        });
+
+        setCommandStatus('done');
+      } 
+      // For other commands that were interrupted by reload, try to continue them
+      else if (restoredCommand.payload.action === 'click') {
+        // For click commands that caused a reload, we'll consider them done
+        // since the click already happened and caused the reload
+        addLog('Click action completed (caused page reload)');
+
+        chrome.runtime.sendMessage({
+          type: 'status',
+          actionId: restoredCommand.actionId,
+          timestamp: new Date().toISOString(),
+          correlationId: restoredCommand.correlationId,
+          payload: {
+            status: 'done',
+            details: {
+              reloadedAfterClick: true
+            }
+          }
+        });
+
+        setCommandStatus('done');
+      }
+      // For other commands, we might need to re-execute them
+      else {
+        addLog(`Re-executing command after reload: ${restoredCommand.payload.action}`);
+
+        // Re-execute the command
+        executeCommand(restoredCommand)
+          .then(result => {
+            addLog(`Re-executed command completed: ${result.status}`);
+            setCommandStatus(result.status);
+
+            chrome.runtime.sendMessage({
+              type: 'status',
+              actionId: restoredCommand.actionId,
+              timestamp: new Date().toISOString(),
+              correlationId: restoredCommand.correlationId,
+              payload: {
+                status: result.status,
+                details: result.details
+              }
+            });
+          })
+          .catch(error => {
+            addLog(`Re-executed command failed: ${error.message}`);
+            setCommandStatus('error');
+
+            chrome.runtime.sendMessage({
+              type: 'error',
+              actionId: restoredCommand.actionId,
+              timestamp: new Date().toISOString(),
+              correlationId: restoredCommand.correlationId,
+              payload: {
+                message: error.message,
+                details: error.details
+              }
+            });
+          });
+      }
     }
   }
 
-  const messageListener = (message: any, sender: any, sendResponse: any) => {
+  const messageListener = (
+    message: CommandMessage, 
+    sender: chrome.runtime.MessageSender, 
+    sendResponse: (response?: Record<string, unknown>) => void
+  ) => {
     if (message.type === 'command') {
       console.log('Received command:', message);
       setCurrentCommand(message);
       setCommandStatus('in-progress');
       addLog(`Received command: ${message.payload.action}`);
 
-      if(currentCommand?.actionId == message.actionId == ACTIONS_WITH_PAGE_REFRESH.includes(message?.payload.action ?? "unknown")){
-        chrome.runtime.sendMessage({
-          type: 'status',
-          actionId: message.actionId,
-          timestamp: new Date().toISOString(),
-          correlationId: message.correlationId,
-          payload: {
-            status: "done",
-            details: "",
-          }
-        });
+      // If this is an action that might cause a page refresh, save state immediately
+      if (ACTIONS_WITH_PAGE_REFRESH.includes(message.payload.action)) {
+        console.log('Command might cause page refresh, saving state');
+
+        // Set last event before saving state
+        addLog('Preparing for possible page reload');
+
+        // Save state to session storage
+        stateManager.saveStateToStorage();
+
+        // For navigate actions, we'll send an immediate acknowledgment
+        // The actual result will be sent after the page reloads and the command completes
+        if (message.payload.action === 'navigate') {
+          chrome.runtime.sendMessage({
+            type: 'status',
+            actionId: message.actionId,
+            timestamp: new Date().toISOString(),
+            correlationId: message.correlationId,
+            payload: {
+              status: "in-progress",
+              details: "Navigation started, page reload expected",
+            }
+          });
+        }
       }
 
       // Execute the command
@@ -155,18 +217,16 @@ export function attachExecutor() {
 
   // Set up beforeunload handler for page reloads
   window.addEventListener('beforeunload', () => {
-    // Save state to sessionStorage
-    sessionStorage.setItem('tribalFarmState', JSON.stringify({
-      currentCommand,
-      commandStatus,
-      lastEvent,
-      logs
-    }));
+    // Save state to sessionStorage using StateManager
+    stateManager.saveStateToStorage();
+
+    // Get current state for the notification
+    const state = stateManager.getState();
 
     // Notify service worker about the unload
     chrome.runtime.sendMessage({
       type: 'event',
-      actionId: currentCommand?.actionId || 'none',
+      actionId: state.currentCommand?.actionId || 'none',
       timestamp: new Date().toISOString(),
       payload: {
         eventType: 'stateChange',

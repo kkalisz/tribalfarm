@@ -1,5 +1,5 @@
 import React from "react";
-import {Box, Flex, Heading, Text} from "@chakra-ui/react";
+import {Box, Flex, Text} from "@chakra-ui/react";
 import {SidebarToggleButton} from "@pages/content/ui/SidebarToggleButton";
 import TribalCard from "@src/shared/ui/TribalCard";
 
