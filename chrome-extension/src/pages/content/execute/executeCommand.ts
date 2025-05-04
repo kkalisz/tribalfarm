@@ -3,10 +3,12 @@ import { executeClickAction } from './executeClickAction';
 import { executeInputAction } from './executeInputAction';
 import { executeNavigateAction } from './executeNavigateAction';
 import { executeExtractAction } from './executeExtractAction';
+import {executeNavigateToScreenAction} from "@pages/content/execute/executeNavigateToScreenAction";
+import {NavigateToScreenActionPayload} from "@src/shared/models/actions/NavigateToScreenAction";
 
 // Execute a command on the page
 export async function executeCommand(command: CommandMessage): Promise<{ status: string, details?: any }> {
-    console.log(`Executing command: ${command.payload.action}`);
+    console.log(`Executing command: ${command.payload.action} ${JSON.stringify(command.payload)}`);
 
     // Implement different actions based on the command
     switch (command.payload.action) {
@@ -16,6 +18,8 @@ export async function executeCommand(command: CommandMessage): Promise<{ status:
             return await executeInputAction(command.payload.parameters);
         case 'navigate':
             return await executeNavigateAction(command.payload.parameters);
+        case 'navigateToScreenAction':
+            return await executeNavigateToScreenAction(command.payload as NavigateToScreenActionPayload);
         case 'extract':
             return await executeExtractAction(command.payload.parameters);
         default:

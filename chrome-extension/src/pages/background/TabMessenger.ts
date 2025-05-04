@@ -1,12 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Message, CommandMessage } from '@src/shared/types';
 import { logInfo } from "@src/shared/helpers/sendLog";
+import {CommandPayload, EventPayload} from "@src/shared/models/base";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
   reject: (reason: Error | Record<string, unknown>) => void;
   actionId: string;
-  timeout: number;
+  timeout: ReturnType<typeof setTimeout>;
 }
 
 interface WaitCondition {
@@ -17,6 +18,7 @@ interface WaitCondition {
   reject: (reason: Error) => void;
   timeout: NodeJS.Timeout;
 }
+type ExtractEventPayload<T> = T extends CommandPayload<infer E> ? E : never;
 
 /**
  * TabMessenger provides a reliable way to communicate with a specific tab,
@@ -50,6 +52,7 @@ export class TabMessenger {
    * Sets up the message listener for this tab
    */
   private setupMessageListener() {
+
     if (this.isListening) return;
 
     this.messageListener = (message: Message, sender: chrome.runtime.MessageSender) => {
@@ -123,14 +126,12 @@ export class TabMessenger {
         reject(new Error(`Command timed out after ${timeoutMs}ms: ${action}`));
       }, timeoutMs);
 
-      const timeoutId = timeout[Symbol.toPrimitive]();
-
       // Store the pending request
       this.pendingRequests.set(actionId, {
         resolve,
         reject,
         actionId,
-        timeout: timeoutId,
+        timeout: timeout,
       });
 
       // Send the command
@@ -143,6 +144,21 @@ export class TabMessenger {
         });
     });
   }
+
+  async sendCommand<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
+  {
+    const result = await this.send(command.action, command.parameters);
+    return result as unknown as ExtractEventPayload<T>;
+  }
+
+  async sendCommand2<T extends CommandPayload<E>, E extends EventPayload>(
+    command: T
+  ): Promise<E> {
+    // Your sending logic here
+    return {} as E; // Replace with actual implementation
+  }
+
+
 
   /**
    * Waits for a specific condition to be met in messages from the tab

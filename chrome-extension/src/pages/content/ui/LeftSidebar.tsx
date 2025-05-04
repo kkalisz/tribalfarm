@@ -21,7 +21,7 @@ export const LeftSidebar = ({
                               lastEvent
                             }: LeftSidebarProps) => {
   // Use the feature settings hook to get and set the autoScavenge setting
-  const { autoScavenge } = useFeatureSettings();
+  const {autoScavenge} = useFeatureSettings();
 
   return (
     <Box
@@ -52,8 +52,8 @@ export const LeftSidebar = ({
               <FormLabel htmlFor="auto-scavenge" mb="0">
                 Auto Scavenge
               </FormLabel>
-              <Switch 
-                id="auto-scavenge" 
+              <Switch
+                id="auto-scavenge"
                 isChecked={autoScavenge.enabled}
                 onChange={(e) => autoScavenge.setEnabled(e.target.checked)}
               />
@@ -64,25 +64,32 @@ export const LeftSidebar = ({
           </TribalCard>
 
           <TribalCard title="Status">
-              <TribalButton onClick={() => executeCommand(
-                {
-                  actionId: "123", payload: {action: "navigate", parameters: {
-                    url: "https://pl213.plemiona.pl/game.php?village=46605&screen=place"
-                    }}, timestamp: Date.now().toString(), type: "command"
-                }
-              )}>
-                Test Navigate
-              </TribalButton>
-              {currentCommand && (
-                <Box mt={2}>
-                  <Text><strong>Current Command:</strong></Text>
-                  <Text>Action: {currentCommand.payload.action}</Text>
-                  <Text>ID: {currentCommand.actionId}</Text>
-                </Box>
-              )}
-              {lastEvent && (
-                <Text mt={2}><strong>Last Event:</strong> {lastEvent}</Text>
-              )}
+            <TribalButton onClick={() => {
+              chrome.runtime.sendMessage({
+                type: "test",
+                content: "test1",
+              });
+            }}>
+              Test Navigate
+            </TribalButton>
+            <TribalButton onClick={() => {
+              chrome.runtime.sendMessage({
+                type: "test",
+                content: "test2",
+              });
+            }}>
+              Test Action
+            </TribalButton>
+            {currentCommand && (
+              <Box mt={2}>
+                <Text><strong>Current Command:</strong></Text>
+                <Text>Action: {currentCommand.payload.action}</Text>
+                <Text>ID: {currentCommand.actionId}</Text>
+              </Box>
+            )}
+            {lastEvent && (
+              <Text mt={2}><strong>Last Event:</strong> {lastEvent}</Text>
+            )}
           </TribalCard>
         </Box>
       )}

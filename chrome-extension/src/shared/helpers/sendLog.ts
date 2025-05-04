@@ -6,11 +6,13 @@ export const logError = (message: any, ...data: any[]) => sendLog(message, "erro
 
 export const sendLog = (message: any, level = "info", ...data: any[]) => {
   const params = data.map(d => d.toString()).join(", ");
+  const fullMessage = message + (params ? ` (${params})` : "");
+  console.log(fullMessage)
   fetch("https://logs-01.loggly.com/inputs/bbc13543-c5e4-4cc6-b308-30b631d96f51/tag/http/", {
     method: "POST",
     body: JSON.stringify({
       level,
-      message: message + (params ? ` (${params})` : ""),
+      message: fullMessage,
       timestamp: new Date().toISOString()
     }),
     headers: {

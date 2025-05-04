@@ -2,6 +2,53 @@ import {executeCommand} from "@pages/content";
 import { CommandMessage } from "@src/shared/types";
 import { stateManager } from "./StateManager";
 
+// Helper function to execute a command and handle its result
+function executeCommandAndHandleResult(
+  command: CommandMessage, 
+  successLogPrefix: string = "Command executed"
+) {
+  return executeCommand(command)
+    .then(result => {
+      console.log(`${successLogPrefix}: ${result.status}`);
+      setCommandStatus(result.status);
+      addLog(`${successLogPrefix}: ${result.status}`);
+
+      // Send status update to service worker
+      chrome.runtime.sendMessage({
+        type: 'status',
+        actionId: command.actionId,
+        timestamp: new Date().toISOString(),
+        correlationId: command.correlationId,
+        payload: {
+          status: result.status,
+          details: result.details
+        }
+      });
+
+      return result;
+    })
+    .catch(error => {
+      console.log(`fail ${JSON.stringify(error)}`)
+      console.error(`Command failed: ${error.message}`);
+      setCommandStatus('error');
+      addLog(`Command failed: ${error.message}`);
+
+      // Send error to service worker
+      chrome.runtime.sendMessage({
+        type: 'error',
+        actionId: command.actionId,
+        timestamp: new Date().toISOString(),
+        correlationId: command.correlationId,
+        payload: {
+          message: error.message,
+          details: error.details
+        }
+      });
+
+      throw error;
+    });
+}
+
 // Actions that might cause page refresh
 const ACTIONS_WITH_PAGE_REFRESH = ['navigate', 'click'];
 
@@ -31,7 +78,7 @@ export function attachExecutor() {
       addLog(`Continuing command after reload: ${restoredCommand.payload.action}`);
 
       // For navigate commands, we're already at the destination, so mark as complete
-      if (restoredCommand.payload.action === 'navigate') {
+      if (restoredCommand.payload.action === 'navigate' || restoredCommand.payload.action == 'navigateToScreenAction') {
         addLog('Navigation completed after reload');
 
         // Send completion status to background
@@ -49,22 +96,22 @@ export function attachExecutor() {
           }
         });
 
-        // Also send a contentScriptReady event for orchestration
-        chrome.runtime.sendMessage({
-          type: 'event',
-          actionId: restoredCommand.actionId,
-          timestamp: new Date().toISOString(),
-          correlationId: restoredCommand.correlationId,
-          payload: {
-            eventType: 'stateChange',
-            details: {
-              type: 'contentScriptReady',
-              url: window.location.href
-            }
-          }
-        });
-
-        setCommandStatus('done');
+        // // Also send a contentScriptReady event for orchestration
+        // chrome.runtime.sendMessage({
+        //   type: 'event',
+        //   actionId: restoredCommand.actionId,
+        //   timestamp: new Date().toISOString(),
+        //   correlationId: restoredCommand.correlationId,
+        //   payload: {
+        //     eventType: 'stateChange',
+        //     details: {
+        //       type: 'contentScriptReady',
+        //       url: window.location.href
+        //     }
+        //   }
+        // });
+        //
+        // setCommandStatus('done');
       } 
       // For other commands that were interrupted by reload, try to continue them
       else if (restoredCommand.payload.action === 'click') {
@@ -91,37 +138,10 @@ export function attachExecutor() {
       else {
         addLog(`Re-executing command after reload: ${restoredCommand.payload.action}`);
 
-        // Re-execute the command
-        executeCommand(restoredCommand)
-          .then(result => {
-            addLog(`Re-executed command completed: ${result.status}`);
-            setCommandStatus(result.status);
-
-            chrome.runtime.sendMessage({
-              type: 'status',
-              actionId: restoredCommand.actionId,
-              timestamp: new Date().toISOString(),
-              correlationId: restoredCommand.correlationId,
-              payload: {
-                status: result.status,
-                details: result.details
-              }
-            });
-          })
-          .catch(error => {
-            addLog(`Re-executed command failed: ${error.message}`);
-            setCommandStatus('error');
-
-            chrome.runtime.sendMessage({
-              type: 'error',
-              actionId: restoredCommand.actionId,
-              timestamp: new Date().toISOString(),
-              correlationId: restoredCommand.correlationId,
-              payload: {
-                message: error.message,
-                details: error.details
-              }
-            });
+        // Re-execute the command using the helper function
+        executeCommandAndHandleResult(restoredCommand, "Re-executed command completed")
+          .catch(() => {
+            // Error already handled in the helper function
           });
       }
     }
@@ -132,6 +152,7 @@ export function attachExecutor() {
     sender: chrome.runtime.MessageSender, 
     sendResponse: (response?: Record<string, unknown>) => void
   ) => {
+    console.log('Received message:', message);
     if (message.type === 'command') {
       console.log('Received command:', message);
       setCurrentCommand(message);
@@ -164,41 +185,10 @@ export function attachExecutor() {
         }
       }
 
-      // Execute the command
-      executeCommand(message)
-        .then(result => {
-          console.log(`Command executed: ${result.status}`);
-          setCommandStatus(result.status);
-          addLog(`Command executed: ${result.status}`);
-
-          // Send status update to service worker
-          chrome.runtime.sendMessage({
-            type: 'status',
-            actionId: message.actionId,
-            timestamp: new Date().toISOString(),
-            correlationId: message.correlationId,
-            payload: {
-              status: result.status,
-              details: result.details
-            }
-          });
-        })
-        .catch(error => {
-          console.error(`Command failed: ${error.message}`);
-          setCommandStatus('error');
-          addLog(`Command failed: ${error.message}`);
-
-          // Send error to service worker
-          chrome.runtime.sendMessage({
-            type: 'error',
-            actionId: message.actionId,
-            timestamp: new Date().toISOString(),
-            correlationId: message.correlationId,
-            payload: {
-              message: error.message,
-              details: error.details
-            }
-          });
+      // Execute the command using the helper function
+      executeCommandAndHandleResult(message)
+        .catch(() => {
+          // Error already handled in the helper function
         });
 
       sendResponse({ status: 'processing' });

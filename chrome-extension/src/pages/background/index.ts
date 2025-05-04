@@ -1,7 +1,9 @@
-import { Message, CommandMessage } from '@src/shared/types';
-import { logInfo } from "@src/shared/helpers/sendLog";
-import { settingsStorage } from '@src/shared/services/settingsStorage';
-import { TabMessenger, orchestrateOnTab } from './TabMessenger';
+import {CommandMessage, Message} from '@src/shared/types';
+import {logInfo} from "@src/shared/helpers/sendLog";
+import {settingsStorage} from '@src/shared/services/settingsStorage';
+import {orchestrateOnTab, TabMessenger} from './TabMessenger';
+import {NavigateToScreenActionPayload} from "@src/shared/models/actions/NavigateToScreenAction";
+import {BuildingType} from "@src/shared/models/BuildingType";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -213,6 +215,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle different message types
+  if(message.type === 'test') {
+    logInfo('Received command from content script:', message);
+    if(message.content === 'test1') {
+      orchestrateOnTab(sender.tab!.id!, async (messenger) => {
+
+        const aaa = await messenger.sendCommand<NavigateToScreenActionPayload>({
+          action: "navigateToScreenAction",
+          parameters: {
+            screen: BuildingType.BARRACKS,
+            villageId: "63450"
+          },
+        });
+
+        console.log(`action result received aaa ${JSON.stringify(aaa)}`)
+
+        const bbb = await messenger.sendCommand<NavigateToScreenActionPayload>({
+          action: "navigateToScreenAction",
+          parameters: {
+            screen: BuildingType.IRON_MINE,
+            villageId: "63450"
+          },
+        });
+
+        console.log(`action result received bbb ${JSON.stringify(bbb)}`)
+      });
+      return
+    }
+    if(message.content === 'test1') {
+
+      return
+    }
+    return true;
+  }
   if (message.type === 'contentScriptReady') {
     logInfo('Content script ready in tab', activeTabId);
 
