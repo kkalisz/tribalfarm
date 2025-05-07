@@ -4,6 +4,7 @@ import {settingsStorage} from '@src/shared/services/settingsStorage';
 import {orchestrateOnTab, TabMessenger} from './TabMessenger';
 import {NavigateToScreenActionPayload} from "@src/shared/models/actions/NavigateToScreenAction";
 import {BuildingType} from "@src/shared/models/BuildingType";
+import {openDB} from "idb";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -22,6 +23,12 @@ let autoScavengeInterval: number | null = null;
 const AUTO_SCAVENGE_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 const SCAVENGE_PAGE_URL = "https://pl213.plemiona.pl/game.php?village=46605&screen=place&mode=scavenge";
 const SCAVENGE_BUTTON_SELECTOR = ".scavenge-option:not(.locked) button.btn-confirm-yes";
+
+const db = await openDB('tribal', 1, {
+  upgrade(db) {
+    db.createObjectStore('keyval');
+  },
+});
 
 // Connect to WebSocket server
 function connectWebSocket() {

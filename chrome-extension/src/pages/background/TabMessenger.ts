@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Message, CommandMessage } from '@src/shared/types';
 import { logInfo } from "@src/shared/helpers/sendLog";
-import {CommandPayload, EventPayload} from "@src/shared/models/base";
+import {CommandPayload } from "@src/shared/models/base";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
@@ -151,14 +151,11 @@ export class TabMessenger {
     return result as unknown as ExtractEventPayload<T>;
   }
 
-  async sendCommand2<T extends CommandPayload<E>, E extends EventPayload>(
-    command: T
-  ): Promise<E> {
-    // Your sending logic here
-    return {} as E; // Replace with actual implementation
+  async sendCommand2<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
+  {
+    const result = await this.send(command.action, command.parameters);
+    return result as unknown as ExtractEventPayload<T>;
   }
-
-
 
   /**
    * Waits for a specific condition to be met in messages from the tab

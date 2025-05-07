@@ -20,6 +20,8 @@ export async function executeCommand(command: CommandMessage): Promise<{ status:
             return await executeNavigateAction(command.payload.parameters);
         case 'navigateToScreenAction':
             return await executeNavigateToScreenAction(command.payload as NavigateToScreenActionPayload);
+        case 'userVillages':
+            return await executeNavigateToScreenAction(command.payload as NavigateToScreenActionPayload);
         case 'extract':
             return await executeExtractAction(command.payload.parameters);
         default:

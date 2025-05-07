@@ -1,6 +1,6 @@
-import {executeCommand} from "@pages/content";
 import { CommandMessage } from "@src/shared/types";
 import { stateManager } from "./StateManager";
+import {executeCommand} from "@pages/content/execute/executeCommand";
 
 // Helper function to execute a command and handle its result
 function executeCommandAndHandleResult(
