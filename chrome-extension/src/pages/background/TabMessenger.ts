@@ -1,7 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Message, CommandMessage } from '@src/shared/types';
 import { logInfo } from "@src/shared/helpers/sendLog";
-import {CommandPayload } from "@src/shared/models/base";
+import {CommandPayload, EventPayload} from "@src/shared/models/base";
+import {
+  NavigateToScreenActionParameters,
+  NavigateToScreenActionPayload
+} from "@src/shared/models/actions/NavigateToScreenAction";
+import sendCommand = chrome._debugger.sendCommand;
+import {BuildingType} from "@src/shared/models/BuildingType";
+import {BaseAction, PageStatusAction, PageStatusResponse} from "@src/shared/actions/PageStatusAction";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
@@ -19,6 +26,8 @@ interface WaitCondition {
   timeout: NodeJS.Timeout;
 }
 type ExtractEventPayload<T> = T extends CommandPayload<infer E> ? E : never;
+type ExtractBaseActionPayload<T> = T extends BaseAction<infer E> ? E : never;
+
 
 /**
  * TabMessenger provides a reliable way to communicate with a specific tab,
@@ -157,6 +166,16 @@ export class TabMessenger {
     return result as unknown as ExtractEventPayload<T>;
   }
 
+  async sendAction<T extends BaseAction>(actionName: string, command: T): Promise<ExtractBaseActionPayload<T>>
+  {
+    const result = await this.send(actionName, command as unknown as Record<string, unknown>);
+    return result as unknown as ExtractBaseActionPayload<T>;
+  }
+
+  async getCurrentUrlAction(action: PageStatusAction): Promise<PageStatusResponse>{
+    return this.sendAction("pageStatus", action);
+  }
+
   /**
    * Waits for a specific condition to be met in messages from the tab
    * @param type The type of message to wait for
@@ -216,6 +235,16 @@ export class TabMessenger {
     }
     this.waitConditions = [];
   }
+
+  async executeNavigateToScreen(parameters: NavigateToScreenActionParameters): Promise<ExtractEventPayload<NavigateToScreenActionPayload>>
+  {
+    const result = await this.sendCommand<NavigateToScreenActionPayload>({
+      action: "navigateToScreenAction",
+      parameters
+    });
+    return result;
+  }
+
 }
 
 /**

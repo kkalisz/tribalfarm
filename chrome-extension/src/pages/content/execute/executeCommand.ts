@@ -14,6 +14,8 @@ export async function executeCommand(command: CommandMessage): Promise<{ status:
     switch (command.payload.action) {
         case 'click':
             return await executeClickAction(command.payload.parameters);
+        case 'click':
+            return await executeClickAction(command.payload.parameters);
         case 'input':
             return await executeInputAction(command.payload.parameters);
         case 'navigate':
