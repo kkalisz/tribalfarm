@@ -1,11 +1,12 @@
 import React from "react";
-import {CommandMessage} from "@src/shared/types";
+import {CommandMessage} from "@src/shared/actions/core/types";
 import {SidebarToggleButton} from "./SidebarToggleButton";
 import {Box, Flex, Switch, Text, FormControl, FormLabel} from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalButton from "@src/shared/ui/TribalButton";
-import {executeCommand} from "@pages/content";
 import {useFeatureSettings} from "@src/shared/hooks/useFeatureSettings";
+import TribalSwitch from "@src/shared/ui/TribalSwitch";
+import TribalText from "@src/shared/ui/TribalText";
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
@@ -52,15 +53,15 @@ export const LeftSidebar = ({
               <FormLabel htmlFor="auto-scavenge" mb="0">
                 Auto Scavenge
               </FormLabel>
-              <Switch
+              <TribalSwitch
                 id="auto-scavenge"
                 isChecked={autoScavenge.enabled}
                 onChange={(e) => autoScavenge.setEnabled(e.target.checked)}
               />
             </FormControl>
-            <Text fontSize="xs" color="gray.500" mt={1}>
+            <TribalText fontSize="xs" mt={1}>
               Automatically scavenges resources every 5 minutes
-            </Text>
+            </TribalText>
           </TribalCard>
 
           <TribalCard title="Status">

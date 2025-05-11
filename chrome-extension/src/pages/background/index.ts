@@ -1,10 +1,10 @@
-import {CommandMessage, Message} from '@src/shared/types';
+import {CommandMessage, Message} from '@src/shared/actions/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
 import {settingsStorage} from '@src/shared/services/settingsStorage';
-import {orchestrateOnTab, TabMessenger} from './TabMessenger';
+import {orchestrateOnTab, TabMessenger} from '../../shared/actions/core/TabMessenger';
 import {NavigateToScreenActionPayload} from "@src/shared/models/actions/NavigateToScreenAction";
 import {BuildingType} from "@src/shared/models/BuildingType";
-import {openDB} from "idb";
+import {IDBPDatabase, openDB} from "idb";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -24,14 +24,28 @@ const AUTO_SCAVENGE_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 const SCAVENGE_PAGE_URL = "https://pl213.plemiona.pl/game.php?village=46605&screen=place&mode=scavenge";
 const SCAVENGE_BUTTON_SELECTOR = ".scavenge-option:not(.locked) button.btn-confirm-yes";
 
-const db = await openDB('tribal', 1, {
-  upgrade(db) {
-    db.createObjectStore('keyval');
-  },
-});
+// Declare a variable to hold the singleton instance
+let dbInstance: IDBPDatabase | null = null;
+
+// Function to get or initialize the singleton database
+export async function getDB(): Promise<IDBPDatabase> {
+  if (!dbInstance) {
+    // Only initialize the database if it hasn't been initialized yet
+    dbInstance = await openDB('tribal', 1, {
+      upgrade(db) {
+        // if (!db.objectStoreNames.contains('keyval')) {
+        //   db.createObjectStore('keyval');
+        // }
+      },
+    });
+  }
+  return dbInstance;
+}
 
 // Connect to WebSocket server
 function connectWebSocket() {
+  //TODO
+  return;
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
     logInfo('WebSocket already connected or connecting');
     return;
@@ -223,29 +237,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Handle different message types
   if(message.type === 'test') {
-    logInfo('Received command from content script:', message);
+    logInfo('Received command from content script:', JSON.stringify(message));
     if(message.content === 'test1') {
+      logInfo('start test 1:', message);
       orchestrateOnTab(sender.tab!.id!, async (messenger) => {
 
-        const aaa = await messenger.sendCommand<NavigateToScreenActionPayload>({
-          action: "navigateToScreenAction",
-          parameters: {
-            screen: BuildingType.BARRACKS,
-            villageId: "63450"
-          },
-        });
+        logInfo('before send');
+        const pageStatusResponse = await messenger.executePageStatusAction({})
+        // const aaa = await messenger.sendCommand<NavigateToScreenActionPayload>({
+        //   action: "navigateToScreenAction",
+        //   parameters: {
+        //     screen: BuildingType.BARRACKS,
+        //     villageId: "63450"
+        //   },
+        // });
 
-        console.log(`action result received aaa ${JSON.stringify(aaa)}`)
+        console.log(`action result received for pageStatus 1 ${JSON.stringify(pageStatusResponse)}`)
 
-        const bbb = await messenger.sendCommand<NavigateToScreenActionPayload>({
-          action: "navigateToScreenAction",
-          parameters: {
-            screen: BuildingType.IRON_MINE,
-            villageId: "63450"
-          },
-        });
+        const pageStatusResponse2 = await messenger.executePageStatusAction({})
 
-        console.log(`action result received bbb ${JSON.stringify(bbb)}`)
+        // const bbb = await messenger.sendCommand<NavigateToScreenActionPayload>({
+        //   action: "navigateToScreenAction",
+        //   parameters: {
+        //     screen: BuildingType.IRON_MINE,
+        //     villageId: "63450"
+        //   },
+        // });
+
+        console.log(`action result received pageStatus 2 ${JSON.stringify(pageStatusResponse2)}`)
       });
       return
     }
@@ -312,9 +331,9 @@ function startAutoScavengeInterval() {
   executeAutoScavengeAction(); // Execute immediately on start
 
   // Set interval to execute every 5 minutes
-  autoScavengeInterval = window.setInterval(() => {
-    executeAutoScavengeAction();
-  }, AUTO_SCAVENGE_CHECK_INTERVAL);
+  // autoScavengeInterval = window.setInterval(() => {
+  //   executeAutoScavengeAction();
+  // }, AUTO_SCAVENGE_CHECK_INTERVAL);
 }
 
 // Function to stop auto scavenge interval

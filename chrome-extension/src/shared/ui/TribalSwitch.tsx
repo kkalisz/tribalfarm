@@ -25,6 +25,20 @@ const TribalSwitch: FC<TribalSwitchProps> = ({
     <Box display="flex" alignItems="center">
       <Switch 
         size={size}
+        sx={{
+          '& .chakra-switch__track': {
+            bg: 'tribal.secondaryBg',
+          },
+          '& .chakra-switch__track[data-checked]': {
+            bg: 'tribal.accent',
+          },
+          '& .chakra-switch__thumb': {
+            bg: 'tribal.primaryBg',
+          },
+          '&:hover .chakra-switch__track[data-checked]': {
+            bg: 'tribal.hover',
+          }
+        }}
         {...rest}
       />
       {children && (

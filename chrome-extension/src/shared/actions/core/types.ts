@@ -1,5 +1,5 @@
 export interface BaseMessage {
-  type: 'command' | 'status' | 'event' | 'error' | 'ack';
+  type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack';
   actionId: string;
   timestamp: string;
   correlationId?: string;
@@ -19,6 +19,18 @@ export interface StatusMessage extends BaseMessage {
     status: 'in-progress' | 'done' | 'error' | 'interrupted';
     details?: Record<string, any>;
   };
+}
+
+export interface GenericStatusPayload<RESPONSE extends Record<string,any>>  {
+  status: 'in-progress' | 'done' | 'error';
+  details?: RESPONSE;
+}
+
+export function doneResponse<RESPONSE extends Record<string,any>>(response: RESPONSE): GenericStatusPayload<RESPONSE> {
+  return {
+    status: "done",
+    details: response
+  }
 }
 
 export interface EventMessage extends BaseMessage {

@@ -1,13 +1,16 @@
-import { CommandMessage } from "@src/shared/types";
+import { CommandMessage } from "@src/shared/actions/core/types";
 import { stateManager } from "./StateManager";
-import {executeCommand} from "@pages/content/execute/executeCommand";
+import {executeCommand} from "@src/shared/actions/executeCommand";
+import {ActionExecutor} from "@src/shared/actions/core/AcitionExecutor";
+import {PageStatusActionHandler} from "@src/shared/actions/pageStatus/PageStatusActionHandler";
 
 // Helper function to execute a command and handle its result
 function executeCommandAndHandleResult(
+  actionExecutor: ActionExecutor,
   command: CommandMessage, 
   successLogPrefix: string = "Command executed"
 ) {
-  return executeCommand(command)
+  return executeCommand(actionExecutor, command)
     .then(result => {
       console.log(`${successLogPrefix}: ${result.status}`);
       setCommandStatus(result.status);
@@ -60,8 +63,11 @@ export const addLog = stateManager.addLog.bind(stateManager);
 export const subscribeToState = stateManager.subscribeToState.bind(stateManager);
 export const getState = stateManager.getState.bind(stateManager);
 
+export const actionExecutor = new ActionExecutor();
+
 // Attach executor to handle commands
 export function attachExecutor() {
+  actionExecutor.register("pageStatusAction", new PageStatusActionHandler());
   // Check for saved state on load
   if (stateManager.loadStateFromStorage()) {
     addLog('Restored state after page reload');
@@ -139,7 +145,7 @@ export function attachExecutor() {
         addLog(`Re-executing command after reload: ${restoredCommand.payload.action}`);
 
         // Re-execute the command using the helper function
-        executeCommandAndHandleResult(restoredCommand, "Re-executed command completed")
+        executeCommandAndHandleResult(actionExecutor, restoredCommand, "Re-executed command completed")
           .catch(() => {
             // Error already handled in the helper function
           });
@@ -186,7 +192,7 @@ export function attachExecutor() {
       }
 
       // Execute the command using the helper function
-      executeCommandAndHandleResult(message)
+      executeCommandAndHandleResult(actionExecutor, message)
         .catch(() => {
           // Error already handled in the helper function
         });

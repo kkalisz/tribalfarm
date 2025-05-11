@@ -1,14 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
-import { Message, CommandMessage } from '@src/shared/types';
-import { logInfo } from "@src/shared/helpers/sendLog";
-import {CommandPayload, EventPayload} from "@src/shared/models/base";
-import {
-  NavigateToScreenActionParameters,
-  NavigateToScreenActionPayload
-} from "@src/shared/models/actions/NavigateToScreenAction";
-import sendCommand = chrome._debugger.sendCommand;
-import {BuildingType} from "@src/shared/models/BuildingType";
-import {BaseAction, PageStatusAction, PageStatusResponse} from "@src/shared/actions/PageStatusAction";
+import {v4 as uuidv4} from 'uuid';
+import {CommandMessage, GenericStatusPayload, Message} from '@src/shared/actions/core/types';
+import {logInfo} from "@src/shared/helpers/sendLog";
+import {BaseAction, BaseResponse, PageStatusAction, PageStatusResponse} from "@src/shared/actions/pageStatus/PageStatusAction";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
@@ -25,8 +18,10 @@ interface WaitCondition {
   reject: (reason: Error) => void;
   timeout: NodeJS.Timeout;
 }
-type ExtractEventPayload<T> = T extends CommandPayload<infer E> ? E : never;
+//type ExtractEventPayload<T> = T extends CommandPayload<infer E> ? E : never;
+//type ExtractBaseActionPayload<T> = T extends BaseAction<infer E> ? E : never;
 type ExtractBaseActionPayload<T> = T extends BaseAction<infer E> ? E : never;
+
 
 
 /**
@@ -68,7 +63,7 @@ export class TabMessenger {
       // Only process messages from our tab
       if (sender.tab?.id !== this.tabId) return;
 
-      logInfo(`TabMessenger received message from tab ${this.tabId}:`, message);
+      logInfo(`TabMessenger received message from tab ${this.tabId}:`, JSON.stringify(message));
 
       // Handle responses to pending requests
       if ((message.type === 'status' || message.type === 'error') && message.actionId) {
@@ -89,6 +84,9 @@ export class TabMessenger {
       // Check wait conditions
       for (let i = this.waitConditions.length - 1; i >= 0; i--) {
         const condition = this.waitConditions[i];
+
+        //const a: EventMessage = message;
+        //a.payload.
 
         // Skip if message type doesn't match what we're waiting for
         if (message.type !== condition.type) continue;
@@ -154,27 +152,57 @@ export class TabMessenger {
     });
   }
 
-  async sendCommand<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
-  {
-    const result = await this.send(command.action, command.parameters);
-    return result as unknown as ExtractEventPayload<T>;
+  // async sendCommand<BA extends BaseAction>(
+  //   actionName: string,
+  //   action: BA
+  // ): Promise<ExtractBaseActionPayload<BA>> {
+  //   const result = await this.send(actionName, action);
+  //   return result as unknown as ExtractBaseActionPayload<BA>;
+  // }
+
+  async sendCommand<RESPONSE extends BaseResponse, BA extends BaseAction<RESPONSE>>(
+    actionName: string,
+    action: BA
+  ): Promise<GenericStatusPayload<RESPONSE>> {
+    const result = await this.send(actionName, action as Record<string, any>);
+    console.log(`send command result: ${JSON.stringify(result)}`)
+    return result as unknown as GenericStatusPayload<RESPONSE>;
   }
 
-  async sendCommand2<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
+  async executePageStatusAction(parameters: PageStatusAction): Promise<GenericStatusPayload<PageStatusResponse>>
   {
-    const result = await this.send(command.action, command.parameters);
-    return result as unknown as ExtractEventPayload<T>;
+    return await this.sendCommand<PageStatusResponse, PageStatusAction>("pageStatusAction", parameters);
   }
 
-  async sendAction<T extends BaseAction>(actionName: string, command: T): Promise<ExtractBaseActionPayload<T>>
-  {
-    const result = await this.send(actionName, command as unknown as Record<string, unknown>);
-    return result as unknown as ExtractBaseActionPayload<T>;
-  }
-
-  async getCurrentUrlAction(action: PageStatusAction): Promise<PageStatusResponse>{
-    return this.sendAction("pageStatus", action);
-  }
+  // async sendCommand<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
+  // {
+  //   const result = await this.send(command.action, command.parameters);
+  //   return result as unknown as ExtractEventPayload<T>;
+  // }
+  //
+  //
+  //
+  // async sendCommand2<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
+  // {
+  //   const result = await this.send(command.action, command.parameters);
+  //   return result as unknown as ExtractEventPayload<T>;
+  // }
+  //
+  // async sendAction<T extends BaseAction>(actionName: string, command: T): Promise<ExtractBaseActionPayload<T>>
+  // {
+  //   const result = await this.send(actionName, command as unknown as Record<string, unknown>);
+  //   return result as unknown as ExtractBaseActionPayload<T>;
+  // }
+  //
+  // async sendAction2<T extends BaseAction>(actionName: string, action: T): Promise<ExtractBaseActionPayload<T>>
+  // {
+  //   const result = await this.send(actionName, action as unknown as Record<string, unknown>);
+  //   return result as unknown as ExtractBaseActionPayload<T>;
+  // }
+  //
+  // async getCurrentUrlAction(action: PageStatusAction): Promise<PageStatusResponse>{
+  //   return this.sendAction("pageStatus", action);
+  // }
 
   /**
    * Waits for a specific condition to be met in messages from the tab
@@ -236,14 +264,14 @@ export class TabMessenger {
     this.waitConditions = [];
   }
 
-  async executeNavigateToScreen(parameters: NavigateToScreenActionParameters): Promise<ExtractEventPayload<NavigateToScreenActionPayload>>
-  {
-    const result = await this.sendCommand<NavigateToScreenActionPayload>({
-      action: "navigateToScreenAction",
-      parameters
-    });
-    return result;
-  }
+  // async executeNavigateToScreen(parameters: NavigateToScreenActionParameters): Promise<ExtractEventPayload<NavigateToScreenActionPayload>>
+  // {
+  //   const result = await this.sendCommand<NavigateToScreenActionPayload>({
+  //     action: "navigateToScreenAction",
+  //     parameters
+  //   });
+  //   return result;
+  // }
 
 }
 

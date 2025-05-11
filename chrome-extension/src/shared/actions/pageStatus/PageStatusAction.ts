@@ -1,13 +1,18 @@
 
 export interface BaseResponse{
-  url: string
+
 }
 
 export interface BaseAction<RESPONSE extends BaseResponse = BaseResponse> {
-  url: string
+
+}
+
+export interface BaseVillageAction<RESPONSE extends BaseResponse = BaseResponse> extends BaseAction<RESPONSE> {
+  villageId: string;
 }
 
 export interface PageStatusResponse extends BaseResponse{
+  url: string
   pageContent?: string;
 }
 

@@ -95,19 +95,14 @@ export default function Popup() {
               <TribalCard >
                 <SettingsSwitch onChange={plugin.setVisible} label={'Enable plugin'} name={'settings-enabled'} enabled={plugin.visible}/>
                 <SettingsSwitch onChange={gui.setVisible} label={'Show gui'} name={'settings-gui'} enabled={gui.visible}/>
-                <Button
+                <TribalButton
                   onClick={() => setIsDialogOpen(true)}
                   mt={4}
-                  borderRadius="md"
-                  bg="blue.500"
                   px={4}
                   py={2}
-                  color="white"
-                  _hover={{bg: "blue.600"}}
-                  _focus={{outline: "none", ring: 2, ringColor: "blue.500"}}
                 >
                   More Info
-                </Button>
+                </TribalButton>
               </TribalCard>
               <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
                 <Text fontSize="sm">
