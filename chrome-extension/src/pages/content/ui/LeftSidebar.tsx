@@ -1,7 +1,7 @@
 import React from "react";
-import {CommandMessage} from "@src/shared/actions/core/types";
+import {CommandMessage} from "@src/shared/actions/content/core/types";
 import {SidebarToggleButton} from "./SidebarToggleButton";
-import {Box, Flex, Switch, Text, FormControl, FormLabel} from "@chakra-ui/react";
+import {Box, Flex, Text, FormControl, FormLabel} from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalButton from "@src/shared/ui/TribalButton";
 import {useFeatureSettings} from "@src/shared/hooks/useFeatureSettings";
@@ -12,14 +12,12 @@ interface LeftSidebarProps {
   leftSidebarVisible: boolean;
   setLeftSidebarVisible: (visible: boolean) => Promise<void>;
   currentCommand: CommandMessage | null;
-  lastEvent: string;
 }
 
 export const LeftSidebar = ({
                               leftSidebarVisible,
                               setLeftSidebarVisible,
                               currentCommand,
-                              lastEvent
                             }: LeftSidebarProps) => {
   // Use the feature settings hook to get and set the autoScavenge setting
   const {autoScavenge} = useFeatureSettings();
@@ -87,9 +85,6 @@ export const LeftSidebar = ({
                 <Text>Action: {currentCommand.payload.action}</Text>
                 <Text>ID: {currentCommand.actionId}</Text>
               </Box>
-            )}
-            {lastEvent && (
-              <Text mt={2}><strong>Last Event:</strong> {lastEvent}</Text>
             )}
           </TribalCard>
         </Box>

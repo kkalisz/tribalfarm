@@ -6,8 +6,8 @@ import { useSetting } from '@src/shared/services/settingsStorage';
  */
 export function useGuiSettings() {
   // Use settings for sidebar visibility
-  const [leftSidebarVisible, setLeftSidebarVisible] = useSetting<boolean>('leftSidebarVisible', true);
-  const [rightSidebarVisible, setRightSidebarVisible] = useSetting<boolean>('rightSidebarVisible', true);
+  const [leftSidebarVisible, setLeftSidebarVisible] = useSetting<boolean>('leftSidebarVisible', false);
+  const [rightSidebarVisible, setRightSidebarVisible] = useSetting<boolean>('rightSidebarVisible', false);
   // Use setting for global GUI visibility
   const [showGUI, setShowGUI] = useSetting<boolean>('showGUI', true);
 

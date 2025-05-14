@@ -1,7 +1,8 @@
 import {v4 as uuidv4} from 'uuid';
-import {CommandMessage, GenericStatusPayload, Message} from '@src/shared/actions/core/types';
+import {BasePageAction, BasePageResponse, CommandMessage, GenericStatusPayload, Message} from '@src/shared/actions/content/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
-import {BaseAction, BaseResponse, PageStatusAction, PageStatusResponse} from "@src/shared/actions/pageStatus/PageStatusAction";
+import {PAGE_STATUS_ACTION, PageStatusAction, PageStatusResponse} from "@src/shared/actions/content/pageStatus/PageStatusAction";
+import {NAVIGATE_TO_PAGE_ACTION, NavigateToPageAction, NavigateToPageActionResponse} from "@src/shared/actions/content/navigateToPage/NavigateToPageAction";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
@@ -18,9 +19,6 @@ interface WaitCondition {
   reject: (reason: Error) => void;
   timeout: NodeJS.Timeout;
 }
-//type ExtractEventPayload<T> = T extends CommandPayload<infer E> ? E : never;
-//type ExtractBaseActionPayload<T> = T extends BaseAction<infer E> ? E : never;
-type ExtractBaseActionPayload<T> = T extends BaseAction<infer E> ? E : never;
 
 
 
@@ -152,15 +150,7 @@ export class TabMessenger {
     });
   }
 
-  // async sendCommand<BA extends BaseAction>(
-  //   actionName: string,
-  //   action: BA
-  // ): Promise<ExtractBaseActionPayload<BA>> {
-  //   const result = await this.send(actionName, action);
-  //   return result as unknown as ExtractBaseActionPayload<BA>;
-  // }
-
-  async sendCommand<RESPONSE extends BaseResponse, BA extends BaseAction<RESPONSE>>(
+  async sendCommand<RESPONSE extends BasePageResponse, BA extends BasePageAction<RESPONSE>>(
     actionName: string,
     action: BA
   ): Promise<GenericStatusPayload<RESPONSE>> {
@@ -169,9 +159,12 @@ export class TabMessenger {
     return result as unknown as GenericStatusPayload<RESPONSE>;
   }
 
-  async executePageStatusAction(parameters: PageStatusAction): Promise<GenericStatusPayload<PageStatusResponse>>
-  {
-    return await this.sendCommand<PageStatusResponse, PageStatusAction>("pageStatusAction", parameters);
+  async executePageStatusAction(parameters: PageStatusAction): Promise<GenericStatusPayload<PageStatusResponse>> {
+    return await this.sendCommand<PageStatusResponse, PageStatusAction>(PAGE_STATUS_ACTION, parameters);
+  }
+
+  async executeNavigateToPageAction(parameters: NavigateToPageAction): Promise<GenericStatusPayload<NavigateToPageActionResponse>> {
+    return await this.sendCommand<NavigateToPageActionResponse, NavigateToPageAction>(NAVIGATE_TO_PAGE_ACTION, parameters);
   }
 
   // async sendCommand<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>

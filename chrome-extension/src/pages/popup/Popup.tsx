@@ -14,7 +14,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Switch,
   Tab,
   TabList,
   TabPanel,
@@ -26,6 +25,8 @@ import {usePluginSettings} from "@src/shared/hooks/usePluginSettings";
 import TribalButton from "@src/shared/ui/TribalButton";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalSwitch from "@src/shared/ui/TribalSwitch";
+import PlayerSettingsTab from "./PlayerSettingsTab";
+import {TribalTab, TribalTabList, TribalTabPanel, TribalTabs} from "@src/shared/ui/TribalTabs";
 
 interface SettingsSwitchProps {
   label: string;
@@ -49,62 +50,45 @@ const SettingsSwitch: React.FC<SettingsSwitchProps> = ({label, name, enabled, on
 };
 
 export default function Popup() {
-  const { gui } = useGuiSettings();
-  const { plugin } = usePluginSettings();
+  const {gui} = useGuiSettings();
+  const {plugin} = usePluginSettings();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleShowGUIChange2 = (checked: boolean) => {
-    gui.setVisible(checked);
-  };
-
   return (
-    <Box position="absolute" top="0" left="0" right="0" bottom="0" textAlign="center" height="full" p={3} bg="gray.800">
-      <Flex as="header" flexDirection="column" alignItems="center" justifyContent="center" color="white">
-        <Image src={logo} height="36" pointerEvents="none" animation="spin 20s linear infinite" alt="logo"/>
-
-        {/* Tabs for different sections */}
-        <Box width="full" maxWidth="md" px={2} py={4} sx={{sm: {px: 0}}}>
-          <Tabs variant="enclosed" colorScheme="blue">
-            <TabList mb={2} p={1} borderRadius="xl" bg="blue.900" opacity={0.2}>
-              <Tab
-                width="full"
-                borderRadius="lg"
-                py={2}
-                fontSize="sm"
-                fontWeight="medium"
-                _selected={{bg: "blue.500", color: "white", boxShadow: "md"}}
-                _hover={{bg: "blue.800", color: "white"}}
-                color="blue.100"
-              >
+    <Box textAlign="center" height="full" p={3} backgroundColor="tribal.rootBg">
+      <Flex as="header" flexDirection="column" alignItems="center" justifyContent="center">
+        <Box width="full" maxWidth="md" sx={{sm: {px: 0}}}>
+          <TribalTabs>
+            <TribalTabList gap={2}>
+              <TribalTab>
                 Settings
-              </Tab>
-              <Tab
-                width="full"
-                borderRadius="lg"
-                py={2}
-                fontSize="sm"
-                fontWeight="medium"
-                _selected={{bg: "blue.500", color: "white", boxShadow: "md"}}
-                _hover={{bg: "blue.800", color: "white"}}
-                color="blue.100"
-              >
+              </TribalTab>
+              <TribalTab>
+                Player
+              </TribalTab>
+              <TribalTab>
                 About
-              </Tab>
-            </TabList>
-            <TabPanels>
-              <TribalCard >
-                <SettingsSwitch onChange={plugin.setVisible} label={'Enable plugin'} name={'settings-enabled'} enabled={plugin.visible}/>
-                <SettingsSwitch onChange={gui.setVisible} label={'Show gui'} name={'settings-gui'} enabled={gui.visible}/>
-                <TribalButton
-                  onClick={() => setIsDialogOpen(true)}
-                  mt={4}
-                  px={4}
-                  py={2}
-                >
-                  More Info
-                </TribalButton>
-              </TribalCard>
-              <TabPanel borderRadius="xl" bg="gray.700" p={3} color="white">
+              </TribalTab>
+            </TribalTabList>
+            <TabPanels >
+              <TribalTabPanel>
+                <TribalCard variant={"secondary"}>
+                  <SettingsSwitch onChange={plugin.setVisible} label={'Enable plugin'} name={'settings-enabled'} enabled={plugin.visible}/>
+                  <SettingsSwitch onChange={gui.setVisible} label={'Show gui'} name={'settings-gui'} enabled={gui.visible}/>
+                  <TribalButton
+                    onClick={() => setIsDialogOpen(true)}
+                    mt={4}
+                    px={4}
+                    py={2}
+                  >
+                    More Info
+                  </TribalButton>
+                </TribalCard>
+              </TribalTabPanel>
+              <TribalTabPanel>
+                <PlayerSettingsTab/>
+              </TribalTabPanel>
+              <TribalTabPanel>
                 <Text fontSize="sm">
                   This is a Chrome extension built with React, TypeScript, and Chakra UI.
                 </Text>
@@ -121,42 +105,11 @@ export default function Popup() {
                 >
                   Learn more about Chakra UI
                 </Link>
-              </TabPanel>
+              </TribalTabPanel>
             </TabPanels>
-          </Tabs>
+          </TribalTabs>
         </Box>
       </Flex>
-
-      {/* Modal for additional information */}
-      <Modal isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-        <ModalOverlay/>
-        <ModalContent bg="gray.700" color="white" mx={4}>
-          <ModalHeader>GUI Settings Information</ModalHeader>
-          <ModalBody>
-            <Text fontSize="sm">
-              Enabling the GUI will show the sidebar interfaces on the webpage.
-            </Text>
-            <Text mt={4} fontSize="sm">
-              The left sidebar shows status information, while the right sidebar displays logs.
-            </Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              onClick={() => setIsDialogOpen(false)}
-              mt={2}
-              borderRadius="md"
-              bg="blue.500"
-              px={4}
-              py={2}
-              color="white"
-              _hover={{bg: "blue.600"}}
-              _focus={{outline: "none", ring: 2, ringColor: "blue.500"}}
-            >
-              Got it, thanks!
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </Box>
   );
 }

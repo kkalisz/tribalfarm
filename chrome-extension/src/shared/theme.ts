@@ -7,6 +7,7 @@ const theme = extendTheme({
   colors: {
     tribal: {
       // Primary colors from ui_plan.md
+      rootBg: '#d2c89d', // Light parchment
       primaryBg: '#f4e2c6', // Light parchment
       secondaryBg: '#dbc2a3', // Darker parchment for headers
       primaryBorder: '#8b4513', // Saddle brown
@@ -19,7 +20,8 @@ const theme = extendTheme({
       error: '#b71c1c', // Deep red
 
       // Component-specific colors
-      card: '#f4e2c6', // Light parchment background
+      cardPrimary: '#e9d9b6',//'#f4e2c6', // Light parchment background
+      cardSecondary: '#f1e5c0', // #e9d9b6
       cardHeader: '#dbc2a3', // Darker parchment for headers
       cardBorder: '#8b4513', // Saddle brown
       cardHeaderBorder: '#a52a2a', // Brown/red for emphasis

@@ -1,8 +1,8 @@
 
-import {PageStatusAction, PageStatusResponse} from "@src/shared/actions/pageStatus/PageStatusAction";
-import {doneResponse, GenericStatusPayload} from "@src/shared/actions/core/types";
-import {ActionHandler} from "@src/shared/actions/core/ActionHandler";
-import { ActionContext } from "../core/ActionContext";
+import {PageStatusAction, PageStatusResponse} from "@src/shared/actions/content/pageStatus/PageStatusAction";
+import {doneResponse, GenericStatusPayload} from "@src/shared/actions/content/core/types";
+import {ActionHandler} from "@src/shared/actions/content/core/ActionHandler";
+import { ActionContext } from "@src/shared/actions/content/core/ActionContext";
 
 export class PageStatusActionHandler implements ActionHandler<PageStatusAction, PageStatusResponse> {
 

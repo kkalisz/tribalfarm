@@ -1,5 +1,3 @@
-import {setupDOMObserver} from "@pages/content";
-import {useEffect} from "react";
 import {useCommandsData} from "@pages/content/hooks/useCommandsData";
 import {LeftSidebar} from "@pages/content/ui/LeftSidebar";
 import {RightSidebar} from "@pages/content/ui/RightSidebar";
@@ -11,7 +9,6 @@ export const SidebarContainer = () => {
     // Use custom hook for command data
     const {
         currentCommand,
-        lastEvent,
         logs
     } = useCommandsData();
 
@@ -37,7 +34,6 @@ export const SidebarContainer = () => {
                         leftSidebarVisible={leftSidebar.visible}
                         setLeftSidebarVisible={leftSidebar.setVisible}
                         currentCommand={currentCommand}
-                        lastEvent={lastEvent}
                     />
 
                     {/* Right Sidebar - Logs */}

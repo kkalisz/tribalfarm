@@ -1,10 +1,11 @@
-import {CommandMessage, Message} from '@src/shared/actions/core/types';
+import {CommandMessage, Message} from '@src/shared/actions/content/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
-import {settingsStorage} from '@src/shared/services/settingsStorage';
-import {orchestrateOnTab, TabMessenger} from '../../shared/actions/core/TabMessenger';
-import {NavigateToScreenActionPayload} from "@src/shared/models/actions/NavigateToScreenAction";
-import {BuildingType} from "@src/shared/models/BuildingType";
+import {orchestrateOnTab, TabMessenger} from '@src/shared/actions/content/core/TabMessenger';
 import {IDBPDatabase, openDB} from "idb";
+import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
+import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
+import getUserMetadataAction from "@src/shared/actions/backend/getUserMetadataAction";
+import startScavengeAction from "@src/shared/actions/backend/startScavengeAction";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -17,12 +18,6 @@ let currentCommand: CommandMessage | null = null;
 const commandQueue: CommandMessage[] = [];
 let activeTabId: number | null = null;
 let activeTabMessenger: TabMessenger | null = null;
-
-// Auto scavenge state
-let autoScavengeInterval: number | null = null;
-const AUTO_SCAVENGE_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
-const SCAVENGE_PAGE_URL = "https://pl213.plemiona.pl/game.php?village=46605&screen=place&mode=scavenge";
-const SCAVENGE_BUTTON_SELECTOR = ".scavenge-option:not(.locked) button.btn-confirm-yes";
 
 // Declare a variable to hold the singleton instance
 let dbInstance: IDBPDatabase | null = null;
@@ -227,49 +222,52 @@ function processCommandQueue() {
 }
 
 // Listen for messages from content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   logInfo('Message from content script:', message, 'Sender:', sender);
 
   // Track the active tab
+  // TODO handle main tabs and worker tabs
   if (sender.tab && sender.tab.id) {
     activeTabId = sender.tab.id;
   }
 
+  const hasValidPlayerSettings = await PlayerSettingsManager.getInstance().hasValidSettings();
+
+  if(!hasValidPlayerSettings){
+    // return TODO
+    return true;
+  }
+
+
   // Handle different message types
   if(message.type === 'test') {
-    logInfo('Received command from content script:', JSON.stringify(message));
+    logInfo('Received command from content script:');
     if(message.content === 'test1') {
       logInfo('start test 1:', message);
       orchestrateOnTab(sender.tab!.id!, async (messenger) => {
 
         logInfo('before send');
-        const pageStatusResponse = await messenger.executePageStatusAction({})
-        // const aaa = await messenger.sendCommand<NavigateToScreenActionPayload>({
-        //   action: "navigateToScreenAction",
-        //   parameters: {
-        //     screen: BuildingType.BARRACKS,
-        //     villageId: "63450"
-        //   },
-        // });
+        const context: BackendActionContext = {
+          messenger: messenger,
+          playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings()
+        }
 
-        console.log(`action result received for pageStatus 1 ${JSON.stringify(pageStatusResponse)}`)
+        await getUserMetadataAction(context);
+        await startScavengeAction(context, {
+          villageId: "54198"
+        })
 
-        const pageStatusResponse2 = await messenger.executePageStatusAction({})
-
-        // const bbb = await messenger.sendCommand<NavigateToScreenActionPayload>({
-        //   action: "navigateToScreenAction",
-        //   parameters: {
-        //     screen: BuildingType.IRON_MINE,
-        //     villageId: "63450"
-        //   },
-        // });
-
-        console.log(`action result received pageStatus 2 ${JSON.stringify(pageStatusResponse2)}`)
+        // const pageStatusResponse = await messenger.executePageStatusAction({})
+        //
+        // console.log(`action result received for pageStatus 1 ${JSON.stringify(pageStatusResponse)}`)
+        // const pageStatusResponse2 = await messenger.executePageStatusAction({})
+        //
+        //
+        // console.log(`action result received pageStatus 2 ${JSON.stringify(pageStatusResponse2)}`)
       });
       return
     }
     if(message.content === 'test1') {
-
       return
     }
     return true;
@@ -304,110 +302,107 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-// Function to check autoScavenge setting and start/stop interval
-async function checkAutoScavengeSetting() {
-  try {
-    const autoScavengeEnabled = await settingsStorage.getSetting<boolean>('autoScavenge', false);
-    logInfo(`Auto scavenge setting checked: ${autoScavengeEnabled}`);
+// // Function to check autoScavenge setting and start/stop interval
+// async function checkAutoScavengeSetting() {
+//   try {
+//     const autoScavengeEnabled = await settingsStorage.getSetting<boolean>('autoScavenge', false);
+//     logInfo(`Auto scavenge setting checked: ${autoScavengeEnabled}`);
+//
+//     if (autoScavengeEnabled) {
+//       startAutoScavengeInterval();
+//     } else {
+//       stopAutoScavengeInterval();
+//     }
+//   } catch (error) {
+//     console.error('Error checking auto scavenge setting:', error);
+//   }
+// }
 
-    if (autoScavengeEnabled) {
-      startAutoScavengeInterval();
-    } else {
-      stopAutoScavengeInterval();
-    }
-  } catch (error) {
-    console.error('Error checking auto scavenge setting:', error);
-  }
-}
-
-// Function to start auto scavenge interval
-function startAutoScavengeInterval() {
-  if (autoScavengeInterval !== null) {
-    logInfo('Auto scavenge interval already running');
-    return;
-  }
-
-  logInfo('Starting auto scavenge interval');
-  executeAutoScavengeAction(); // Execute immediately on start
-
-  // Set interval to execute every 5 minutes
-  // autoScavengeInterval = window.setInterval(() => {
-  //   executeAutoScavengeAction();
-  // }, AUTO_SCAVENGE_CHECK_INTERVAL);
-}
-
-// Function to stop auto scavenge interval
-function stopAutoScavengeInterval() {
-  if (autoScavengeInterval === null) {
-    logInfo('No auto scavenge interval running');
-    return;
-  }
-
-  logInfo('Stopping auto scavenge interval');
-  clearInterval(autoScavengeInterval);
-  autoScavengeInterval = null;
-}
-
-// Function to execute auto scavenge action
-function executeAutoScavengeAction() {
-  logInfo('Executing auto scavenge action');
-
-  if (!activeTabId) {
-    logInfo('No active tab, cannot execute auto scavenge action');
-    return;
-  }
-
-  // Use orchestrateOnTab for reliable execution across page reloads
-  orchestrateOnTab(activeTabId, async (messenger) => {
-    logInfo('Starting auto scavenge orchestration');
-
-    // Navigate to scavenge page
-    logInfo('Navigating to scavenge page');
-    await messenger.send('navigate', {
-      url: SCAVENGE_PAGE_URL
-    });
-
-    // Wait for page to load and content script to be ready
-    logInfo('Waiting for page to load after navigation');
-    await messenger.waitFor('event', 
-      (msg) => msg.type === 'event' && 
-              msg.payload.eventType === 'stateChange' && 
-              msg.payload.details.type === 'contentScriptReady',
-      30000
-    );
-
-    // Wait a bit more for the page to fully render
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Click the scavenge button
-    logInfo('Clicking scavenge button');
-    const result = await messenger.send('click', {
-      selector: SCAVENGE_BUTTON_SELECTOR
-    });
-
-    logInfo('Auto scavenge completed successfully', result);
-    return result;
-  }).catch(error => {
-    console.error('Error during auto scavenge orchestration:', error);
-  });
-}
-
-// Listen for changes to the autoScavenge setting
-settingsStorage.addListener('autoScavenge', (settings) => {
-  const autoScavengeEnabled = settings['autoScavenge'];
-  logInfo(`Auto scavenge setting changed: ${autoScavengeEnabled}`);
-
-  if (autoScavengeEnabled) {
-    startAutoScavengeInterval();
-  } else {
-    stopAutoScavengeInterval();
-  }
-});
+// // Function to start auto scavenge interval
+// function startAutoScavengeInterval() {
+//   if (autoScavengeInterval !== null) {
+//     logInfo('Auto scavenge interval already running');
+//     return;
+//   }
+//
+//   logInfo('Starting auto scavenge interval');
+//   executeAutoScavengeAction(); // Execute immediately on start
+//
+//   // Set interval to execute every 5 minutes
+//   // autoScavengeInterval = window.setInterval(() => {
+//   //   executeAutoScavengeAction();
+//   // }, AUTO_SCAVENGE_CHECK_INTERVAL);
+// }
+//
+// // Function to stop auto scavenge interval
+// function stopAutoScavengeInterval() {
+//   if (autoScavengeInterval === null) {
+//     logInfo('No auto scavenge interval running');
+//     return;
+//   }
+//
+//   logInfo('Stopping auto scavenge interval');
+//   clearInterval(autoScavengeInterval);
+//   autoScavengeInterval = null;
+// }
+//
+// // Function to execute auto scavenge action
+// function executeAutoScavengeAction() {
+//   logInfo('Executing auto scavenge action');
+//
+//   if (!activeTabId) {
+//     logInfo('No active tab, cannot execute auto scavenge action');
+//     return;
+//   }
+//
+//   // Use orchestrateOnTab for reliable execution across page reloads
+//   orchestrateOnTab(activeTabId, async (messenger) => {
+//     logInfo('Starting auto scavenge orchestration');
+//
+//     // Navigate to scavenge page
+//     logInfo('Navigating to scavenge page');
+//     await messenger.send('navigate', {
+//       url: SCAVENGE_PAGE_URL
+//     });
+//
+//     // Wait for page to load and content script to be ready
+//     logInfo('Waiting for page to load after navigation');
+//     await messenger.waitFor('event',
+//       (msg) => msg.type === 'event' &&
+//               msg.payload.eventType === 'stateChange' &&
+//               msg.payload.details.type === 'contentScriptReady',
+//       30000
+//     );
+//
+//     // Wait a bit more for the page to fully render
+//     await new Promise(resolve => setTimeout(resolve, 2000));
+//
+//     // Click the scavenge button
+//     logInfo('Clicking scavenge button');
+//     const result = await messenger.send('click', {
+//       selector: SCAVENGE_BUTTON_SELECTOR
+//     });
+//
+//     logInfo('Auto scavenge completed successfully', result);
+//     return result;
+//   }).catch(error => {
+//     console.error('Error during auto scavenge orchestration:', error);
+//   });
+// }
+//
+// // Listen for changes to the autoScavenge setting
+// settingsStorage.addListener('autoScavenge', (settings) => {
+//   const autoScavengeEnabled = settings['autoScavenge'];
+//   logInfo(`Auto scavenge setting changed: ${autoScavengeEnabled}`);
+//
+//   if (autoScavengeEnabled) {
+//     startAutoScavengeInterval();
+//   } else {
+//     stopAutoScavengeInterval();
+//   }
+// });
 
 // Initialize connection when the service worker starts
 connectWebSocket();
-
-// Check auto scavenge setting on startup
-checkAutoScavengeSetting();
 
 logInfo('Service worker initialized');

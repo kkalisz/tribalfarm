@@ -1,4 +1,4 @@
-import { CommandMessage } from "@src/shared/actions/core/types";
+import { CommandMessage } from "@src/shared/actions/content/core/types";
 
 // Type definition for state subscribers
 export type StateSubscriber = () => void;

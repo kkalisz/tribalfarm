@@ -37,9 +37,9 @@ export const TribalTabList: FC<TabListProps> = ({ children, ...rest }) => {
   return (
     <TabList
       mb={2}
-      p={1}
-      borderRadius="xl"
-      bg="tribal.secondaryBg"
+      p={2}
+      borderRadius="none"
+      bg="tribal.cardSecondary"
       borderWidth="2px"
       borderColor="tribal.primaryBorder"
       {...rest}
@@ -58,11 +58,14 @@ export const TribalTab: FC<TabProps> = ({ children, ...rest }) => {
   return (
     <Tab
       width="full"
-      borderRadius="lg"
+      borderRadius="none"
       py={2}
       fontSize="sm"
       fontWeight="medium"
+      bg={"tribal.cardPrimary"}
       fontFamily="heading"
+      borderWidth="1px"
+      borderColor="tribal.primaryBorder"
       color="tribal.primaryText"
       _selected={{
         bg: "tribal.accent",
@@ -103,8 +106,8 @@ export const TribalTabPanels: FC<TabPanelsProps> = ({ children, ...rest }) => {
 export const TribalTabPanel: FC<TabPanelProps> = ({ children, ...rest }) => {
   return (
     <TabPanel
-      borderRadius="xl"
-      bg="tribal.primaryBg"
+      borderRadius="none"
+      bg="tribal.cardPrimary"
       p={3}
       color="tribal.primaryText"
       borderWidth="2px"
@@ -125,17 +128,6 @@ export const TribalTabs: FC<TribalTabsProps> = ({
   children,
   ...rest
 }) => {
-  // Size-specific styles
-  const sizeStyles = {
-    md: {
-      fontSize: "sm",
-      tabPadding: 2,
-    },
-    sm: {
-      fontSize: "xs",
-      tabPadding: 1,
-    },
-  };
 
   return (
     <Tabs
@@ -144,46 +136,7 @@ export const TribalTabs: FC<TribalTabsProps> = ({
       size={size}
       {...rest}
     >
-      <Box
-        sx={{
-          ".chakra-tabs__tablist": {
-            mb: 2,
-            p: 1,
-            borderRadius: "xl",
-            bg: "tribal.secondaryBg",
-            borderWidth: "2px",
-            borderColor: "tribal.primaryBorder",
-          },
-          ".chakra-tabs__tab": {
-            width: "full",
-            borderRadius: "lg",
-            py: sizeStyles[size].tabPadding,
-            fontSize: sizeStyles[size].fontSize,
-            fontWeight: "medium",
-            fontFamily: "heading",
-            color: "tribal.primaryText",
-            _selected: {
-              bg: "tribal.accent",
-              color: "tribal.primaryText",
-              boxShadow: "md",
-              borderWidth: "1px",
-              borderColor: "tribal.primaryBorder"
-            },
-            _hover: {
-              bg: "tribal.hover",
-              color: "tribal.primaryText"
-            }
-          },
-          ".chakra-tabs__tab-panel": {
-            borderRadius: "xl",
-            bg: "tribal.primaryBg",
-            p: 3,
-            color: "tribal.primaryText",
-            borderWidth: "2px",
-            borderColor: "tribal.primaryBorder",
-          }
-        }}
-      >
+      <Box>
         {children}
       </Box>
     </Tabs>

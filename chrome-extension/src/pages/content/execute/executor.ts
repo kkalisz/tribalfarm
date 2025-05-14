@@ -1,16 +1,22 @@
-import { CommandMessage } from "@src/shared/actions/core/types";
+import { CommandMessage } from "@src/shared/actions/content/core/types";
 import { stateManager } from "./StateManager";
-import {executeCommand} from "@src/shared/actions/executeCommand";
-import {ActionExecutor} from "@src/shared/actions/core/AcitionExecutor";
-import {PageStatusActionHandler} from "@src/shared/actions/pageStatus/PageStatusActionHandler";
+import {ActionExecutor} from "@src/shared/actions/content/core/AcitionExecutor";
+import {PageStatusActionHandler} from "@src/shared/actions/content/pageStatus/PageStatusActionHandler";
+import {PAGE_STATUS_ACTION} from "@src/shared/actions/content/pageStatus/PageStatusAction";
+import {NAVIGATE_TO_PAGE_ACTION} from "@src/shared/actions/content/navigateToPage/NavigateToPageAction";
+import {NavigateToPageActionHandler} from "@src/shared/actions/content/navigateToPage/NavigateToPageActionHandler";
+import {ActionContext} from "@src/shared/actions/content/core/ActionContext";
+import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
 
 // Helper function to execute a command and handle its result
-function executeCommandAndHandleResult(
+async function executeCommandAndHandleResult(
   actionExecutor: ActionExecutor,
+  actionContext: ActionContext,
   command: CommandMessage, 
-  successLogPrefix: string = "Command executed"
 ) {
-  return executeCommand(actionExecutor, command)
+
+  const successLogPrefix = actionContext.isCurrentActionRestored ? "Command restored": "Command executed"
+  return actionExecutor.execute(actionContext, command.payload.action, command.payload.parameters)
     .then(result => {
       console.log(`${successLogPrefix}: ${result.status}`);
       setCommandStatus(result.status);
@@ -66,8 +72,10 @@ export const getState = stateManager.getState.bind(stateManager);
 export const actionExecutor = new ActionExecutor();
 
 // Attach executor to handle commands
-export function attachExecutor() {
-  actionExecutor.register("pageStatusAction", new PageStatusActionHandler());
+export async function attachExecutor() {
+  actionExecutor.register(PAGE_STATUS_ACTION, new PageStatusActionHandler());
+  actionExecutor.register(NAVIGATE_TO_PAGE_ACTION, new NavigateToPageActionHandler());
+
   // Check for saved state on load
   if (stateManager.loadStateFromStorage()) {
     addLog('Restored state after page reload');
@@ -144,8 +152,13 @@ export function attachExecutor() {
       else {
         addLog(`Re-executing command after reload: ${restoredCommand.payload.action}`);
 
+        const actionContext: ActionContext = {
+          isCurrentActionRestored: true,
+          actionId: restoredCommand.actionId,
+          playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings(),
+        }
         // Re-execute the command using the helper function
-        executeCommandAndHandleResult(actionExecutor, restoredCommand, "Re-executed command completed")
+        executeCommandAndHandleResult(actionExecutor, actionContext, restoredCommand)
           .catch(() => {
             // Error already handled in the helper function
           });
@@ -153,7 +166,7 @@ export function attachExecutor() {
     }
   }
 
-  const messageListener = (
+  const messageListener = async (
     message: CommandMessage, 
     sender: chrome.runtime.MessageSender, 
     sendResponse: (response?: Record<string, unknown>) => void
@@ -191,8 +204,13 @@ export function attachExecutor() {
         }
       }
 
+      const actionContext: ActionContext = {
+        isCurrentActionRestored: true,
+        actionId: message.actionId,
+        playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings()
+      }
       // Execute the command using the helper function
-      executeCommandAndHandleResult(actionExecutor, message)
+      executeCommandAndHandleResult(actionExecutor, actionContext, message)
         .catch(() => {
           // Error already handled in the helper function
         });

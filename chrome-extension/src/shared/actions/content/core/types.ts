@@ -1,3 +1,13 @@
+
+export interface BasePageResponse {
+
+}
+
+export interface BasePageAction<RESPONSE extends BasePageResponse = BasePageResponse> {
+
+}
+
+
 export interface BaseMessage {
   type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack';
   actionId: string;
@@ -21,15 +31,23 @@ export interface StatusMessage extends BaseMessage {
   };
 }
 
-export interface GenericStatusPayload<RESPONSE extends Record<string,any>>  {
+export interface GenericStatusPayload<RESPONSE extends BasePageResponse>  {
   status: 'in-progress' | 'done' | 'error';
-  details?: RESPONSE;
+  details?: RESPONSE | undefined;
+  statusMessage?: string;
 }
 
-export function doneResponse<RESPONSE extends Record<string,any>>(response: RESPONSE): GenericStatusPayload<RESPONSE> {
+export function doneResponse<RESPONSE extends BasePageResponse>(response: RESPONSE): GenericStatusPayload<RESPONSE> {
   return {
     status: "done",
     details: response
+  }
+}
+
+export function inProgressResponse<RESPONSE extends BasePageResponse>(): GenericStatusPayload<RESPONSE> {
+  return {
+    status: "in-progress",
+    details: undefined
   }
 }
 

@@ -12,16 +12,13 @@ import {getBaseDomain} from "@src/shared/helpers/location/getBaseDomain";
  */
 export function generateTribalWarsUrl(
   baseUrl: string,
-  villageId: string,
+  villageId: string | undefined,
   screen: string,
   mode?: string
 ): string {
   // Validate inputs
   if (!baseUrl.trim()) {
     throw new Error("Base URL cannot be blank");
-  }
-  if (!Number(villageId)) {
-    throw new Error(`Village ID must be a positive integer, got ${villageId}`);
   }
   if (!screen.trim()) {
     throw new Error("Screen name cannot be blank");
