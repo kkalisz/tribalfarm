@@ -1,0 +1,50 @@
+import {TroopName} from "@src/shared/models/game/Troop";
+import {AvailableTroops} from "@src/shared/actions/backend/startScavengeAction";
+import {calculateScavengeImpl} from "@src/shared/helpers/calculateScavengeImpl";
+
+export type TroopsWithCount = Record<TroopName, number>;
+
+export enum ScavengeCalculationMode {
+  MAX_RESOURCES_PER_RUN,
+  SAME_RETURN_TIME,
+  MAX_RESOURCES_PER_HOUR,
+}
+
+export interface Unit {
+  count: number;
+  name: TroopName;
+}
+
+export interface MissionResult {
+  missionIndex: number;
+  totalCapacity: number;
+  resources: number;
+  runTime: number;
+  unitsAllocated: { [unitName: string]: number }; // For each unit, how many were allocated in this mission
+}
+
+export interface MissionsStats {
+  missions: MissionResult[]; // Detailed results of all missions
+  totalResPerRun: number; // Total resources collected per run
+  totalResPerHour: number; // Total resources collected per hour
+  totalRunTime: number; // Total maximum runtime (longest mission runtime)
+}
+
+
+export interface ScavengeMissionInfo {
+  id: string,
+  canBenUsed: boolean,
+  isAvailable: boolean,
+  isUnlocked: boolean,
+  finishTime: string,
+}
+
+export function calculateScavenge(
+  allUnitsElements: AvailableTroops, // Information about all units
+  worldSpeed: number, // World speed factor
+  missionsInfo: ScavengeMissionInfo[], // Enabled missions
+  calcMethod: ScavengeCalculationMode, // Calculation method (e.g., max or default)
+  timeLimitInMinutes: number = Infinity // Time limit in minutes (0 means no limit)
+): MissionsStats {
+  return calculateScavengeImpl(allUnitsElements,worldSpeed,missionsInfo, calcMethod, timeLimitInMinutes )
+}

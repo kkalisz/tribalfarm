@@ -23,6 +23,8 @@
     "@chakra-ui/react-types": "^2.0.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "axios": "^1.9.0",
+    "fast-xml-parser": "^5.2.3",
     "framer-motion": "^12.7.2",
     "idb": "^8.0.2",
     "linkedom": "^0.18.10",

@@ -7,6 +7,15 @@ export interface BasePageAction<RESPONSE extends BasePageResponse = BasePageResp
 
 }
 
+export interface Messenger {
+  sendCommand<RESPONSE extends BasePageResponse, BA extends BasePageAction<RESPONSE>>(
+    actionName: string,
+    action: BA
+  ): Promise<GenericStatusPayload<RESPONSE>>
+
+  dispose(): any;
+}
+
 
 export interface BaseMessage {
   type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack';

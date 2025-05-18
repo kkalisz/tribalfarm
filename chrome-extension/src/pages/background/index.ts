@@ -254,7 +254,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         await getUserMetadataAction(context);
         await startScavengeAction(context, {
-          villageId: "54198"
+          villageId: "60770"
         })
 
         // const pageStatusResponse = await messenger.executePageStatusAction({})

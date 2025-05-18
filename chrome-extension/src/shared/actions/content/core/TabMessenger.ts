@@ -1,8 +1,17 @@
 import {v4 as uuidv4} from 'uuid';
-import {BasePageAction, BasePageResponse, CommandMessage, GenericStatusPayload, Message} from '@src/shared/actions/content/core/types';
+import {
+  BasePageAction,
+  BasePageResponse,
+  CommandMessage,
+  GenericStatusPayload,
+  Message,
+  Messenger
+} from '@src/shared/actions/content/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
 import {PAGE_STATUS_ACTION, PageStatusAction, PageStatusResponse} from "@src/shared/actions/content/pageStatus/PageStatusAction";
 import {NAVIGATE_TO_PAGE_ACTION, NavigateToPageAction, NavigateToPageActionResponse} from "@src/shared/actions/content/navigateToPage/NavigateToPageAction";
+import {action} from "webextension-polyfill";
+import {MessengerWrapper} from "@src/shared/actions/content/core/MessengerWrapper";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
@@ -21,12 +30,11 @@ interface WaitCondition {
 }
 
 
-
 /**
  * TabMessenger provides a reliable way to communicate with a specific tab,
  * even across page reloads.
  */
-export class TabMessenger {
+export class TabMessenger implements Messenger{
   private tabId: number;
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private waitConditions: WaitCondition[] = [];
@@ -155,47 +163,9 @@ export class TabMessenger {
     action: BA
   ): Promise<GenericStatusPayload<RESPONSE>> {
     const result = await this.send(actionName, action as Record<string, any>);
-    console.log(`send command result: ${JSON.stringify(result)}`)
+    console.log(`send command result: ${JSON.stringify(result.status)}`)
     return result as unknown as GenericStatusPayload<RESPONSE>;
   }
-
-  async executePageStatusAction(parameters: PageStatusAction): Promise<GenericStatusPayload<PageStatusResponse>> {
-    return await this.sendCommand<PageStatusResponse, PageStatusAction>(PAGE_STATUS_ACTION, parameters);
-  }
-
-  async executeNavigateToPageAction(parameters: NavigateToPageAction): Promise<GenericStatusPayload<NavigateToPageActionResponse>> {
-    return await this.sendCommand<NavigateToPageActionResponse, NavigateToPageAction>(NAVIGATE_TO_PAGE_ACTION, parameters);
-  }
-
-  // async sendCommand<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
-  // {
-  //   const result = await this.send(command.action, command.parameters);
-  //   return result as unknown as ExtractEventPayload<T>;
-  // }
-  //
-  //
-  //
-  // async sendCommand2<T extends CommandPayload>(command: T): Promise<ExtractEventPayload<T>>
-  // {
-  //   const result = await this.send(command.action, command.parameters);
-  //   return result as unknown as ExtractEventPayload<T>;
-  // }
-  //
-  // async sendAction<T extends BaseAction>(actionName: string, command: T): Promise<ExtractBaseActionPayload<T>>
-  // {
-  //   const result = await this.send(actionName, command as unknown as Record<string, unknown>);
-  //   return result as unknown as ExtractBaseActionPayload<T>;
-  // }
-  //
-  // async sendAction2<T extends BaseAction>(actionName: string, action: T): Promise<ExtractBaseActionPayload<T>>
-  // {
-  //   const result = await this.send(actionName, action as unknown as Record<string, unknown>);
-  //   return result as unknown as ExtractBaseActionPayload<T>;
-  // }
-  //
-  // async getCurrentUrlAction(action: PageStatusAction): Promise<PageStatusResponse>{
-  //   return this.sendAction("pageStatus", action);
-  // }
 
   /**
    * Waits for a specific condition to be met in messages from the tab
@@ -256,16 +226,6 @@ export class TabMessenger {
     }
     this.waitConditions = [];
   }
-
-  // async executeNavigateToScreen(parameters: NavigateToScreenActionParameters): Promise<ExtractEventPayload<NavigateToScreenActionPayload>>
-  // {
-  //   const result = await this.sendCommand<NavigateToScreenActionPayload>({
-  //     action: "navigateToScreenAction",
-  //     parameters
-  //   });
-  //   return result;
-  // }
-
 }
 
 /**
@@ -276,9 +236,9 @@ export class TabMessenger {
  */
 export async function orchestrateOnTab<T>(
   tabId: number,
-  fn: (messenger: TabMessenger) => Promise<T>
+  fn: (messenger: MessengerWrapper) => Promise<T>
 ): Promise<T> {
-  const messenger = new TabMessenger(tabId);
+  const messenger = new MessengerWrapper(new TabMessenger(tabId));
   try {
     return await fn(messenger);
   } finally {

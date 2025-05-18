@@ -71,6 +71,10 @@ export class PageParser {
     return this.query(`div.${className}`);
   }
 
+  queryByClass(className: string): NodeListOf<Element> {
+    return this.query(`.${className}`);
+  }
+
   /**
    * Query elements by tag name and class name
    * @param tagName The HTML tag name
