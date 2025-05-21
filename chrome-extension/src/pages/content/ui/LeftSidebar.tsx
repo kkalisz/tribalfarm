@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useCallback} from "react";
 import {CommandMessage} from "@src/shared/actions/content/core/types";
 import {SidebarToggleButton} from "./SidebarToggleButton";
 import {Box, Flex, Text, FormControl, FormLabel} from "@chakra-ui/react";
@@ -7,6 +7,8 @@ import TribalButton from "@src/shared/ui/TribalButton";
 import {useFeatureSettings} from "@src/shared/hooks/useFeatureSettings";
 import TribalSwitch from "@src/shared/ui/TribalSwitch";
 import TribalText from "@src/shared/ui/TribalText";
+import TroopCountsForm from "@pages/content/ui/TroopCountsForm";
+import {TroopsCount} from "@src/shared/models/game/TroopCount";
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
@@ -21,6 +23,8 @@ export const LeftSidebar = ({
                             }: LeftSidebarProps) => {
   // Use the feature settings hook to get and set the autoScavenge setting
   const {autoScavenge} = useFeatureSettings();
+
+  const onChangeUnits = useCallback((value: TroopsCount) => {},[])
 
   return (
     <Box
@@ -87,6 +91,7 @@ export const LeftSidebar = ({
               </Box>
             )}
           </TribalCard>
+          <TroopCountsForm onChange={onChangeUnits}></TroopCountsForm>
         </Box>
       )}
     </Box>

@@ -1,16 +1,17 @@
-import {AvailableTroops} from "@src/shared/actions/backend/startScavengeAction";
 import {
   MissionResult,
   MissionsStats,
   ScavengeCalculationMode,
   ScavengeMissionInfo
 } from "@src/shared/helpers/calculateScavenge";
+import {TroopsCount} from "@src/shared/models/game/TroopCount";
 
 interface  UnitInfo {
   cap: number;
   cnt: number;
 }
 
+type ScavengeType = "FF" | "BB" | "SS" | "RR";
 
 interface TroopDistribution {
   [key: string]: {
@@ -228,7 +229,7 @@ function getOptimalDistribution(
  * Main calculation function
  */
 export function calculateScavengeImpl(
-  allUnitsElements: AvailableTroops,
+  allUnitsElements: TroopsCount,
   worldSpeed: number,
   missionsInfo: ScavengeMissionInfo[],
   scavengeCalculationMode: ScavengeCalculationMode,
@@ -267,7 +268,7 @@ export function calculateScavengeImpl(
   ];
 
   // Initialize distribution ratios
-  let r = [
+  const r = [
     aRaidChecked[0] ? 7.5 : 0, 
     aRaidChecked[1] ? 3 : 0, 
     aRaidChecked[2] ? 1.5 : 0, 
@@ -286,7 +287,8 @@ export function calculateScavengeImpl(
 
   // Calculate capacities based on optimal distribution
   const iMaxCap = fnDurationToCap(iMaxDuration, optimizedR, worldSpeed);
-  const iCaps = {
+
+  const iCaps: Record<ScavengeType, number> = {
     FF: Math.round(Math.min(iMaxCap.FF, iCap * optimizedR[0])),
     BB: Math.round(Math.min(iMaxCap.BB, iCap * optimizedR[1])),
     SS: Math.round(Math.min(iMaxCap.SS, iCap * optimizedR[2])),
@@ -300,7 +302,7 @@ export function calculateScavengeImpl(
   const result: TroopDistribution = {};
 
   // Function to fill a raid with units
-  const fillRaid = (raid: string): MissionResult => {
+  const fillRaid = (raid: ScavengeType): MissionResult => {
     result[raid] = {
       spear: 0,
       sword: 0,
@@ -312,7 +314,7 @@ export function calculateScavengeImpl(
     };
 
     // Function to allocate units to a raid
-    const fill = (raidKey: string, unitKey: string, unitInfo: UnitInfo): number => {
+    const fill = (raidKey: ScavengeType, unitKey: string, unitInfo: UnitInfo): number => {
       const count = Math.min(unitInfo.cnt, Math.floor(iCaps[raidKey] / unitInfo.cap));
       iCaps[raidKey] -= count * unitInfo.cap;
       unitInfo.cnt -= count;
@@ -350,7 +352,7 @@ export function calculateScavengeImpl(
       (Math.pow(Math.pow(totalCapacity, 2) * 100 * Math.pow(resourceMultiplier, 2), 0.45) + 1800) * getDurationFactor(worldSpeed);
 
     // Create unitsAllocated object for the result
-    const unitsAllocated: { [unitName: string]: number } = {
+    const unitsAllocated: TroopsCount = {
       spear: result[raid].spear,
       sword: result[raid].sword,
       axe: result[raid].axe,

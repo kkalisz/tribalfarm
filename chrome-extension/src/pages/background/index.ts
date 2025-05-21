@@ -1,11 +1,14 @@
 import {CommandMessage, Message} from '@src/shared/actions/content/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
-import {orchestrateOnTab, TabMessenger} from '@src/shared/actions/content/core/TabMessenger';
 import {IDBPDatabase, openDB} from "idb";
 import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
 import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
-import getUserMetadataAction from "@src/shared/actions/backend/getUserMetadataAction";
-import startScavengeAction from "@src/shared/actions/backend/startScavengeAction";
+import scavengeAction from "@src/shared/actions/backend/scavenge/ScavengeAction";
+import {WorldConfig} from "@src/shared/models/game/WorldConfig";
+import {fetchWorldConfig} from "@src/shared/helpers/fetchWorldConfig";
+import {settingsStorage} from "@src/shared/services/settingsStorage";
+import {PLAYER_SETTINGS_STORAGE_KEY} from "@src/shared/hooks/usePlayerSettings";
+import {orchestrateOnTab, TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -21,6 +24,16 @@ let activeTabMessenger: TabMessenger | null = null;
 
 // Declare a variable to hold the singleton instance
 let dbInstance: IDBPDatabase | null = null;
+let worldConfig: WorldConfig | null = null;
+
+export async function getWorldConfig(refetch: boolean = false): Promise<WorldConfig> {
+  if (!worldConfig || refetch) {
+    const userSettings = await PlayerSettingsManager.getInstance().getPlayerSettings();
+    console.log(`world config refetch ${userSettings.server}}`)
+    worldConfig = await fetchWorldConfig(userSettings.server);
+  }
+  return worldConfig;
+}
 
 // Function to get or initialize the singleton database
 export async function getDB(): Promise<IDBPDatabase> {
@@ -138,14 +151,14 @@ async function forwardCommandToContentScript(command: CommandMessage) {
         logInfo(`Orchestrating ${command.payload.action} command on tab ${activeTabId}`);
 
         // Send the command
-        const result = await messenger.send(
+        const result = await messenger.sendCommand(
           command.payload.action, 
           command.payload.parameters
         );
 
         // If this is a navigation command, wait for the page to load
         if (command.payload.action === 'navigate') {
-          await messenger.waitFor('event', 
+          await messenger.waitFor('event',
             (msg) => msg.type === 'event' && 
                     msg.payload.eventType === 'stateChange' && 
                     msg.payload.details.type === 'contentScriptReady',
@@ -249,21 +262,13 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         logInfo('before send');
         const context: BackendActionContext = {
           messenger: messenger,
-          playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings()
+          playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings(),
+          worldConfig: await getWorldConfig()
         }
 
-        await getUserMetadataAction(context);
-        await startScavengeAction(context, {
-          villageId: "60770"
+        //await getUserMetadataAction(context);
+        await scavengeAction(context, {
         })
-
-        // const pageStatusResponse = await messenger.executePageStatusAction({})
-        //
-        // console.log(`action result received for pageStatus 1 ${JSON.stringify(pageStatusResponse)}`)
-        // const pageStatusResponse2 = await messenger.executePageStatusAction({})
-        //
-        //
-        // console.log(`action result received pageStatus 2 ${JSON.stringify(pageStatusResponse2)}`)
       });
       return
     }
@@ -406,3 +411,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 connectWebSocket();
 
 logInfo('Service worker initialized');
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+settingsStorage.addListener(PLAYER_SETTINGS_STORAGE_KEY, (_settings) => {
+  getWorldConfig(true);
+});

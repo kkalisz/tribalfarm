@@ -13,7 +13,14 @@ export interface Messenger {
     action: BA
   ): Promise<GenericStatusPayload<RESPONSE>>
 
-  dispose(): any;
+  dispose(): void;
+
+  waitFor(
+    type: 'status' | 'event' | 'error',
+    predicate: (message: Message) => boolean,
+    timeoutMs: number,
+    actionId?: string
+  ): Promise<Record<string, unknown>>
 }
 
 
@@ -28,7 +35,7 @@ export interface CommandMessage extends BaseMessage {
   type: 'command';
   payload: {
     action: string;
-    parameters: Record<string, any>;
+    parameters: Record<string, never>;
   };
 }
 
@@ -36,7 +43,7 @@ export interface StatusMessage extends BaseMessage {
   type: 'status';
   payload: {
     status: 'in-progress' | 'done' | 'error' | 'interrupted';
-    details?: Record<string, any>;
+    details?: Record<string, never>;
   };
 }
 
@@ -64,7 +71,7 @@ export interface EventMessage extends BaseMessage {
   type: 'event';
   payload: {
     eventType: 'popup' | 'modal' | 'validation' | 'stateChange';
-    details: Record<string, any>;
+    details: Record<string, never>;
   };
 }
 
@@ -73,7 +80,7 @@ export interface ErrorMessage extends BaseMessage {
   payload: {
     message: string;
     code?: string;
-    details?: Record<string, any>;
+    details?: Record<string, never>;
   };
 }
 

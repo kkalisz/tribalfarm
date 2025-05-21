@@ -1,11 +1,11 @@
 import {describe, it} from 'vitest';
-import {AvailableTroops} from "@src/shared/actions/backend/startScavengeAction";
+import {TroopsCount} from "@src/shared/actions/backend/scavenge/ScavengeAction";
 import {calculateScavenge, ScavengeCalculationMode, ScavengeMissionInfo} from "@src/shared/helpers/calculateScavenge";
 
 describe('calculateScavengeOptions', () => {
     it('should calculate scavenge options',
       () => {
-        const allUnitsElements: AvailableTroops = {
+        const allUnitsElements: TroopsCount = {
           spear: 1000,
           sword: 1000,
         };

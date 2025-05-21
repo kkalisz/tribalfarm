@@ -2,7 +2,7 @@ import axios from 'axios';
 import {XMLParser} from 'fast-xml-parser';
 import {WorldConfig} from "@src/shared/models/game/WorldConfig";
 
-async function fetchWorldConfig(serverUrl: string): Promise<WorldConfig> {
+export async function fetchWorldConfig(serverUrl: string): Promise<WorldConfig> {
   try {
     // Fetch the XML data
     const response = await axios.get(`https://${serverUrl}/interface.php?func=get_config`, {

@@ -7,6 +7,10 @@ import {NAVIGATE_TO_PAGE_ACTION} from "@src/shared/actions/content/navigateToPag
 import {NavigateToPageActionHandler} from "@src/shared/actions/content/navigateToPage/NavigateToPageActionHandler";
 import {ActionContext} from "@src/shared/actions/content/core/ActionContext";
 import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
+import {CLICK_ACTION} from "@src/shared/actions/content/click/ClickAction";
+import {ClickActionHandler} from "@src/shared/actions/content/click/ClickActionHandler";
+import {FILL_INPUT_ACTION} from "@src/shared/actions/content/fillInput/FillInputAction";
+import {FillInputActionHandler} from "@src/shared/actions/content/fillInput/FillInputActionHandler";
 
 // Helper function to execute a command and handle its result
 async function executeCommandAndHandleResult(
@@ -75,6 +79,9 @@ export const actionExecutor = new ActionExecutor();
 export async function attachExecutor() {
   actionExecutor.register(PAGE_STATUS_ACTION, new PageStatusActionHandler());
   actionExecutor.register(NAVIGATE_TO_PAGE_ACTION, new NavigateToPageActionHandler());
+  actionExecutor.register(CLICK_ACTION, new ClickActionHandler());
+  actionExecutor.register(FILL_INPUT_ACTION, new FillInputActionHandler());
+
 
   // Check for saved state on load
   if (stateManager.loadStateFromStorage()) {
@@ -205,7 +212,7 @@ export async function attachExecutor() {
       }
 
       const actionContext: ActionContext = {
-        isCurrentActionRestored: true,
+        isCurrentActionRestored: false,
         actionId: message.actionId,
         playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings()
       }

@@ -8,9 +8,6 @@ import {
   Messenger
 } from '@src/shared/actions/content/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
-import {PAGE_STATUS_ACTION, PageStatusAction, PageStatusResponse} from "@src/shared/actions/content/pageStatus/PageStatusAction";
-import {NAVIGATE_TO_PAGE_ACTION, NavigateToPageAction, NavigateToPageActionResponse} from "@src/shared/actions/content/navigateToPage/NavigateToPageAction";
-import {action} from "webextension-polyfill";
 import {MessengerWrapper} from "@src/shared/actions/content/core/MessengerWrapper";
 
 interface PendingRequest {
@@ -162,7 +159,7 @@ export class TabMessenger implements Messenger{
     actionName: string,
     action: BA
   ): Promise<GenericStatusPayload<RESPONSE>> {
-    const result = await this.send(actionName, action as Record<string, any>);
+    const result = await this.send(actionName, action as Record<string, never>);
     console.log(`send command result: ${JSON.stringify(result.status)}`)
     return result as unknown as GenericStatusPayload<RESPONSE>;
   }

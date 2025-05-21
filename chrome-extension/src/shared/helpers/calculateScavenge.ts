@@ -1,6 +1,6 @@
 import {TroopName} from "@src/shared/models/game/Troop";
-import {AvailableTroops} from "@src/shared/actions/backend/startScavengeAction";
 import {calculateScavengeImpl} from "@src/shared/helpers/calculateScavengeImpl";
+import {TroopsCount} from "@src/shared/models/game/TroopCount";
 
 export type TroopsWithCount = Record<TroopName, number>;
 
@@ -20,7 +20,7 @@ export interface MissionResult {
   totalCapacity: number;
   resources: number;
   runTime: number;
-  unitsAllocated: { [unitName: string]: number }; // For each unit, how many were allocated in this mission
+  unitsAllocated: TroopsCount; // For each unit, how many were allocated in this mission
 }
 
 export interface MissionsStats {
@@ -40,7 +40,7 @@ export interface ScavengeMissionInfo {
 }
 
 export function calculateScavenge(
-  allUnitsElements: AvailableTroops, // Information about all units
+  allUnitsElements: TroopsCount, // Information about all units
   worldSpeed: number, // World speed factor
   missionsInfo: ScavengeMissionInfo[], // Enabled missions
   calcMethod: ScavengeCalculationMode, // Calculation method (e.g., max or default)
