@@ -1,4 +1,4 @@
-import {useSetting} from '@src/shared/services/settingsStorage';
+import {SettingsStorageService, useSetting} from '@src/shared/services/settingsStorage';
 
 export const PLAYER_SETTINGS_STORAGE_KEY = 'playerSettings';
 
@@ -16,8 +16,8 @@ export const defaultPlayerSettings: PlayerSettings = {
   server: ''
 };
 
-export function usePlayerSettings() {
-  const [playerSettings, setPlayerSettings] = useSetting<PlayerSettings>(PLAYER_SETTINGS_STORAGE_KEY, defaultPlayerSettings);
+export function usePlayerSettings(settings: SettingsStorageService) {
+  const [playerSettings, setPlayerSettings] = useSetting<PlayerSettings>(settings,PLAYER_SETTINGS_STORAGE_KEY, defaultPlayerSettings);
   return {
     playerSettings,
     setPlayerSettings

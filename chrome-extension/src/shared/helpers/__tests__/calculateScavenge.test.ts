@@ -1,5 +1,5 @@
 import {describe, it} from 'vitest';
-import {TroopsCount} from "@src/shared/actions/backend/scavenge/ScavengeAction";
+import {TroopsCount} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
 import {calculateScavenge, ScavengeCalculationMode, ScavengeMissionInfo} from "@src/shared/helpers/calculateScavenge";
 
 describe('calculateScavengeOptions', () => {

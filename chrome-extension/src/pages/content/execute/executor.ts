@@ -6,11 +6,11 @@ import {PAGE_STATUS_ACTION} from "@src/shared/actions/content/pageStatus/PageSta
 import {NAVIGATE_TO_PAGE_ACTION} from "@src/shared/actions/content/navigateToPage/NavigateToPageAction";
 import {NavigateToPageActionHandler} from "@src/shared/actions/content/navigateToPage/NavigateToPageActionHandler";
 import {ActionContext} from "@src/shared/actions/content/core/ActionContext";
-import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
 import {CLICK_ACTION} from "@src/shared/actions/content/click/ClickAction";
 import {ClickActionHandler} from "@src/shared/actions/content/click/ClickActionHandler";
 import {FILL_INPUT_ACTION} from "@src/shared/actions/content/fillInput/FillInputAction";
 import {FillInputActionHandler} from "@src/shared/actions/content/fillInput/FillInputActionHandler";
+import {ContentPageContext} from "@pages/content";
 
 // Helper function to execute a command and handle its result
 async function executeCommandAndHandleResult(
@@ -76,7 +76,7 @@ export const getState = stateManager.getState.bind(stateManager);
 export const actionExecutor = new ActionExecutor();
 
 // Attach executor to handle commands
-export async function attachExecutor() {
+export async function attachExecutor(contentPageContext: ContentPageContext) {
   actionExecutor.register(PAGE_STATUS_ACTION, new PageStatusActionHandler());
   actionExecutor.register(NAVIGATE_TO_PAGE_ACTION, new NavigateToPageActionHandler());
   actionExecutor.register(CLICK_ACTION, new ClickActionHandler());
@@ -162,7 +162,7 @@ export async function attachExecutor() {
         const actionContext: ActionContext = {
           isCurrentActionRestored: true,
           actionId: restoredCommand.actionId,
-          playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings(),
+          ...contentPageContext,
         }
         // Re-execute the command using the helper function
         executeCommandAndHandleResult(actionExecutor, actionContext, restoredCommand)
@@ -214,7 +214,7 @@ export async function attachExecutor() {
       const actionContext: ActionContext = {
         isCurrentActionRestored: false,
         actionId: message.actionId,
-        playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings()
+        ...contentPageContext,
       }
       // Execute the command using the helper function
       executeCommandAndHandleResult(actionExecutor, actionContext, message)

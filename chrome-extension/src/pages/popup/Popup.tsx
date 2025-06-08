@@ -1,32 +1,14 @@
-import React, {useState} from 'react';
-import logo from '@assets/img/logo.svg';
+import React, {useMemo, useState} from 'react';
 import {useGuiSettings} from '@src/shared/hooks/useGuiSettings';
-import {
-  Box,
-  Button,
-  Flex,
-  FormLabel,
-  Image,
-  Link,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Text
-} from '@chakra-ui/react';
+import {Box, Flex, FormLabel, Link, TabPanels, Text} from '@chakra-ui/react';
 import {usePluginSettings} from "@src/shared/hooks/usePluginSettings";
 import TribalButton from "@src/shared/ui/TribalButton";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalSwitch from "@src/shared/ui/TribalSwitch";
 import PlayerSettingsTab from "./PlayerSettingsTab";
 import {TribalTab, TribalTabList, TribalTabPanel, TribalTabs} from "@src/shared/ui/TribalTabs";
+import {SettingsStorageService} from "@src/shared/services/settingsStorage";
+import TribalText from "@src/shared/ui/TribalText";
 
 interface SettingsSwitchProps {
   label: string;
@@ -53,6 +35,21 @@ export default function Popup() {
   const {gui} = useGuiSettings();
   const {plugin} = usePluginSettings();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const gameUrlInfo = useMemo(() => {
+    return getGameUrlInfo(window.location.href)
+  }, [window.location.href])
+
+  const settings = useMemo(() => {
+    return new SettingsStorageService(gameUrlInfo.fullDomain ?? "")
+  }, [gameUrlInfo])
+
+  if (!gameUrlInfo.isValid) {
+    return <TribalCard variant={"standard"}>
+      <TribalText>
+        Not in a game page
+      </TribalText>
+    </TribalCard>
+  }
 
   return (
     <Box textAlign="center" height="full" p={3} backgroundColor="tribal.rootBg">
@@ -86,7 +83,7 @@ export default function Popup() {
                 </TribalCard>
               </TribalTabPanel>
               <TribalTabPanel>
-                <PlayerSettingsTab/>
+                <PlayerSettingsTab settings={settings}/>
               </TribalTabPanel>
               <TribalTabPanel>
                 <Text fontSize="sm">

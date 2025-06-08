@@ -9,7 +9,7 @@ export interface GameUrlParams{
 export function buildGameUrlWithScreen(
   baseUrl: string,
   gameUrlParams: GameUrlParams,
-  params: Record<string, string | number | null | undefined>
+  params?: Record<string, string | number | null | undefined>
 ): string {
   const combinedParams: Record<string, string | number | null | undefined> = {
     ...gameUrlParams,

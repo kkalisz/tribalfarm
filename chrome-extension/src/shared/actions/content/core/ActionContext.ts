@@ -1,7 +1,7 @@
 import {PlayerSettings} from "@src/shared/hooks/usePlayerSettings";
+import {ContentPageContext} from "@pages/content";
 
-export interface ActionContext {
+export interface ActionContext extends ContentPageContext{
     isCurrentActionRestored: boolean;
     actionId: string;
-    playerSettings: PlayerSettings;
 }

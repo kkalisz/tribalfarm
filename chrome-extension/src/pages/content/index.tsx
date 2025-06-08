@@ -1,12 +1,14 @@
 import {createRoot} from 'react-dom/client';
 import React from 'react';
-import {isValidDomain} from "@src/shared/helpers/isValidDomain";
 import {SidebarContainer} from "@pages/content/ui/SidebarContainer";
 import {ChakraProvider} from '@chakra-ui/react';
 import theme from '@src/shared/theme';
 import {CacheProvider} from '@emotion/react';
 import createCache from '@emotion/cache';
 import {attachExecutor} from "@pages/content/execute/executor";
+import {SettingsStorageService} from "@src/shared/services/settingsStorage";
+import {PlayerSettings} from "@src/shared/hooks/usePlayerSettings";
+import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
 
 // DOM Observer to detect modals and popups
 export function setupDOMObserver() {
@@ -44,9 +46,10 @@ export function setupDOMObserver() {
 // Wait for DOM to be fully loaded
 window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded, checking domain before initializing');
-    if (isValidDomain()) {
+    const gameUrlInfo = getGameUrlInfo(window.location.href);
+    if (gameUrlInfo.isValid) {
         console.log('Valid domain detected, initializing content script');
-        initializeContentScript();
+        initializeContentScript(gameUrlInfo);
     } else {
         console.log('Domain does not match required pattern, content script will not initialize');
     }
@@ -55,17 +58,43 @@ window.addEventListener('DOMContentLoaded', () => {
 // If DOMContentLoaded already fired, initialize immediately if domain is valid
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     console.log('DOM already loaded, checking domain before initializing');
-    if (isValidDomain()) {
+    const gameUrlInfo = getGameUrlInfo(window.location.href);
+    if (gameUrlInfo.isValid) {
         console.log('Valid domain detected, initializing content script immediately');
-        initializeContentScript();
+        initializeContentScript(gameUrlInfo);
     } else {
         console.log('Domain does not match required pattern, content script will not initialize');
     }
 }
 
-export function initializeContentScript() {
+export interface ContentPageContext {
+    settings: SettingsStorageService;
+    gameUrlInfo: GameUrlInfo;
+    playerSettings: PlayerSettings;
+}
+
+export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
+    if (!gameUrlInfo.isValid || !gameUrlInfo.fullDomain) {
+        console.log('Invalid domain detected, skipping initialization');
+        return
+    }
+    const settings = new SettingsStorageService(gameUrlInfo.fullDomain);
+    const playerSettingsManger = await new PlayerSettingsManager(settings);
+    if(!await playerSettingsManger.hasValidSettings()){
+        console.log('No valid player settings found, skipping initialization');
+        return;
+    }
+
+    const playerSettings = (await playerSettingsManger.getPlayerSettings())!;
+
+    const context: ContentPageContext = {
+        settings: settings,
+        gameUrlInfo: gameUrlInfo,
+        playerSettings: playerSettings
+    }
+
     try {
-        attachExecutor();
+        attachExecutor(context);
         setupDOMObserver();
 
         console.log('Initializing content script with Chakra UI and Shadow DOM');
@@ -112,11 +141,11 @@ export function initializeContentScript() {
         const root = createRoot(shadowRoot);
         console.log(`React app created ${!!root}`);
         root.render(
-            <CacheProvider value={shadowCache}>
-                <ChakraProvider theme={theme} resetCSS={false}>
-                    <SidebarContainer/>
-                </ChakraProvider>
-            </CacheProvider>
+          <CacheProvider value={shadowCache}>
+              <ChakraProvider theme={theme} resetCSS={false}>
+                  <SidebarContainer/>
+              </ChakraProvider>
+          </CacheProvider>
         );
 
         console.log('React app successfully rendered with Chakra UI in Shadow DOM');

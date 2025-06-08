@@ -1,6 +1,6 @@
 import {
-  MissionResult,
-  MissionsStats,
+  ScavengeMissionPlan,
+  ScavengeMissionsPlan,
   ScavengeCalculationMode,
   ScavengeMissionInfo
 } from "@src/shared/helpers/calculateScavenge";
@@ -234,7 +234,7 @@ export function calculateScavengeImpl(
   missionsInfo: ScavengeMissionInfo[],
   scavengeCalculationMode: ScavengeCalculationMode,
   timeLimitInMinutes: number = Infinity
-): MissionsStats {
+): ScavengeMissionsPlan {
   // Convert time limit to seconds
   const iMaxDuration = timeLimitInMinutes === 0 || timeLimitInMinutes === Infinity 
     ? Infinity 
@@ -302,7 +302,7 @@ export function calculateScavengeImpl(
   const result: TroopDistribution = {};
 
   // Function to fill a raid with units
-  const fillRaid = (raid: ScavengeType): MissionResult => {
+  const fillRaid = (raid: ScavengeType): ScavengeMissionPlan => {
     result[raid] = {
       spear: 0,
       sword: 0,
@@ -372,7 +372,7 @@ export function calculateScavengeImpl(
   };
 
   // Fill raids in order of priority
-  const missions: MissionResult[] = [];
+  const missions: ScavengeMissionPlan[] = [];
   if (aRaidChecked[3]) missions.push(fillRaid("RR"));
   if (aRaidChecked[2]) missions.push(fillRaid("SS"));
   if (aRaidChecked[1]) missions.push(fillRaid("BB"));

@@ -3,12 +3,11 @@ import {logInfo} from "@src/shared/helpers/sendLog";
 import {IDBPDatabase, openDB} from "idb";
 import {PlayerSettingsManager} from "@src/shared/services/PlayerSettingsManager";
 import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
-import scavengeAction from "@src/shared/actions/backend/scavenge/ScavengeAction";
-import {WorldConfig} from "@src/shared/models/game/WorldConfig";
-import {fetchWorldConfig} from "@src/shared/helpers/fetchWorldConfig";
 import {settingsStorage} from "@src/shared/services/settingsStorage";
 import {PLAYER_SETTINGS_STORAGE_KEY} from "@src/shared/hooks/usePlayerSettings";
 import {orchestrateOnTab, TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
+import WorldConfigManager from "@src/shared/services/WorldConfigManager";
+import {scavengeVillage} from "@src/shared/actions/backend/scavenge/scavengeVillage";
 
 // Connection state
 let socket: WebSocket | null = null;
@@ -24,16 +23,6 @@ let activeTabMessenger: TabMessenger | null = null;
 
 // Declare a variable to hold the singleton instance
 let dbInstance: IDBPDatabase | null = null;
-let worldConfig: WorldConfig | null = null;
-
-export async function getWorldConfig(refetch: boolean = false): Promise<WorldConfig> {
-  if (!worldConfig || refetch) {
-    const userSettings = await PlayerSettingsManager.getInstance().getPlayerSettings();
-    console.log(`world config refetch ${userSettings.server}}`)
-    worldConfig = await fetchWorldConfig(userSettings.server);
-  }
-  return worldConfig;
-}
 
 // Function to get or initialize the singleton database
 export async function getDB(): Promise<IDBPDatabase> {
@@ -237,6 +226,9 @@ function processCommandQueue() {
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   logInfo('Message from content script:', message, 'Sender:', sender);
+  if(message.world) {
+    return;
+  }
 
   // Track the active tab
   // TODO handle main tabs and worker tabs
@@ -263,12 +255,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         const context: BackendActionContext = {
           messenger: messenger,
           playerSettings: await PlayerSettingsManager.getInstance().getPlayerSettings(),
-          worldConfig: await getWorldConfig()
+          worldConfig: await WorldConfigManager.getInstance().getWorldConfig()
         }
 
-        //await getUserMetadataAction(context);
-        await scavengeAction(context, {
-        })
+        await scavengeVillage(context, {})
       });
       return
     }

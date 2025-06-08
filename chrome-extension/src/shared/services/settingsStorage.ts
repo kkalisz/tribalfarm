@@ -5,78 +5,82 @@ export interface Settings {
   [key: string]: any;
 }
 
-// Define types for listeners
 type SettingsListener = (settings: Settings) => void;
 
-// Class to manage settings storage
-class SettingsStorageService {
+export class SettingsStorageService {
+  private prefix: string;
   private listeners: Map<string, SettingsListener[]> = new Map();
 
-  constructor() {
-    // Add listener for Chrome storage changes
+  constructor(prefix: string) {
+    this.prefix = prefix;
+
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName !== 'sync') return;
 
-      // Notify listeners for each changed key
-      Object.keys(changes).forEach(key => {
-        const newValue = changes[key].newValue;
+      Object.entries(changes).forEach(([fullKey, { newValue }]) => {
+        if (!fullKey.startsWith(this.prefix + ':')) return;
+
+        const key = this.stripPrefix(fullKey);
         this.notifyListeners(key, { [key]: newValue });
       });
     });
   }
 
-  // Save a setting
+  private addPrefix(key: string): string {
+    return `${this.prefix}:${key}`;
+  }
+
+  private stripPrefix(fullKey: string): string {
+    return fullKey.slice(this.prefix.length + 1); // +1 for colon
+  }
+
   async saveSetting<T>(key: string, value: T): Promise<void> {
     try {
-      // Create an object with the key-value pair
-      const data = { [key]: value };
-
-      // Save to Chrome storage
-      await chrome.storage.sync.set(data);
-
-      // Notify listeners is now handled by the onChanged listener
+      const fullKey = this.addPrefix(key);
+      await chrome.storage.sync.set({ [fullKey]: value });
     } catch (error) {
       console.error(`Error saving setting ${key}:`, error);
     }
   }
 
-  // Get a setting
-  async getSetting<T>(key: string, defaultValue: T): Promise<T> {
+  async getSetting<T>(key: string): Promise<T | null> {
     try {
-      // Get from Chrome storage
-      const result = await chrome.storage.sync.get(key);
+      const fullKey = this.addPrefix(key);
+      const result = await chrome.storage.sync.get(fullKey);
+      return result[fullKey];
+    } catch (error) {
+      console.error(`Error getting setting ${key}:`, error);
+      return null;
+    }
+  }
 
-      // Return the value or default if not found
-      return result[key] !== undefined ? result[key] : defaultValue;
+  async getSettingOrDefault<T>(key: string, defaultValue: T): Promise<T> {
+    try {
+      const result = await this.getSetting<T>(key)
+      return result ?? defaultValue;
     } catch (error) {
       console.error(`Error getting setting ${key}:`, error);
       return defaultValue;
     }
   }
 
-  // Register a listener for a specific setting
   addListener(key: string, listener: SettingsListener): void {
     if (!this.listeners.has(key)) {
       this.listeners.set(key, []);
     }
-
     this.listeners.get(key)?.push(listener);
   }
 
-  // Remove a listener
   removeListener(key: string, listener: SettingsListener): void {
-    if (!this.listeners.has(key)) return;
-
     const keyListeners = this.listeners.get(key);
-    if (keyListeners) {
-      const index = keyListeners.indexOf(listener);
-      if (index !== -1) {
-        keyListeners.splice(index, 1);
-      }
+    if (!keyListeners) return;
+
+    const index = keyListeners.indexOf(listener);
+    if (index !== -1) {
+      keyListeners.splice(index, 1);
     }
   }
 
-  // Notify all listeners for a specific key
   private notifyListeners(key: string, settings: Settings): void {
     const keyListeners = this.listeners.get(key);
     if (keyListeners) {
@@ -85,11 +89,8 @@ class SettingsStorageService {
   }
 }
 
-// Create a singleton instance
-export const settingsStorage = new SettingsStorageService();
-
 // React hook for using settings
-export function useSetting<T>(key: string, defaultValue: T): [T, (value: T) => Promise<void>] {
+export function useSetting<T>(settingsStorage: SettingsStorageService, key: string, defaultValue: T): [T, (value: T) => Promise<void>] {
   const [value, setValue] = useState<T>(defaultValue);
 
   // Load the setting on mount
@@ -97,7 +98,7 @@ export function useSetting<T>(key: string, defaultValue: T): [T, (value: T) => P
     let isMounted = true;
 
     const loadSetting = async () => {
-      const storedValue = await settingsStorage.getSetting<T>(key, defaultValue);
+      const storedValue = await settingsStorage.getSettingOrDefault<T>(key, defaultValue);
       if (isMounted) {
         setValue(storedValue);
       }
@@ -129,3 +130,4 @@ export function useSetting<T>(key: string, defaultValue: T): [T, (value: T) => P
 
   return [value, updateSetting];
 }
+

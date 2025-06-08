@@ -3,6 +3,9 @@ import {TroopName} from "@src/shared/models/game/Troop";
 import {ScavengeMissionInfo} from "@src/shared/helpers/calculateScavenge";
 import {AllTroopNames} from "@src/shared/models/game/Troops";
 import {PageParser} from "@src/shared/helpers/PageParser";
+import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
+import {parseTimeToMiliSeconds} from "@src/shared/helpers/parseTimeToMiliSeconds";
+import {addMiliSecondsTo} from "@src/shared/helpers/addMiliSecondsToNow";
 
 
 function getScavengeStatus(index: number, element: Element): ScavengeMissionInfo {
@@ -62,4 +65,15 @@ export function parseScavengePageContent(pageContent: string) {
     troopsCount,
     scavengeOptions
   }
+}
+
+export async function extractScavengingEndTimes(context: BackendActionContext) {
+  const refreshedPageContent = await context.messenger.executePageStatusAction({})
+  const pageParser = new PageParser(refreshedPageContent.details?.pageContent ?? "");
+  const countdowns = pageParser.queryByClass("return_countdown")
+
+  // for now simplify we don't need info what exact level is finished when
+  return Array.from(countdowns).map(countdown => {
+    return parseTimeToMiliSeconds(countdown.textContent)
+  }).filter(minutes => minutes !== null).map(minutes => addMiliSecondsTo(minutes));
 }

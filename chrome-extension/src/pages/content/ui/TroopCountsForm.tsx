@@ -4,13 +4,12 @@ import TribalCard from "@src/shared/ui/TribalCard";
 import TribalInput from "@src/shared/ui/TribalInput";
 import { AllTroops } from "@src/shared/models/game/Troops";
 import { TroopName } from "@src/shared/models/game/Troop";
+import {TroopCounts} from "@src/shared/models/actions";
+import {TroopsCount} from "@src/shared/models/game/TroopCount";
 
-export interface TroopCounts {
-  [troopType: string]: number;
-}
 
 interface TroopCountsFormProps {
-  initialCounts?: TroopCounts;
+  initialCounts?: TroopsCount;
   onChange: (counts: TroopCounts) => void;
   title?: string;
 }

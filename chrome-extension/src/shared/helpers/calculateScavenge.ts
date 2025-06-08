@@ -10,12 +10,7 @@ export enum ScavengeCalculationMode {
   MAX_RESOURCES_PER_HOUR,
 }
 
-export interface Unit {
-  count: number;
-  name: TroopName;
-}
-
-export interface MissionResult {
+export interface ScavengeMissionPlan {
   missionIndex: number;
   totalCapacity: number;
   resources: number;
@@ -23,13 +18,12 @@ export interface MissionResult {
   unitsAllocated: TroopsCount; // For each unit, how many were allocated in this mission
 }
 
-export interface MissionsStats {
-  missions: MissionResult[]; // Detailed results of all missions
+export interface ScavengeMissionsPlan {
+  missions: ScavengeMissionPlan[]; // Detailed results of all missions
   totalResPerRun: number; // Total resources collected per run
   totalResPerHour: number; // Total resources collected per hour
   totalRunTime: number; // Total maximum runtime (longest mission runtime)
 }
-
 
 export interface ScavengeMissionInfo {
   id: string,
@@ -45,6 +39,6 @@ export function calculateScavenge(
   missionsInfo: ScavengeMissionInfo[], // Enabled missions
   calcMethod: ScavengeCalculationMode, // Calculation method (e.g., max or default)
   timeLimitInMinutes: number = Infinity // Time limit in minutes (0 means no limit)
-): MissionsStats {
+): ScavengeMissionsPlan {
   return calculateScavengeImpl(allUnitsElements,worldSpeed,missionsInfo, calcMethod, timeLimitInMinutes )
 }

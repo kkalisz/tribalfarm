@@ -1,20 +1,17 @@
+import {GameUrlParams} from "@src/shared/helpers/buildUrl";
+
 export function validateTribalWarsUrl(
   currentUrl: string,
-  screen: string,
-  villageId?: string,
+  gameUrlParams: GameUrlParams,
   baseUrl?: string,
-  mode?: string
 ): boolean {
   // Validate inputs
   if (!currentUrl.trim()) {
     throw new Error("Current URL cannot be blank");
   }
 
-  if (villageId && !Number.isInteger(villageId)) {
+  if (gameUrlParams.village && !Number.isInteger(gameUrlParams.village)) {
     throw new Error("Village ID must be a positive integer");
-  }
-  if (!screen.trim()) {
-    throw new Error("Screen name cannot be blank");
   }
 
 
@@ -34,11 +31,11 @@ export function validateTribalWarsUrl(
   const currentParams = new URLSearchParams(current.search);
 
   // Check required parameters: village and screen
-  if(mode && currentParams.get("mode") !== mode) {
+  if(gameUrlParams.mode && currentParams.get("mode") !== gameUrlParams.mode) {
     return false;
   }
 
-  if(screen && currentParams.get("screen") !== screen) {
+  if(gameUrlParams.screen && currentParams.get("screen") !== gameUrlParams.screen) {
     return false;
   }
 

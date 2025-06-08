@@ -3,9 +3,10 @@ import { Box, Flex } from '@chakra-ui/react';
 import { usePlayerSettings } from '@src/shared/hooks/usePlayerSettings';
 import TribalInput from '@src/shared/ui/TribalInput';
 import TribalButton from '@src/shared/ui/TribalButton';
+import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 
-const PlayerSettingsTab: React.FC = () => {
-  const { playerSettings, setPlayerSettings } = usePlayerSettings();
+const PlayerSettingsTab: React.FC<{ settings: SettingsStorageService}> = ({settings}) => {
+  const { playerSettings, setPlayerSettings } = usePlayerSettings(settings);
   const [errors, setErrors] = useState<Record<keyof typeof playerSettings, boolean>>({
     login: false,
     password: false,
