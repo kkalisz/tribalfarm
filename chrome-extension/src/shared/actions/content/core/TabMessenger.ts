@@ -32,7 +32,7 @@ interface WaitCondition {
  * even across page reloads.
  */
 export class TabMessenger implements Messenger{
-  private tabId: number;
+  private readonly tabId: number;
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private waitConditions: WaitCondition[] = [];
   // @ts-expect-error we are defining it in setupMessageListener
@@ -117,9 +117,10 @@ export class TabMessenger implements Messenger{
    * @param timeoutMs Timeout in milliseconds
    * @returns A promise that resolves with the command result
    */
-  async send(action: string, parameters: Record<string, unknown>, timeoutMs: number = 30000): Promise<Record<string, unknown>> {
+  async send(action: string, parameters: Record<string, never>, timeoutMs: number = 30000): Promise<Record<string, unknown>> {
     const actionId = uuidv4();
     const command: CommandMessage = {
+      fullDomain: "",
       type: 'command',
       actionId,
       timestamp: new Date().toISOString(),
@@ -225,20 +226,20 @@ export class TabMessenger implements Messenger{
   }
 }
 
-/**
- * Helper function to orchestrate a sequence of operations on a tab
- * @param tabId The ID of the tab to orchestrate
- * @param fn A function that uses the TabMessenger to perform operations
- * @returns A promise that resolves when the orchestration is complete
- */
-export async function orchestrateOnTab<T>(
-  tabId: number,
-  fn: (messenger: MessengerWrapper) => Promise<T>
-): Promise<T> {
-  const messenger = new MessengerWrapper(new TabMessenger(tabId));
-  try {
-    return await fn(messenger);
-  } finally {
-    messenger.dispose();
-  }
-}
+// /**
+//  * Helper function to orchestrate a sequence of operations on a tab
+//  * @param tabId The ID of the tab to orchestrate
+//  * @param fn A function that uses the TabMessenger to perform operations
+//  * @returns A promise that resolves when the orchestration is complete
+//  */
+// export async function orchestrateOnTab<T>(
+//   tabId: number,
+//   fn: (messenger: MessengerWrapper) => Promise<T>
+// ): Promise<T> {
+//   const messenger = new MessengerWrapper(new TabMessenger(tabId));
+//   try {
+//     return await fn(messenger);
+//   } finally {
+//     messenger.dispose();
+//   }
+// }

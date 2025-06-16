@@ -9,9 +9,10 @@ export interface InputParam {
 
 export interface FillInputActionResponse extends BasePageResponse{
   allInputsFilledCorrectly: boolean;
-
 }
 
 export interface FillInputAction extends BasePageAction<FillInputActionResponse> {
   inputs: InputParam[];
 }
+
+export const toInputValueWithoutZero = (value?: string) => value === '0' ? '' : value ?? '';

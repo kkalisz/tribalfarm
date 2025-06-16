@@ -15,7 +15,7 @@
       "jsx": true
     },
     "ecmaVersion": "latest",
-    "sourceType": "module"
+    "sourceType": "commonjs"
   },
   "plugins": ["react", "@typescript-eslint"],
   "rules": {

@@ -23,7 +23,7 @@ import {
  * @param isInvalid - Whether the input is invalid
  */
 interface TribalInputProps extends Omit<InputProps & TextareaProps, 'size' | 'variant'> {
-  size?: "md" | "sm";
+  size?: "md" | "sm" | "xs";
   variant?: "standard" | "textarea";
   label?: string;
   helperText?: string;
@@ -40,7 +40,7 @@ const TribalInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, TribalInp
   ...rest
 }, ref) => {
   // Size-specific styles
-  const sizeStyles: Record<"md" | "sm", any> = {
+  const sizeStyles: Record<"md" | "sm" | "xs", any> = {
     md: {
       height: (variant as "standard" | "textarea") === "textarea" ? "auto" : "38px",
       fontSize: "sm",
@@ -53,6 +53,13 @@ const TribalInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, TribalInp
       px: 2,
       py: (variant as "standard" | "textarea") === "textarea" ? 1 : undefined,
     },
+    xs: {
+      height: (variant as "standard" | "textarea") === "textarea" ? "auto" : "20px",
+      fontSize: "xs",
+      px: 1,
+      py: (variant as "standard" | "textarea") === "textarea" ? 1 : undefined,
+    }
+
   };
 
   // Common styles for all input variants
@@ -108,17 +115,17 @@ const TribalInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, TribalInp
   const InputComponent = (variant as "standard" | "textarea") === "textarea" ? (
     <Textarea
       ref={ref as React.RefObject<HTMLTextAreaElement>}
-      sx={commonStyles}
       isInvalid={isInvalid}
       minH={(size as "md" | "sm") === "md" ? "100px" : "80px"}
       {...rest}
+      sx={{ ...commonStyles, ...rest.sx}}
     />
   ) : (
     <Input
       ref={ref as React.RefObject<HTMLInputElement>}
-      sx={commonStyles}
       isInvalid={isInvalid}
       {...rest}
+      sx={{ ...commonStyles, ...rest.sx}}
     />
   );
 

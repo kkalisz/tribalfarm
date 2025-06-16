@@ -1,12 +1,9 @@
-// File: task_scheduler.ts
-
-export interface TaskInput {
-
-}
+import {BackendAction} from "@src/shared/actions/backend/core/BackendAction";
 
 interface TaskWrapper {
   id: string;
-  action: TaskInput;
+  action: BackendAction<never, never>;
+  type: string;
   lastRun: number | null;
   nextRun: number;
   running: boolean;
@@ -14,16 +11,21 @@ interface TaskWrapper {
   intervalMs: number | null
 }
 
-export class TaskScheduler {
+export class ActionScheduler {
   private taskIdCounter = 0;
   private paused = false;
   private isExclusiveRunning = false;
   private exclusiveQueue: TaskWrapper[] = [];
   private parallelQueue: TaskWrapper[] = [];
   private readonly intervalHandle: ReturnType<typeof setInterval>;
+  private executor: (type: string, action: BackendAction<never,never>) => Promise<void> = () => Promise.resolve();
 
-  constructor(private persist?: (state: any) => void, private restore?: () => any) {
+  constructor(private persist?: (state: never) => void, private restore?: () => never) {
     this.intervalHandle = setInterval(() => this.runLoop(), 1000);
+  }
+
+  public setExecutor(executor: (type: string, action: BackendAction<never,never>) => Promise<void>): void {
+    this.executor = executor;
   }
 
   public pause(): void {
@@ -38,11 +40,12 @@ export class TaskScheduler {
     clearInterval(this.intervalHandle);
   }
 
-  public scheduleTask(input: TaskInput,  exclusive: boolean, priority: number, runAt?: Date, intervalMs?: number): string {
+  public scheduleTask(type: string, input: BackendAction<never, never>,  exclusive: boolean, priority: number, runAt?: Date, intervalMs?: number): string {
     const id = `${Date.now()}_${this.taskIdCounter++}`;
     const task: TaskWrapper = {
       id,
       action: input,
+      type: type,
       lastRun: null,
       nextRun: runAt ? runAt.getTime() : Date.now(),
       running: false,
@@ -72,9 +75,9 @@ export class TaskScheduler {
   //   this.save();
   // }
 
-  public removeByPredicate(predicate: (input: TaskInput) => boolean): void {
-    this.exclusiveQueue = this.exclusiveQueue.filter(t => !predicate(t.action));
-    this.parallelQueue = this.parallelQueue.filter(t => !predicate(t.action));
+  public removeByPredicate(predicate: (input: TaskWrapper) => boolean): void {
+    this.exclusiveQueue = this.exclusiveQueue.filter(t => !predicate(t));
+    this.parallelQueue = this.parallelQueue.filter(t => !predicate(t));
     this.save();
   }
 
@@ -127,28 +130,28 @@ export class TaskScheduler {
 
   private async runTask(task: TaskWrapper): Promise<void> {
     try {
-      await task.action.run();
+      await this.executor(task.type, task.action)
     } catch (err) {
       console.error(`[TaskScheduler] Task failed`, err);
     }
   }
 
   private save(): void {
-    if (this.persist) {
-      this.persist({
-        exclusiveQueue: this.exclusiveQueue,
-        parallelQueue: this.parallelQueue,
-        taskIdCounter: this.taskIdCounter
-      });
-    }
+    // if (this.persist) {
+    //   this.persist({
+    //     exclusiveQueue: this.exclusiveQueue,
+    //     parallelQueue: this.parallelQueue,
+    //     taskIdCounter: this.taskIdCounter
+    //   });
+    // }
   }
 
   public restoreFromStorage(): void {
     if (!this.restore) return;
     const state = this.restore();
     if (!state) return;
-    this.exclusiveQueue = state.exclusiveQueue || [];
-    this.parallelQueue = state.parallelQueue || [];
-    this.taskIdCounter = state.taskIdCounter || 0;
+    // this.exclusiveQueue = state.exclusiveQueue || [];
+    // this.parallelQueue = state.parallelQueue || [];
+    // this.taskIdCounter = state.taskIdCounter || 0;
   }
 }

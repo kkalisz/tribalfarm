@@ -38,9 +38,9 @@ const theme = extendTheme({
     },
   },
   fonts: {
-    // Typography settings from ui_plan.md
-    heading: "'Cinzel', serif", // A serif font that resembles medieval text
-    body: "'Merriweather', serif", // A more readable serif font for body text
+    // Typography settings updated to Verdana, Arial
+    heading: "'Verdana', 'Arial', sans-serif", // Updated font family
+    body: "'Verdana', 'Arial', sans-serif", // Updated font family
   },
   fontSizes: {
     xs: "10px", // Small text

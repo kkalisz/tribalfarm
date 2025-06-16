@@ -25,17 +25,22 @@ export interface Messenger {
 
 
 export interface BaseMessage {
-  type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack';
+  type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack' | 'contentScriptReady';
+  fullDomain: string
   actionId: string;
   timestamp: string;
   correlationId?: string;
+}
+
+export interface ContentScriptReadyMessage extends BaseMessage {
+  type: 'contentScriptReady';
 }
 
 export interface CommandMessage extends BaseMessage {
   type: 'command';
   payload: {
     action: string;
-    parameters: Record<string, never>;
+    parameters: Record<string, any>;
   };
 }
 
@@ -43,7 +48,7 @@ export interface StatusMessage extends BaseMessage {
   type: 'status';
   payload: {
     status: 'in-progress' | 'done' | 'error' | 'interrupted';
-    details?: Record<string, never>;
+    details?: Record<string, any>;
   };
 }
 
@@ -71,7 +76,8 @@ export interface EventMessage extends BaseMessage {
   type: 'event';
   payload: {
     eventType: 'popup' | 'modal' | 'validation' | 'stateChange';
-    details: Record<string, never>;
+
+    details: Record<string, string>;
   };
 }
 
@@ -91,4 +97,4 @@ export interface AckMessage extends BaseMessage {
   };
 }
 
-export type Message = CommandMessage | StatusMessage | EventMessage | ErrorMessage | AckMessage;
+export type Message = CommandMessage | StatusMessage | EventMessage | ErrorMessage | AckMessage | ContentScriptReadyMessage;

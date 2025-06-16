@@ -18,6 +18,7 @@
     "128": "icon-128.png"
   },
   "permissions": [
+    "tabs",
     "activeTab",
     "storage",
     "downloads",

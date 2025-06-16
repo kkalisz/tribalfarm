@@ -8,7 +8,6 @@ export interface ClickParam {
 
 export interface ClickActionResponse extends BasePageResponse{
   allClicksDone: boolean;
-
 }
 
 export interface ClickAction extends BasePageAction<ClickActionResponse> {

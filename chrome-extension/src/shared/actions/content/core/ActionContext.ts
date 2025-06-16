@@ -1,7 +1,8 @@
-import {PlayerSettings} from "@src/shared/hooks/usePlayerSettings";
-import {ContentPageContext} from "@pages/content";
+import {PlayerUiContextState} from "@src/shared/contexts/PlayerContext";
+import {ContentMessengerWrapper} from "@pages/content/execute/ContentMessenger";
 
-export interface ActionContext extends ContentPageContext{
+export interface ActionContext extends PlayerUiContextState{
+    messenger: ContentMessengerWrapper
     isCurrentActionRestored: boolean;
     actionId: string;
 }

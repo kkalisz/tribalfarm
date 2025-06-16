@@ -1,32 +1,36 @@
 import React, {useState, useEffect, useCallback} from "react";
-import { Box, Flex, Image } from "@chakra-ui/react";
+import { Box, Flex, Image, Text } from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalInput from "@src/shared/ui/TribalInput";
 import { AllTroops } from "@src/shared/models/game/Troops";
 import { TroopName } from "@src/shared/models/game/Troop";
 import {TroopCounts} from "@src/shared/models/actions";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
+import TribalText from "@src/shared/ui/TribalText";
+import TribalLink from "@src/shared/ui/TribalLink";
 
 
 interface TroopCountsFormProps {
   initialCounts?: TroopsCount;
   onChange: (counts: TroopCounts) => void;
   title?: string;
+  availableTroops?: TroopsCount;
 }
 
 export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
   initialCounts = {},
   onChange,
-  title = "Troop Counts"
+  title = "Troop Counts",
+  availableTroops = {}
 }) => {
   const [counts, setCounts] = useState<TroopCounts>(initialCounts);
 
   // Update counts when initialCounts changes
-  useEffect(() => {
-    setCounts(initialCounts);
-  }, []);
+  // useEffect(() => {
+  //   setCounts(initialCounts);
+  // }, [initialCounts]);
 
-  const handleInputChange = useCallback( (troopName: TroopName, value: string) => {
+  const handleInputChange = useCallback((troopName: TroopName, value: string) => {
     const numValue = value === "" ? 0 : parseInt(value, 10);
     console.log(`new value ${numValue} ${isNaN(numValue)}`)
     if(counts[troopName] === numValue){
@@ -38,36 +42,71 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
     };
     setCounts(newCounts);
     onChange(newCounts);
-  },[]);
+  }, [counts, onChange]);
 
-  console.log(JSON.stringify(counts))
-  console.log(counts["spear"] || "");
+  // Calculate available troops for a specific troop type
+  const getAvailableTroops = useCallback((troopName: TroopName) => {
+    const available = availableTroops[troopName] || 0;
+    const current = counts[troopName] || 0;
+    return Math.max(0, available - current);
+  }, [availableTroops, counts]);
+
+  // Handle clicking on the available troops counter
+  const handleCounterClick = useCallback((troopName: TroopName) => {
+    const available = getAvailableTroops(troopName);
+    //if (available > 0) {
+      const current = counts[troopName] || 0;
+      const newValue = available === 0 ? 0 :current + available;
+      const newCounts = {
+        ...counts,
+        [troopName]: newValue
+      };
+      setCounts(newCounts);
+      onChange(newCounts);
+    //}
+  }, [counts, getAvailableTroops, onChange]);
+
 
   return (
     <TribalCard title={title}>
-      <Box width="150px">
+      <Box width="140px">
         {AllTroops.map((troop) => (
           <Flex 
             key={troop.name} 
             alignItems="center" 
-            mb={2}
+            mb={1}
             justifyContent="space-between"
           >
-              <Image
-                src={`https://dspl.innogamescdn.com/asset/5b5cd/graphic/unit/unit_${troop.name}.png`} 
-                alt={troop.name} 
-                boxSize="24px" 
-                mr={2}
-              />
-            <Box width="100px">
-              <TribalInput
-                //type="number"
-                size="sm"
-                value={counts[troop.name] ?? ""}
-                onChange={(e) => handleInputChange(troop.name, e.target.value)}
-                placeholder="0"
-              />
-            </Box>
+            <Image
+              src={`https://dspl.innogamescdn.com/asset/5b5cd/graphic/unit/unit_${troop.name}.png`} 
+              alt={troop.name} 
+              boxSize="20px" 
+              mr={1}
+            />
+            <Flex alignItems="center" gap={2} width="100%" justifyContent="start">
+              <Box width="50px" mr={1}>
+                <TribalInput
+                  size="xs"
+                  value={counts[troop.name] === 0 ? "" : counts[troop.name]}
+                  onChange={(e) => handleInputChange(troop.name, e.target.value)}
+                />
+              </Box>
+              {availableTroops[troop.name] !== undefined && (
+                <TribalLink
+                  onClick={() => handleCounterClick(troop.name)}
+                  textAlign="left"
+                  sx={{
+                    px: 1,
+                    lineHeight: 1, // This reduces the vertical space
+                    margin: 0, // Ensures there’s no margin applied
+                    padding: 0,
+                    ml: 1// Ensures no additional paddings
+                  }}
+                >
+                  {`(${getAvailableTroops(troop.name)})`}
+                </TribalLink>
+              )}
+            </Flex>
           </Flex>
         ))}
       </Box>

@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import { usePlayerSettings } from '@src/shared/hooks/usePlayerSettings';
+import {defaultPlayerSettings, PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
 import TribalInput from '@src/shared/ui/TribalInput';
 import TribalButton from '@src/shared/ui/TribalButton';
-import {SettingsStorageService} from "@src/shared/services/settingsStorage";
+import {useGameDatabase} from "@src/shared/contexts/StorageContext";
+import {useAsync} from "@src/shared/hooks/useAsync";
 
-const PlayerSettingsTab: React.FC<{ settings: SettingsStorageService}> = ({settings}) => {
-  const { playerSettings, setPlayerSettings } = usePlayerSettings(settings);
+const PlayerSettingsTab: React.FC = () => {
+
+  const gameDatabase = useGameDatabase();
+
+  const { loading, error, data: playerSettingsRaw, execute } = useAsync(() => gameDatabase.get<PlayerSettings>('playerSettings', 'playerSettings'), []);
+
+  const [ playerSettings, setPlayerSettings ] = useState(defaultPlayerSettings)
+
+  useEffect(() => {
+    setPlayerSettings(playerSettingsRaw ?? defaultPlayerSettings)
+  },[playerSettingsRaw])
+
   const [errors, setErrors] = useState<Record<keyof typeof playerSettings, boolean>>({
     login: false,
     password: false,
@@ -47,6 +58,8 @@ const PlayerSettingsTab: React.FC<{ settings: SettingsStorageService}> = ({setti
   };
 
   const handleSave = () => {
+
+    console.log('Saving settings...')
     // Check all fields
     const newErrors: Record<keyof typeof playerSettings, boolean> = {
       login: !validateField('login', playerSettings.login),
@@ -66,10 +79,18 @@ const PlayerSettingsTab: React.FC<{ settings: SettingsStorageService}> = ({setti
     });
 
     // If no errors, save settings
+    console.log(JSON.stringify(Object.values(newErrors)))
     if (!Object.values(newErrors).some(error => error)) {
+      gameDatabase.put('playerSettings', 'playerSettings',playerSettings)
       console.log('Player settings saved:', playerSettings);
     }
   };
+
+  if(loading) return (
+    <Box>
+      Loading...
+    </Box>
+  )
 
   return (
     <Box>

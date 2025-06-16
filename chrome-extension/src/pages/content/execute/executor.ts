@@ -1,4 +1,4 @@
-import { CommandMessage } from "@src/shared/actions/content/core/types";
+import {CommandMessage, Message} from "@src/shared/actions/content/core/types";
 import { stateManager } from "./StateManager";
 import {ActionExecutor} from "@src/shared/actions/content/core/AcitionExecutor";
 import {PageStatusActionHandler} from "@src/shared/actions/content/pageStatus/PageStatusActionHandler";
@@ -10,15 +10,18 @@ import {CLICK_ACTION} from "@src/shared/actions/content/click/ClickAction";
 import {ClickActionHandler} from "@src/shared/actions/content/click/ClickActionHandler";
 import {FILL_INPUT_ACTION} from "@src/shared/actions/content/fillInput/FillInputAction";
 import {FillInputActionHandler} from "@src/shared/actions/content/fillInput/FillInputActionHandler";
-import {ContentPageContext} from "@pages/content";
+import {PlayerUiContextState} from "@src/shared/contexts/PlayerContext";
+import { ContentMessengerWrapper } from "./ContentMessenger";
 
 // Helper function to execute a command and handle its result
 async function executeCommandAndHandleResult(
+  messager: ContentMessengerWrapper,
   actionExecutor: ActionExecutor,
   actionContext: ActionContext,
   command: CommandMessage, 
 ) {
 
+  const fullDomain = actionContext.gameUrlInfo.fullDomain ?? "";
   const successLogPrefix = actionContext.isCurrentActionRestored ? "Command restored": "Command executed"
   return actionExecutor.execute(actionContext, command.payload.action, command.payload.parameters)
     .then(result => {
@@ -27,8 +30,9 @@ async function executeCommandAndHandleResult(
       addLog(`${successLogPrefix}: ${result.status}`);
 
       // Send status update to service worker
-      chrome.runtime.sendMessage({
+      messager.sendMessage({
         type: 'status',
+        fullDomain: fullDomain,
         actionId: command.actionId,
         timestamp: new Date().toISOString(),
         correlationId: command.correlationId,
@@ -47,8 +51,9 @@ async function executeCommandAndHandleResult(
       addLog(`Command failed: ${error.message}`);
 
       // Send error to service worker
-      chrome.runtime.sendMessage({
+      messager.sendMessage({
         type: 'error',
+        fullDomain: fullDomain,
         actionId: command.actionId,
         timestamp: new Date().toISOString(),
         correlationId: command.correlationId,
@@ -75,12 +80,20 @@ export const getState = stateManager.getState.bind(stateManager);
 
 export const actionExecutor = new ActionExecutor();
 
+
 // Attach executor to handle commands
-export async function attachExecutor(contentPageContext: ContentPageContext) {
+export async function attachExecutor(contentPageContext: PlayerUiContextState) {
+  const fullDomain = contentPageContext.gameUrlInfo.fullDomain ?? "";
   actionExecutor.register(PAGE_STATUS_ACTION, new PageStatusActionHandler());
   actionExecutor.register(NAVIGATE_TO_PAGE_ACTION, new NavigateToPageActionHandler());
   actionExecutor.register(CLICK_ACTION, new ClickActionHandler());
   actionExecutor.register(FILL_INPUT_ACTION, new FillInputActionHandler());
+
+  const messenger = new ContentMessengerWrapper({
+    sendMessage: (message: Message) => {
+      chrome.runtime.sendMessage(message);
+    }
+  })
 
 
   // Check for saved state on load
@@ -103,8 +116,9 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
         addLog('Navigation completed after reload');
 
         // Send completion status to background
-        chrome.runtime.sendMessage({
+        messenger.sendMessage({
           type: 'status',
+          fullDomain: fullDomain,
           actionId: restoredCommand.actionId,
           timestamp: new Date().toISOString(),
           correlationId: restoredCommand.correlationId,
@@ -112,7 +126,6 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
             status: 'done',
             details: {
               url: window.location.href,
-              title: document.title
             }
           }
         });
@@ -140,14 +153,16 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
         // since the click already happened and caused the reload
         addLog('Click action completed (caused page reload)');
 
-        chrome.runtime.sendMessage({
+        messenger.sendMessage({
           type: 'status',
+          fullDomain: fullDomain,
           actionId: restoredCommand.actionId,
           timestamp: new Date().toISOString(),
           correlationId: restoredCommand.correlationId,
           payload: {
             status: 'done',
             details: {
+              url: window.location.href,
               reloadedAfterClick: true
             }
           }
@@ -165,7 +180,7 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
           ...contentPageContext,
         }
         // Re-execute the command using the helper function
-        executeCommandAndHandleResult(actionExecutor, actionContext, restoredCommand)
+        executeCommandAndHandleResult(messenger, actionExecutor, actionContext, restoredCommand)
           .catch(() => {
             // Error already handled in the helper function
           });
@@ -198,14 +213,18 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
         // For navigate actions, we'll send an immediate acknowledgment
         // The actual result will be sent after the page reloads and the command completes
         if (message.payload.action === 'navigate') {
-          chrome.runtime.sendMessage({
+           
+          messenger.sendMessage({
+            fullDomain: fullDomain,
             type: 'status',
             actionId: message.actionId,
             timestamp: new Date().toISOString(),
             correlationId: message.correlationId,
             payload: {
               status: "in-progress",
-              details: "Navigation started, page reload expected",
+              details: {
+                message: "Navigation started, page reload expected"
+              },
             }
           });
         }
@@ -217,7 +236,7 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
         ...contentPageContext,
       }
       // Execute the command using the helper function
-      executeCommandAndHandleResult(actionExecutor, actionContext, message)
+      executeCommandAndHandleResult(messenger,actionExecutor, actionContext, message)
         .catch(() => {
           // Error already handled in the helper function
         });
@@ -231,8 +250,10 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
   chrome.runtime.onMessage.addListener(messageListener);
 
   // Announce that the content script is ready
-  chrome.runtime.sendMessage({
+  messenger.sendMessage({
+    actionId: "-1",
     type: 'contentScriptReady',
+    fullDomain: fullDomain,
     timestamp: new Date().toISOString()
   });
 
@@ -245,8 +266,9 @@ export async function attachExecutor(contentPageContext: ContentPageContext) {
     const state = stateManager.getState();
 
     // Notify service worker about the unload
-    chrome.runtime.sendMessage({
+    messenger.sendMessage({
       type: 'event',
+      fullDomain: fullDomain,
       actionId: state.currentCommand?.actionId || 'none',
       timestamp: new Date().toISOString(),
       payload: {

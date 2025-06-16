@@ -31,3 +31,7 @@ export function subtractTroops(troops1: TroopsCount, troops2: TroopsCount): Troo
 
   return result;
 }
+
+export function countTroops(troops: TroopsCount): number {
+  return AllTroopNames.reduce((count, troop) => count + (troops[troop] || 0), 0);
+}

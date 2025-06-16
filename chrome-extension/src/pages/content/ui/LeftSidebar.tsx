@@ -9,6 +9,8 @@ import TribalSwitch from "@src/shared/ui/TribalSwitch";
 import TribalText from "@src/shared/ui/TribalText";
 import TroopCountsForm from "@pages/content/ui/TroopCountsForm";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
+import {usePlayerContext} from "@src/shared/contexts/PlayerContext";
+import {SCAVENGE_VILLAGE_ACTION} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
@@ -17,14 +19,16 @@ interface LeftSidebarProps {
 }
 
 export const LeftSidebar = ({
-                              leftSidebarVisible,
-                              setLeftSidebarVisible,
-                              currentCommand,
-                            }: LeftSidebarProps) => {
+  leftSidebarVisible,
+  setLeftSidebarVisible,
+  currentCommand,
+}: LeftSidebarProps) => {
   // Use the feature settings hook to get and set the autoScavenge setting
   const {autoScavenge} = useFeatureSettings();
+  const { gameUrlInfo } = usePlayerContext();
 
-  const onChangeUnits = useCallback((value: TroopsCount) => {},[])
+  const onChangeUnits = useCallback((value: TroopsCount) => {
+  }, [])
 
   return (
     <Box
@@ -69,15 +73,21 @@ export const LeftSidebar = ({
           <TribalCard title="Status">
             <TribalButton onClick={() => {
               chrome.runtime.sendMessage({
-                type: "test",
-                content: "test1",
+                type: "ui_action",
+                fullDomain: gameUrlInfo.fullDomain,
+                payload: {
+                  action: SCAVENGE_VILLAGE_ACTION,
+                  parameters: {
+                    addRepeatScavengeTimer: false,
+                  },
+                },
               });
             }}>
               Test Navigate
             </TribalButton>
             <TribalButton onClick={() => {
               chrome.runtime.sendMessage({
-                type: "test",
+                type: "ui_action",
                 content: "test2",
               });
             }}>
@@ -91,7 +101,10 @@ export const LeftSidebar = ({
               </Box>
             )}
           </TribalCard>
-          <TroopCountsForm onChange={onChangeUnits}></TroopCountsForm>
+          <TroopCountsForm onChange={onChangeUnits} availableTroops={{
+            spear: 9999,
+            axe: 9999,
+          }}/>
         </Box>
       )}
     </Box>

@@ -1,10 +1,10 @@
-type GameUrlInfo = {
+export type GameUrlInfo = {
   isValid: boolean;
   subdomain?: string;
   fullDomain?: string;
 };
 
-function getGameUrlInfo(url: string): GameUrlInfo {
+export function getGameUrlInfo(url: string): GameUrlInfo {
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname;

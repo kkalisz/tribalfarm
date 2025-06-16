@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import {useSettingsStorage} from "@src/shared/contexts/StorageContext";
 
 // Define types for settings
 export interface Settings {
@@ -90,7 +91,8 @@ export class SettingsStorageService {
 }
 
 // React hook for using settings
-export function useSetting<T>(settingsStorage: SettingsStorageService, key: string, defaultValue: T): [T, (value: T) => Promise<void>] {
+export function useSetting<T>(key: string, defaultValue: T): [T, (value: T) => Promise<void>] {
+  const settingsStorage = useSettingsStorage();
   const [value, setValue] = useState<T>(defaultValue);
 
   // Load the setting on mount
