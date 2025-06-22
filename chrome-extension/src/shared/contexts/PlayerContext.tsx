@@ -4,13 +4,14 @@ import {WorldConfig} from "@src/shared/models/game/WorldConfig";
 import {PlayerSettings} from "@src/shared/hooks/usePlayerSettings";
 import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {GameDataBase} from "@src/shared/db/GameDataBase";
+import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 
 export interface PlayerUiContextState {
   settings: SettingsStorageService;
   gameUrlInfo: GameUrlInfo;
   playerSettings: PlayerSettings;
   worldConfig: WorldConfig;
-  gameDatabase: GameDataBase;
+  gameDatabase: GameDataBaseAccess;
 }
 
 // Create the context with a default undefined value

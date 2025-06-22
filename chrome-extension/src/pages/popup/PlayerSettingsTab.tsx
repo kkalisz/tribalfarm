@@ -5,12 +5,24 @@ import TribalInput from '@src/shared/ui/TribalInput';
 import TribalButton from '@src/shared/ui/TribalButton';
 import {useGameDatabase} from "@src/shared/contexts/StorageContext";
 import {useAsync} from "@src/shared/hooks/useAsync";
+import {GameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
 
-const PlayerSettingsTab: React.FC = () => {
+interface PlayerSettingsTabProps {
+  gameUrlInfo: GameUrlInfo;
+}
+
+const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) => {
 
   const gameDatabase = useGameDatabase();
 
-  const { loading, error, data: playerSettingsRaw, execute } = useAsync(() => gameDatabase.get<PlayerSettings>('playerSettings', 'playerSettings'), []);
+
+  const defaultPlayerSettings: PlayerSettings = {
+    login: '',
+    password: '',
+    world: gameUrlInfo.subdomain ?? "",
+    server: gameUrlInfo.fullDomain ?? ""
+  }
+  const { loading, error, data: playerSettingsRaw, execute } = useAsync(() => gameDatabase.settingDb.getPlayerSettings(), []);
 
   const [ playerSettings, setPlayerSettings ] = useState(defaultPlayerSettings)
 
@@ -81,7 +93,7 @@ const PlayerSettingsTab: React.FC = () => {
     // If no errors, save settings
     console.log(JSON.stringify(Object.values(newErrors)))
     if (!Object.values(newErrors).some(error => error)) {
-      gameDatabase.put('playerSettings', 'playerSettings',playerSettings)
+      gameDatabase.settingDb.savePlayerSettings(playerSettings)
       console.log('Player settings saved:', playerSettings);
     }
   };

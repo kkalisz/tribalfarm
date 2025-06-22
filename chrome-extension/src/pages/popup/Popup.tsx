@@ -71,7 +71,7 @@ export default function Popup() {
                   </TribalCard>
                 </TribalTabPanel>
                 <TribalTabPanel>
-                  <PlayerSettingsTab />
+                  <PlayerSettingsTab gameUrlInfo={gameUrlInfo}/>
                 </TribalTabPanel>
                 <TribalTabPanel>
                   <Text fontSize="sm">

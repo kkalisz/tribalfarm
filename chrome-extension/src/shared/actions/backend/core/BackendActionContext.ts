@@ -3,7 +3,8 @@ import {MessengerWrapper} from "@src/shared/actions/content/core/MessengerWrappe
 import {WorldConfig} from "@src/shared/models/game/WorldConfig";
 import {delayRunRandom} from "@src/shared/helpers/delayRun";
 import {ActionScheduler} from "@src/shared/actions/backend/core/ActionScheduler";
-import {GameDataBase} from "@src/shared/db/GameDataBase";
+import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
+import {ServerConfig} from "@pages/background/serverConfig";
 
 export class BackendActionHelpers {
 
@@ -18,8 +19,8 @@ export class BackendActionHelpers {
 export interface BackendActionContext {
   messenger: MessengerWrapper;
   playerSettings: PlayerSettings;
-  worldConfig: WorldConfig;
+  serverConfig: ServerConfig;
   helpers: BackendActionHelpers;
   scheduler: ActionScheduler;
-  gameDatabase: GameDataBase;
+  gameDatabase: GameDataBaseAccess;
 }

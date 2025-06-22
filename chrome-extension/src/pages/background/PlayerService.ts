@@ -1,6 +1,5 @@
 import { SettingsStorageService } from "@src/shared/services/settingsStorage";
 import { PlayerSettings } from "@src/shared/hooks/usePlayerSettings";
-import { WorldConfig } from "@src/shared/models/game/WorldConfig";
 import {
   BackendActionContext,
   BackendActionHelpers,
@@ -10,25 +9,22 @@ import { ActionScheduler } from "@src/shared/actions/backend/core/ActionSchedule
 import { MessengerWrapper } from "@src/shared/actions/content/core/MessengerWrapper";
 import { BackendAction } from "@src/shared/actions/backend/core/BackendAction";
 import {logError, logInfo} from "@src/shared/helpers/sendLog";
-import {GameDataBase} from "@src/shared/db/GameDataBase";
-import {Runtime} from "webextension-polyfill";
-import MessageSender = Runtime.MessageSender;
-import {GameDatabaseBackgroundSync} from "@src/shared/db/GameDatabaseBackgroundSync";
-import {IDBPDatabase} from "idb";
+import MessageSender = chrome.runtime.MessageSender;
+import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
+import {ServerConfig} from "@pages/background/serverConfig";
 
 export class PlayerService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handlers: Record<string, BackendAction<any, any>> = {};
   private actionContext: BackendActionContext;
-  private gameDatabaseSync: GameDatabaseBackgroundSync;
 
   constructor(
     private settings: SettingsStorageService,
     private playerSettings: PlayerSettings,
-    private worldConfig: WorldConfig,
+    private serverConfig: ServerConfig,
     private tabMessanger: TabMessenger,
     private actionScheduler: ActionScheduler,
-    private database: GameDataBase,
+    private database: GameDataBaseAccess,
     private mainTabId: number
   ) {
     // Explicitly declare actionContext in the class (if not done already)
@@ -37,11 +33,9 @@ export class PlayerService {
       messenger: new MessengerWrapper(this.tabMessanger),
       playerSettings: this.playerSettings,
       scheduler: this.actionScheduler,
-      worldConfig: this.worldConfig,
+      serverConfig: this.serverConfig,
       gameDatabase: this.database,
     };
-
-    this.gameDatabaseSync = new GameDatabaseBackgroundSync(this.database.db  as IDBPDatabase, this.database.prefix)
 
     // Set up the executor for the action scheduler
     this.actionScheduler.setExecutor(

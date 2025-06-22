@@ -16,11 +16,14 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 }) => {
   return (
     <Box
+      pointerEvents={rightSidebarVisible ? "auto" : "none"}
       position="fixed"
       top="0"
-      right="0"
-      height="full"
+      right="4"
+      height="100vh"
       width="25%"
+      display="flex"
+      flexDirection="column"
       overflow="hidden"
     >
       <Flex p={2} justifyContent="flex-end" pointerEvents="none">
@@ -34,12 +37,28 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       {/* Sidebar Content - Completely hidden when not visible */}
       {rightSidebarVisible && (
         <Box
-          height="fit-content"
-          overflowY="hidden"
+          flex="1"
           pointerEvents="auto"
+          height="100%"
+          display="flex"
+          flexDirection="column"
+          overflow="hidden"
         >
-          <TribalCard title="Logs">
-            <Box mt={2} fontSize="sm">
+          <TribalCard 
+            title="Logs" 
+            style={{ 
+              height: "100%", 
+              display: "flex", 
+              flexDirection: "column"
+            }}
+          >
+            <Box 
+              fontSize="sm"
+              flex="1" 
+              overflowY="auto" 
+              overflowX="hidden" 
+              height="100%"
+            >
               {logs.map((log, index) => (
                 <Text key={index}>{log}</Text>
               ))}

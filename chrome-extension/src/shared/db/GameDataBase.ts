@@ -1,8 +1,9 @@
 import { IDBPDatabase, openDB } from 'idb';
 import { PlayerSettings } from '@src/shared/hooks/usePlayerSettings';
 import { WorldConfig } from '@src/shared/models/game/WorldConfig';
-import { v4 as uuidv4 } from 'uuid';
-import {TroopsCount} from "@src/shared/models/game/TroopCount"; // For generating unique identifiers
+import {TroopsCount} from "@src/shared/models/game/TroopCount";
+import {Troop} from "@src/shared/models/game/Troop";
+import {Building} from "@src/shared/models/game/Building"; // For generating unique identifiers
 
 // Define the database schema using TypeScript interfaces
 export interface DatabaseSchema {
@@ -26,6 +27,14 @@ export interface DatabaseSchema {
       id: string; // Identifier derived from domain prefix
       config: WorldConfig; // World configuration object
     };
+  };
+  troopConfig: {
+    key: string; // Primary key
+    value: Troop;
+  };
+  buildingConfig: {
+    key: string; // Primary key
+    value: Building;
   };
 }
 
@@ -62,111 +71,20 @@ export class GameDataBase {
             keyPath: 'id',
           });
         }
+
+        // Create the "troopConfig" store, using the `name` field from Troop as the key
+        if (!db.objectStoreNames.contains('troopConfig')) {
+          db.createObjectStore('troopConfig', {
+            keyPath: 'name', // Use `name` as the key
+          });
+        }
+
+        if (!db.objectStoreNames.contains('buildingConfig')) {
+          db.createObjectStore('buildingConfig', {
+            keyPath: 'name', // Use `name` as the key
+          });
+        }
       },
     });
   }
-
-  /* ---------- TroopsCount Methods ---------- */
-
-  // Upsert (insert or update) a TroopsCount entry
-  public async upsertTroopsCount(id: string | undefined, troopsCount: TroopsCount): Promise<string> {
-    const troopsId = id || uuidv4();
-    await this.db.put('troopsCounts', {
-      id: troopsId,
-      troops: troopsCount,
-    });
-    return troopsId;
-  }
-
-  // Retrieve a TroopsCount by ID
-  public async getTroopsCount(id: string): Promise<TroopsCount | null> {
-    const record = await this.db.get('troopsCounts', id);
-    return record ? record.troops : null;
-  }
-
-  // Delete a TroopsCount entry by ID
-  public async deleteTroopsCount(id: string): Promise<void> {
-    await this.db.delete('troopsCounts', id);
-  }
-
-  /* ---------- PlayerSettings Methods ---------- */
-
-  settingDb = {
-
-    savePlayerSettings: async (settings: PlayerSettings): Promise<void> => {
-      await this.db.put('playerSettings', {
-        id: 'playerSettings',
-        settings,
-      });
-    },
-
-    getPlayerSettings: async (): Promise<PlayerSettings | null> => {
-      const record = await this.db.get('playerSettings', 'playerSettings');
-      return record ? record.settings : null;
-    },
-
-    deletePlayerSettings: async (): Promise<void> => {
-      await this.db.delete('playerSettings', 'playerSettings');
-    },
-
-    saveWorldConfig: async (config: WorldConfig): Promise<void> => {
-      await this.db.put('worldConfig', {
-        id: 'worldConfig',
-        config,
-      });
-    },
-
-    getWorldConfig: async (): Promise<WorldConfig | null> => {
-      const record = await this.db.get('worldConfig', 'worldConfig');
-      return record ? record.config : null;
-    },
-
-    deleteWorldConfig: async (): Promise<void> => {
-      await this.db.delete('worldConfig', 'worldConfig');
-    },
-  };
 }
-
-// // Example usage
-// (async () => {
-//   const domainUrl = 'https://example.com';
-//   const db = new DB(domainUrl);
-//
-//   // Initialize the database
-//   await db.init();
-//
-//   // Upsert TroopsCount
-//   const troopsCountId = await db.upsertTroopsCount(undefined, { Swordsman: 20, Archer: 10 });
-//   console.log('TroopsCount saved with ID:', troopsCountId);
-//
-//   // Retrieve TroopsCount
-//   const retrievedTroopsCount = await db.getTroopsCount(troopsCountId);
-//   console.log('Retrieved TroopsCount:', retrievedTroopsCount);
-//
-//   // Save PlayerSettings
-//   const playerSettings: PlayerSettings = {
-//     login: 'testUser',
-//     password: 'securePassword',
-//     world: 'world1',
-//     server: 'server1',
-//   };
-//   await db.savePlayerSettings(playerSettings);
-//   console.log('PlayerSettings saved.');
-//
-//   // Retrieve PlayerSettings
-//   const retrievedPlayerSettings = await db.getPlayerSettings();
-//   console.log('Retrieved PlayerSettings:', retrievedPlayerSettings);
-
-//   // Save WorldConfig
-//   const worldConfig: WorldConfig = {
-//     speed: 2.0,
-//     troopSpeed: 1.5,
-//     unitBuildTimeFactor: 0.8,
-//   };
-//   await db.saveWorldConfig(worldConfig);
-//   console.log('WorldConfig saved.');
-//
-//   // Retrieve WorldConfig
-//   const retrievedWorldConfig = await db.getWorldConfig();
-//   console.log('Retrieved WorldConfig:', retrievedWorldConfig);
-// })();

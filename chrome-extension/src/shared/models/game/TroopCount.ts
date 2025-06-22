@@ -1,5 +1,4 @@
-import {TroopName} from "@src/shared/models/game/Troop";
-import {AllTroopNames} from "@src/shared/models/game/Troops";
+import {AllTroopNames, TroopName} from "@src/shared/models/game/Troop";
 
 export type TroopsCount = {
   [key in TroopName]?: number;

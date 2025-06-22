@@ -1,4 +1,4 @@
-import {FC, PropsWithChildren} from "react";
+import React, {FC, PropsWithChildren} from "react";
 import {Box} from "@chakra-ui/react";
 
 /**
@@ -8,16 +8,19 @@ import {Box} from "@chakra-ui/react";
  *
  * @param title - Optional header title
  * @param variant - Card style variant: "standard" (default), "simple", or "highlighted"
+ * @param style - Optional CSS properties to apply to the card
  * @param children - Content to be displayed inside the card
  */
 interface TribalCardProps {
   title?: string;
   variant?: "standard" | "simple" | "highlighted" | "secondary";
+  style?: React.CSSProperties;
 }
 
 const TribalCard: FC<PropsWithChildren<TribalCardProps>> = ({
   title,
   variant = "standard",
+  style,
   children
 }) => {
   // Determine border color based on variant
@@ -33,7 +36,9 @@ const TribalCard: FC<PropsWithChildren<TribalCardProps>> = ({
       borderWidth="2px"
       borderColor={borderColor}
       boxShadow="inner"
+      overflow="hidden"
       // borderRadius="md"
+      style={style}
       _before={variant === "highlighted" ? {
         content: '""',
         top: "-4px",
@@ -69,6 +74,10 @@ const TribalCard: FC<PropsWithChildren<TribalCardProps>> = ({
         fontSize="sm"
         color="tribal.cardText"
         fontFamily="body"
+        flex="1"
+        display="flex"
+        flexDirection="column"
+        overflow="hidden"
       >
         {children}
       </Box>

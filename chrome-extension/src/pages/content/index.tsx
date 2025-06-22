@@ -12,7 +12,10 @@ import {GameUrlInfo, getGameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
 import {GameDatabaseContext, StorageContext} from "@src/shared/contexts/StorageContext";
 import {PlayerUiContext, PlayerUiContextState} from '@src/shared/contexts/PlayerContext';
 import {fetchWorldConfig} from "@src/shared/helpers/fetchWorldConfig";
-import {GameDataBase} from "@src/shared/db/GameDataBase";
+import {DatabaseSchema} from "@src/shared/db/GameDataBase";
+import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
+import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
+import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
 
 // DOM Observer to detect modals and popups
 export function setupDOMObserver() {
@@ -78,8 +81,9 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
   }
   const settings = new SettingsStorageService(gameUrlInfo.fullDomain);
 
-  const gameDatabase = new GameDataBase(gameUrlInfo.fullDomain);
-  await gameDatabase.init();
+  //const database = new GameDataBase(gameUrlInfo.fullDomain);
+  //await database.init();
+  const gameDatabase = new GameDataBaseAccess(new ProxyIDBPDatabase<DatabaseSchema>(new GameDatabaseClientSync(gameUrlInfo.fullDomain)));
   const playerSettings = await gameDatabase.settingDb.getPlayerSettings();
   if (playerSettings == null || !hasValidPlayerSettings(playerSettings)) {
     console.log('No valid player settings found, skipping initialization');

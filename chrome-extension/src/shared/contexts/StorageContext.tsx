@@ -2,13 +2,14 @@ import React, {createContext, useContext, ReactNode, useMemo, useState, useEffec
 import { SettingsStorageService } from '@src/shared/services/settingsStorage';
 import { getGameUrlInfo } from '@src/shared/helpers/getGameUrlInfo';
 import {useCurrentTabUrl} from "@src/shared/hooks/useCurrentTabUrl";
-import {GameDataBase} from "@src/shared/db/GameDataBase";
+import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
+import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
 
 // Create the context with a default undefined value
 export const StorageContext = createContext<SettingsStorageService | undefined>(undefined);
 
-export const GameDatabaseContext = createContext<GameDatabaseClientSync | undefined>(undefined);
+export const GameDatabaseContext = createContext<GameDataBaseAccess | undefined>(undefined);
 
 // Props for the provider component
 interface SettingsStorageProviderProps {
@@ -27,7 +28,7 @@ export const StorageProvider: React.FC<SettingsStorageProviderProps> = ({
   domain 
 }) => {
   // Get the domain from the URL or use the provided domain
-  const [gameDatabase, setGameDatabase] = useState<GameDatabaseClientSync | null>(null);
+  const [gameDatabase, setGameDatabase] = useState<GameDataBaseAccess | null>(null);
 
   const currentTabUrl = useCurrentTabUrl(useTabsApi);
   const gameUrlInfo = useMemo(() => {
@@ -43,8 +44,8 @@ export const StorageProvider: React.FC<SettingsStorageProviderProps> = ({
    useEffect(() => {
     const domainToUse = domain || gameUrlInfo.fullDomain || "";
     if(domainToUse){
-      const dataBase = new GameDatabaseClientSync(domainToUse);
-      setGameDatabase(dataBase); // Update state if still mounted
+      const dataBase = new ProxyIDBPDatabase(new GameDatabaseClientSync(domainToUse));
+      setGameDatabase(new GameDataBaseAccess(dataBase)); // Update state if still mounted
     }
     }, [domain, gameUrlInfo.fullDomain]);
 
@@ -77,7 +78,7 @@ export const useSettingsStorage = (): SettingsStorageService => {
   return context;
 };
 
-export const useGameDatabase = (): GameDatabaseClientSync => {
+export const useGameDatabase = (): GameDataBaseAccess => {
   const context = useContext(GameDatabaseContext);
 
   if (context === undefined) {

@@ -1,12 +1,10 @@
-import React, {useState, useEffect, useCallback} from "react";
-import { Box, Flex, Image, Text } from "@chakra-ui/react";
+import React, {useState, useCallback} from "react";
+import { Box, Flex, Image } from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalInput from "@src/shared/ui/TribalInput";
-import { AllTroops } from "@src/shared/models/game/Troops";
-import { TroopName } from "@src/shared/models/game/Troop";
+import {AllTroopNames, TroopName} from "@src/shared/models/game/Troop";
 import {TroopCounts} from "@src/shared/models/actions";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
-import TribalText from "@src/shared/ui/TribalText";
 import TribalLink from "@src/shared/ui/TribalLink";
 
 
@@ -70,16 +68,16 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
   return (
     <TribalCard title={title}>
       <Box width="140px">
-        {AllTroops.map((troop) => (
+        {AllTroopNames.map((name) => (
           <Flex 
-            key={troop.name} 
+            key={name} 
             alignItems="center" 
             mb={1}
             justifyContent="space-between"
           >
             <Image
-              src={`https://dspl.innogamescdn.com/asset/5b5cd/graphic/unit/unit_${troop.name}.png`} 
-              alt={troop.name} 
+              src={`https://dspl.innogamescdn.com/asset/5b5cd/graphic/unit/unit_${name}.png`} 
+              alt={name} 
               boxSize="20px" 
               mr={1}
             />
@@ -87,13 +85,13 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
               <Box width="50px" mr={1}>
                 <TribalInput
                   size="xs"
-                  value={counts[troop.name] === 0 ? "" : counts[troop.name]}
-                  onChange={(e) => handleInputChange(troop.name, e.target.value)}
+                  value={counts[name] === 0 ? "" : counts[name]}
+                  onChange={(e) => handleInputChange(name, e.target.value)}
                 />
               </Box>
-              {availableTroops[troop.name] !== undefined && (
+              {availableTroops[name] !== undefined && (
                 <TribalLink
-                  onClick={() => handleCounterClick(troop.name)}
+                  onClick={() => handleCounterClick(name)}
                   textAlign="left"
                   sx={{
                     px: 1,
@@ -103,7 +101,7 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
                     ml: 1// Ensures no additional paddings
                   }}
                 >
-                  {`(${getAvailableTroops(troop.name)})`}
+                  {`(${getAvailableTroops(name)})`}
                 </TribalLink>
               )}
             </Flex>

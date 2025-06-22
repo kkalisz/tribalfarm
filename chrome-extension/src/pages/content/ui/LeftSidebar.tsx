@@ -11,6 +11,7 @@ import TroopCountsForm from "@pages/content/ui/TroopCountsForm";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import {usePlayerContext} from "@src/shared/contexts/PlayerContext";
 import {SCAVENGE_VILLAGE_ACTION} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
+import {playSound} from "@pages/content/helpers/playSound";
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
@@ -101,6 +102,11 @@ export const LeftSidebar = ({
               </Box>
             )}
           </TribalCard>
+          <TribalButton onClick={() => {
+            playSound();
+          }}>
+            Play
+          </TribalButton>
           <TroopCountsForm onChange={onChangeUnits} availableTroops={{
             spear: 9999,
             axe: 9999,

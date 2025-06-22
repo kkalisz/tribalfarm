@@ -1,5 +1,6 @@
-type ResourceCost = {
+export type ResourceCost = {
   wood: number;
-  clay: number;
+  stone: number;
   iron: number;
+  pop: number;
 };
