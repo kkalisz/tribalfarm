@@ -5,7 +5,6 @@ import {ChakraProvider} from '@chakra-ui/react';
 import theme from '@src/shared/theme';
 import {CacheProvider} from '@emotion/react';
 import createCache from '@emotion/cache';
-import {attachExecutor} from "@pages/content/execute/executor";
 import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {hasValidPlayerSettings,} from "@src/shared/services/hasValidPlayerSettings";
 import {GameUrlInfo, getGameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
@@ -16,6 +15,17 @@ import {DatabaseSchema} from "@src/shared/db/GameDataBase";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
 import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
+import {ExecutorAttacher} from "@pages/content/execute/ExecutorAttacher";
+
+let attachExecutor: ExecutorAttacher | null = null;
+
+
+
+function onBotCheck(botCheck: boolean) {
+  if(!attachExecutor){
+    return
+  }
+}
 
 // DOM Observer to detect modals and popups
 export function setupDOMObserver() {
@@ -75,6 +85,9 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 }
 
 export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
+  if(attachExecutor != null){
+    return;
+  }
   if (!gameUrlInfo.isValid || !gameUrlInfo.fullDomain) {
     console.log('Invalid domain detected, skipping initialization');
     return
@@ -105,7 +118,7 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
   }
 
   try {
-    attachExecutor(context);
+    attachExecutor = new ExecutorAttacher(context);
     setupDOMObserver();
 
     console.log('Initializing content script with Chakra UI and Shadow DOM');
