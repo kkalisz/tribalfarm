@@ -6,14 +6,18 @@ export type StateSubscriber = () => void;
 /**
  * StateManager handles the state management for the executor
  * It manages the current command, status, events, logs, and subscriptions
+ * 
+ * Note: The binding/subscription system is simplified as it's not needed in most cases.
+ * Only UI components that need to react to state changes should use subscriptions.
  */
 export class StateManager {
   // State variables
   private currentCommand: CommandMessage | null = null;
   private commandStatus: string = 'idle';
   private logs: string[] = [];
-  
-  // Subscribers for state changes
+  private paused: boolean = false;
+
+  // Subscribers for state changes (only used by UI components)
   private subscribers: StateSubscriber[] = [];
 
   constructor() {}
@@ -21,21 +25,46 @@ export class StateManager {
   // State setters
   public setCurrentCommand(command: CommandMessage | null): void {
     this.currentCommand = command;
-    this.notifySubscribers();
+    // Only notify subscribers if there are any
+    if (this.subscribers.length > 0) {
+      this.notifySubscribers();
+    }
   }
 
   public setCommandStatus(status: string): void {
     this.commandStatus = status;
-    this.notifySubscribers();
+    // Only notify subscribers if there are any
+    if (this.subscribers.length > 0) {
+      this.notifySubscribers();
+    }
   }
+
+  public setPaused(paused: boolean): void {
+    this.paused = paused;
+    // Only notify subscribers if there are any
+    if (this.subscribers.length > 0) {
+      this.notifySubscribers();
+    }
+  }
+
+  public isPaused(): boolean {
+    return this.paused;
+  }
+
   public setLogs(newLogs: string[]): void {
     this.logs = newLogs;
-    this.notifySubscribers();
+    // Only notify subscribers if there are any
+    if (this.subscribers.length > 0) {
+      this.notifySubscribers();
+    }
   }
 
   public addLog(message: string): void {
     this.logs = [...this.logs, `${new Date().toLocaleTimeString()}: ${message}`];
-    this.notifySubscribers();
+    // Only notify subscribers if there are any
+    if (this.subscribers.length > 0) {
+      this.notifySubscribers();
+    }
   }
 
   // Notify all subscribers when state changes
@@ -43,7 +72,7 @@ export class StateManager {
     this.subscribers.forEach(subscriber => subscriber());
   }
 
-  // Subscribe to state changes
+  // Subscribe to state changes (only used by UI components)
   public subscribeToState(callback: StateSubscriber): () => void {
     this.subscribers.push(callback);
     return () => {
@@ -59,11 +88,13 @@ export class StateManager {
     currentCommand: CommandMessage | null;
     commandStatus: string;
     logs: string[];
+    paused: boolean;
   } {
     return {
       currentCommand: this.currentCommand,
       commandStatus: this.commandStatus,
-      logs: this.logs
+      logs: this.logs,
+      paused: this.paused
     };
   }
 
@@ -72,7 +103,8 @@ export class StateManager {
     sessionStorage.setItem(key, JSON.stringify({
       currentCommand: this.currentCommand,
       commandStatus: this.commandStatus,
-      logs: this.logs
+      logs: this.logs,
+      paused: this.paused
     }));
   }
 
@@ -85,6 +117,7 @@ export class StateManager {
         this.setCurrentCommand(parsed.currentCommand);
         this.setCommandStatus(parsed.commandStatus);
         this.setLogs(parsed.logs || []);
+        this.setPaused(parsed.paused || false);
         return true;
       } catch (e) {
         console.error('Failed to parse saved state:', e);

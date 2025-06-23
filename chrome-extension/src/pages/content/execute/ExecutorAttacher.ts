@@ -22,13 +22,37 @@ export class ExecutorAttacher {
   private actionExecutor: ActionExecutor;
   private messenger: ContentMessengerWrapper;
 
-  // Re-export state management functions from StateManager for backward compatibility
-  public setCurrentCommand = stateManager.setCurrentCommand.bind(stateManager);
-  public setCommandStatus = stateManager.setCommandStatus.bind(stateManager);
-  public setLogs = stateManager.setLogs.bind(stateManager);
-  public addLog = stateManager.addLog.bind(stateManager);
-  public subscribeToState = stateManager.subscribeToState.bind(stateManager);
-  public getState = stateManager.getState.bind(stateManager);
+  public setPaused(paused: boolean): void {
+    if(paused == stateManager.isPaused()){
+      return
+    }
+    stateManager.setPaused(paused);
+
+    // If unpausing and there's a command in progress, resume execution
+    if (!paused) {
+      const state = stateManager.getState();
+      if (state.currentCommand && state.commandStatus === 'in-progress') {
+        this.resumeCommand(state.currentCommand);
+      }
+    }
+  }
+
+  private resumeCommand(command: CommandMessage): void {
+    stateManager.addLog(`Resuming command execution: ${command.payload.action}`);
+
+    const actionContext: ActionContext = {
+      isCurrentActionRestored: false,
+      messenger: this.messenger,
+      actionId: command.actionId,
+      ...this.contentPageContext,
+    };
+
+    // Execute the command using the helper function
+    this.executeCommandAndHandleResult(this.messenger, this.actionExecutor, actionContext, command)
+      .catch(() => {
+        // Error already handled in the helper function
+      });
+  }
 
   private messageListener: (
     message: CommandMessage,
@@ -64,8 +88,8 @@ export class ExecutorAttacher {
     return actionExecutor.execute(actionContext, command.payload.action, command.payload.parameters)
       .then(result => {
         console.log(`${successLogPrefix}: ${result.status}`);
-        this.setCommandStatus(result.status);
-        this.addLog(`${successLogPrefix}: ${result.status}`);
+        stateManager.setCommandStatus(result.status);
+        stateManager.addLog(`${successLogPrefix}: ${result.status}`);
 
         // Send status update to service worker
         messager.sendMessage({
@@ -85,8 +109,8 @@ export class ExecutorAttacher {
       .catch(error => {
         console.log(`fail ${JSON.stringify(error)}`)
         console.error(`Command failed: ${error.message}`);
-        this.setCommandStatus('error');
-        this.addLog(`Command failed: ${error.message}`);
+        stateManager.setCommandStatus('error');
+        stateManager.addLog(`Command failed: ${error.message}`);
 
         // Send error to service worker
         messager.sendMessage({
@@ -109,19 +133,19 @@ export class ExecutorAttacher {
   public attach(): () => void {
     // Register action handlers
     this.registerActionHandlers();
-    
+
     // Check for saved state on load
     this.handleStateRestoration();
-    
+
     // Set up message listener
     chrome.runtime.onMessage.addListener(this.messageListener);
-    
+
     // Announce that the content script is ready
     this.announceContentScriptReady();
-    
+
     // Set up beforeunload handler for page reloads
     this.setupBeforeUnloadHandler();
-    
+
     // Return cleanup function
     return () => {
       chrome.runtime.onMessage.removeListener(this.messageListener);
@@ -138,29 +162,51 @@ export class ExecutorAttacher {
   private handleStateRestoration(): void {
     if (stateManager.loadStateFromStorage()) {
       stateManager.addLog('Restored state after page reload');
-      
+
       // Clear the saved state to prevent reprocessing on future reloads
       stateManager.clearStateFromStorage();
-      
+
       // Get the current state
       const state = stateManager.getState();
-      
+
       // If we have a command that was in progress during reload, continue processing it
       if (state.currentCommand && state.commandStatus === 'in-progress') {
         const restoredCommand = state.currentCommand;
-        stateManager.addLog(`Continuing command after reload: ${restoredCommand.payload.action}`);
-        
-        // For navigate commands, we're already at the destination, so mark as complete
-        if (restoredCommand.payload.action === 'navigate' || restoredCommand.payload.action == 'navigateToScreenAction') {
-          this.handleNavigationAfterReload(restoredCommand);
-        } 
-        // For click commands that caused a reload, we'll consider them done
-        else if (restoredCommand.payload.action === 'click') {
-          this.handleClickAfterReload(restoredCommand);
-        }
-        // For other commands, we might need to re-execute them
-        else {
-          this.reExecuteCommandAfterReload(restoredCommand);
+
+        // Check if execution was paused
+        if (state.paused) {
+          stateManager.addLog(`Command execution remains paused after reload: ${restoredCommand.payload.action}`);
+
+          // Notify that the command is still paused
+          this.messenger.sendMessage({
+            type: 'status',
+            fullDomain: this.fullDomain,
+            actionId: restoredCommand.actionId,
+            timestamp: new Date().toISOString(),
+            correlationId: restoredCommand.correlationId,
+            payload: {
+              status: 'in-progress',
+              details: {
+                paused: true,
+                message: "Command execution is paused after page reload"
+              }
+            }
+          });
+        } else {
+          stateManager.addLog(`Continuing command after reload: ${restoredCommand.payload.action}`);
+
+          // For navigate commands, we're already at the destination, so mark as complete
+          if (restoredCommand.payload.action === 'navigate' || restoredCommand.payload.action == 'navigateToScreenAction') {
+            this.handleNavigationAfterReload(restoredCommand);
+          } 
+          // For click commands that caused a reload, we'll consider them done
+          else if (restoredCommand.payload.action === 'click') {
+            this.handleClickAfterReload(restoredCommand);
+          }
+          // For other commands, we might need to re-execute them
+          else {
+            this.reExecuteCommandAfterReload(restoredCommand);
+          }
         }
       }
     }
@@ -168,7 +214,7 @@ export class ExecutorAttacher {
 
   private handleNavigationAfterReload(restoredCommand: CommandMessage): void {
     stateManager.addLog('Navigation completed after reload');
-    
+
     // Send completion status to background
     this.messenger.sendMessage({
       type: 'status',
@@ -187,7 +233,7 @@ export class ExecutorAttacher {
 
   private handleClickAfterReload(restoredCommand: CommandMessage): void {
     stateManager.addLog('Click action completed (caused page reload)');
-    
+
     this.messenger.sendMessage({
       type: 'status',
       fullDomain: this.fullDomain,
@@ -202,20 +248,20 @@ export class ExecutorAttacher {
         }
       }
     });
-    
+
     stateManager.setCommandStatus('done');
   }
 
   private reExecuteCommandAfterReload(restoredCommand: CommandMessage): void {
     stateManager.addLog(`Re-executing command after reload: ${restoredCommand.payload.action}`);
-    
+
     const actionContext: ActionContext = {
       isCurrentActionRestored: true,
       messenger: this.messenger,
       actionId: restoredCommand.actionId,
       ...this.contentPageContext,
     };
-    
+
     // Re-execute the command using the helper function
     this.executeCommandAndHandleResult(this.messenger, this.actionExecutor, actionContext, restoredCommand)
       .catch(() => {
@@ -239,17 +285,17 @@ export class ExecutorAttacher {
         stateManager.setCurrentCommand(message);
         stateManager.setCommandStatus('in-progress');
         stateManager.addLog(`Received command: ${message.payload.action}`);
-        
+
         // If this is an action that might cause a page refresh, save state immediately
         if (ACTIONS_WITH_PAGE_REFRESH.includes(message.payload.action)) {
           console.log('Command might cause page refresh, saving state');
-          
+
           // Set last event before saving state
           stateManager.addLog('Preparing for possible page reload');
-          
+
           // Save state to session storage
           stateManager.saveStateToStorage();
-          
+
           // For navigate actions, we'll send an immediate acknowledgment
           if (message.payload.action === 'navigate') {
             this.messenger.sendMessage({
@@ -267,20 +313,44 @@ export class ExecutorAttacher {
             });
           }
         }
-        
+
         const actionContext: ActionContext = {
           isCurrentActionRestored: false,
           messenger: this.messenger,
           actionId: message.actionId,
           ...this.contentPageContext,
         };
-        
-        // Execute the command using the helper function
-        this.executeCommandAndHandleResult(this.messenger, this.actionExecutor, actionContext, message)
-          .catch(() => {
-            // Error already handled in the helper function
+
+        // Check if execution is paused
+        if (stateManager.isPaused()) {
+          stateManager.addLog(`Command execution paused: ${message.payload.action}`);
+
+          // Save state to session storage to ensure it can be resumed later
+          stateManager.saveStateToStorage();
+
+          // Notify that the command is paused
+          this.messenger.sendMessage({
+            type: 'status',
+            fullDomain: this.fullDomain,
+            actionId: message.actionId,
+            timestamp: new Date().toISOString(),
+            correlationId: message.correlationId,
+            payload: {
+              status: 'in-progress',
+              details: {
+                paused: true,
+                message: "Command execution is paused"
+              }
+            }
           });
-        
+        } else {
+          // Execute the command using the helper function
+          this.executeCommandAndHandleResult(this.messenger, this.actionExecutor, actionContext, message)
+            .catch(() => {
+              // Error already handled in the helper function
+            });
+        }
+
         sendResponse({ status: 'processing' });
         return true;
       }
@@ -301,10 +371,10 @@ export class ExecutorAttacher {
     window.addEventListener('beforeunload', () => {
       // Save state to sessionStorage using StateManager
       stateManager.saveStateToStorage();
-      
+
       // Get current state for the notification
       const state = stateManager.getState();
-      
+
       // Notify service worker about the unload
       this.messenger.sendMessage({
         type: 'event',
