@@ -16,16 +16,96 @@ import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
 import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
 import {ExecutorAttacher} from "@pages/content/execute/ExecutorAttacher";
+import {playSound} from "@pages/content/helpers/playSound";
 
 let attachExecutor: ExecutorAttacher | null = null;
 
 
 
 function onBotCheck(botCheck: boolean) {
+  playSound()
   if(!attachExecutor){
     return
   }
 }
+
+// Function to observe changes in elements of class `questlog`
+function observeQuestLog() {
+  // Select all elements with the `questlog` class initially
+  const questLogContainers = document.querySelectorAll('.questlog');
+
+  if (!questLogContainers.length) {
+    console.error('No elements with class "questlog" found');
+    return;
+  }
+
+  // Create a MutationObserver instance
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        // Handle added nodes (e.g., new quests dynamically added)
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Only process element nodes
+            const botCheck = node?.textContent?.toLowerCase()?.includes('bot');
+            console.log('Added element:', node);
+            const element = node as HTMLElement; // Narrow the type to HTMLElement
+
+            if (element?.id === 'botprotection_quest' || botCheck) {
+              console.log('Detected bot-related change:', node);
+              onBotCheck(true)
+            }
+
+            if (element?.classList.contains('quest')) {
+              console.log('New quest detected:', node);
+            }
+          }
+        });
+
+        // Handle removed nodes (optional logging)
+        mutation.removedNodes.forEach((node) => {
+          console.log('Removed element:', node);
+        });
+      }
+
+      if (mutation.type === 'attributes') {
+        const element = mutation.target as HTMLElement;
+        const botCheck = element?.textContent?.toLowerCase()?.includes('bot');
+        if (botCheck || element?.id === 'botprotection_quest') {
+          onBotCheck(true)
+          console.log(`Detected attribute change related to bot protection or quests on:`, mutation.target);
+        }
+      }
+    }
+  });
+
+  // Start observing each `questlog` container
+  questLogContainers.forEach((questLog) => {
+    observer.observe(questLog, {
+      childList: true,      // Watch for added or removed child nodes
+      subtree: true,        // Observe all nested elements in `questlog`
+      attributes: true,     // Watch for changes to attributes
+    });
+
+    // Initial check for "bot" or "botprotection_quest"
+    const botProtection = questLog.querySelector('#botprotection_quest');
+    if (botProtection) {
+      console.log('Detected bot protection quest at startup:', botProtection);
+    }
+
+    const botRelatedQuests = Array.from(questLog.querySelectorAll('.quest'))
+      .filter((quest) => quest?.textContent?.toLowerCase()?.includes('bot'));
+    botRelatedQuests.forEach((quest) => {
+      console.log('Bot-related quest at startup:', quest);
+    });
+  });
+
+  console.log('Started observing quest log containers for changes.');
+}
+
+// Start observing when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  observeQuestLog();
+});
 
 // DOM Observer to detect modals and popups
 export function setupDOMObserver() {

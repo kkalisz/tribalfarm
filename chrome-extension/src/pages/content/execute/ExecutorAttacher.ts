@@ -1,5 +1,5 @@
 import {BasePageResponse, CommandMessage, GenericStatusPayload, Message} from "@src/shared/actions/content/core/types";
-import { stateManager } from "./StateManager";
+import {StateManager, stateManager} from "./StateManager";
 import { ActionExecutor } from "@src/shared/actions/content/core/AcitionExecutor";
 import { PageStatusActionHandler } from "@src/shared/actions/content/pageStatus/PageStatusActionHandler";
 import { PAGE_STATUS_ACTION } from "@src/shared/actions/content/pageStatus/PageStatusAction";
@@ -25,6 +25,7 @@ export class ExecutorAttacher {
   private contentPageContext: PlayerUiContextState;
   private actionExecutor: ActionExecutor;
   private messenger: ContentMessengerWrapper;
+  private stateManager: StateManager;
   private messageListener: (
     message: CommandMessage,
     sender: chrome.runtime.MessageSender,
@@ -39,6 +40,7 @@ export class ExecutorAttacher {
     this.contentPageContext = contentPageContext;
     this.actionExecutor = new ActionExecutor();
     this.fullDomain = contentPageContext.gameUrlInfo.fullDomain ?? "";
+    this.stateManager = new StateManager(this.fullDomain);
 
     this.messenger = new ContentMessengerWrapper({
       sendMessage: (message: Message) => {

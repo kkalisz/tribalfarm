@@ -1,4 +1,3 @@
-import {useCommandsData} from "@pages/content/hooks/useCommandsData";
 import {LeftSidebar} from "@pages/content/ui/LeftSidebar";
 import {RightSidebar} from "@pages/content/ui/RightSidebar";
 import {useGuiSettings} from "@src/shared/hooks/useGuiSettings";

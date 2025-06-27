@@ -16,11 +16,14 @@ export class StateManager {
   private commandStatus: string = 'idle';
   private logs: string[] = [];
   private paused: boolean = false;
+  private keyPrefix: string = '';
 
   // Subscribers for state changes (only used by UI components)
   private subscribers: StateSubscriber[] = [];
 
-  constructor() {}
+  constructor(prefix: string = '') {
+    this.keyPrefix = prefix;
+  }
 
   // State setters
   public setCurrentCommand(command: CommandMessage | null): void {
@@ -100,7 +103,8 @@ export class StateManager {
 
   // Save state to session storage
   public saveStateToStorage(key: string = 'tribalFarmState'): void {
-    sessionStorage.setItem(key, JSON.stringify({
+    const prefixedKey = this.keyPrefix ? `${this.keyPrefix}_${key}` : key;
+    sessionStorage.setItem(prefixedKey, JSON.stringify({
       currentCommand: this.currentCommand,
       commandStatus: this.commandStatus,
       logs: this.logs,
@@ -110,7 +114,8 @@ export class StateManager {
 
   // Load state from session storage
   public loadStateFromStorage(key: string = 'tribalFarmState'): boolean {
-    const savedState = sessionStorage.getItem(key);
+    const prefixedKey = this.keyPrefix ? `${this.keyPrefix}_${key}` : key;
+    const savedState = sessionStorage.getItem(prefixedKey);
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
@@ -129,7 +134,8 @@ export class StateManager {
 
   // Clear state from session storage
   public clearStateFromStorage(key: string = 'tribalFarmState'): void {
-    sessionStorage.removeItem(key);
+    const prefixedKey = this.keyPrefix ? `${this.keyPrefix}_${key}` : key;
+    sessionStorage.removeItem(prefixedKey);
   }
 }
 
