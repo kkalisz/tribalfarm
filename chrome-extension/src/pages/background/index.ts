@@ -1,8 +1,8 @@
 import {logError, logInfo} from "@src/shared/helpers/sendLog";
 import {hasValidPlayerSettings} from "@src/shared/services/hasValidPlayerSettings";
 import {SettingsStorageService} from "@src/shared/services/settingsStorage";
-import { TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
-import { PlayerService } from './PlayerService';
+import {TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
+import {PlayerService} from './PlayerService';
 import {ActionScheduler} from "@src/shared/actions/backend/core/ActionScheduler";
 import {SCAVENGE_VILLAGE_ACTION, ScavengeVillageAction} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
 import {DatabaseSchema, GameDataBase} from "@src/shared/db/GameDataBase";
@@ -13,7 +13,7 @@ import {fetchTroopInfo} from "@src/shared/helpers/fetchTroopInfo";
 import {fetchBuildingInfo} from "@src/shared/helpers/fetchBuildings";
 import {ServerConfig} from "@pages/background/serverConfig";
 
-interface DatabaseHolder{
+interface DatabaseHolder {
   dbSync: GameDatabaseBackgroundSync<DatabaseSchema>;
   database: GameDataBase;
   databaseAccess: GameDataBaseAccess;
@@ -218,8 +218,8 @@ const databaseCache = new Map<string, DatabaseHolder>();
 //   }
 // }
 
-async function ensureDatabase(fullDomain: string): Promise<DatabaseHolder>{
-  if(!databaseCache.has(fullDomain)) {
+async function ensureDatabase(fullDomain: string): Promise<DatabaseHolder> {
+  if (!databaseCache.has(fullDomain)) {
     const database = new GameDataBase(fullDomain);
     await database.init();
     const gameDatabaseAccess = new GameDataBaseAccess(database.db)
@@ -234,23 +234,30 @@ async function ensureDatabase(fullDomain: string): Promise<DatabaseHolder>{
   return databaseCache.get(fullDomain)!
 }
 
-async function ensureServerConfig(gameDatabaseAccess: GameDataBaseAccess, fullDomain: string): Promise<ServerConfig | undefined>{
-  const basicConfig = await gameDatabaseAccess.settingDb.getWorldConfig();
+async function ensureServerConfig(gameDatabaseAccess: GameDataBaseAccess, fullDomain: string): Promise<ServerConfig | undefined> {
+  const basicWorldConfig = await gameDatabaseAccess.settingDb.getWorldConfig();
+  const basicTroopsConfig = await gameDatabaseAccess.settingDb.getTroopConfigs();
+  const basicBuildingsConfig = await gameDatabaseAccess.settingDb.getBuildingConfigs();
 
-  if(basicConfig == null) {
-    try {
+  try {
+    if (!basicWorldConfig) {
       const worldConfig = await fetchWorldConfig(fullDomain)
-      const troopsConfig = await fetchTroopInfo(fullDomain);
-      const buildingConfig = await fetchBuildingInfo(fullDomain)
       await gameDatabaseAccess.settingDb.saveWorldConfig(worldConfig)
-      await gameDatabaseAccess.settingDb.saveBuildingConfig(buildingConfig)
+    }
+    if (!basicTroopsConfig || !basicTroopsConfig.length) {
+      const troopsConfig = await fetchTroopInfo(fullDomain);
+      console.log(`troops ${JSON.stringify(troopsConfig)}`);
       await gameDatabaseAccess.settingDb.saveTroopsConfig(troopsConfig)
     }
-    catch (e) {
-      logError("can't fetch config", e)
-      return undefined
-
+    if (!basicBuildingsConfig || !basicBuildingsConfig.length) {
+      const buildingConfig = await fetchBuildingInfo(fullDomain)
+      console.log(`basicBuildingsConfig ${JSON.stringify(buildingConfig)}`);
+      await gameDatabaseAccess.settingDb.saveBuildingConfig(buildingConfig)
     }
+  } catch (e) {
+    logError("can't fetch config", e)
+    return undefined
+
   }
   return {
     worldConfig: (await gameDatabaseAccess.settingDb.getWorldConfig())!,
@@ -265,22 +272,24 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   logInfo(Object.keys(message));
   const fullDomain = message.fullDomain;
   const messageType = message.type;
-  if(!fullDomain) {
+  if (!fullDomain) {
     logInfo('No full domain in message, skipping');
     return;
   }
 
-  if(messageType === "db_sync") {
+  if (messageType === "db_init") {
+    logInfo("db_init")
     await ensureDatabase(fullDomain)
+    return false;
   }
 
-  if(messageType === "contentScriptReady") {
+  if (messageType === "contentScriptReady") {
     if (!(sender.tab && sender.tab.id)) {
       logInfo('No sender return');
       return;
     }
     const tabId = sender.tab.id;
-    if (!playerServiceCache.has(fullDomain)){
+    if (!playerServiceCache.has(fullDomain)) {
       logInfo('Creating new PlayserService for ', fullDomain, ' tab ', tabId, '');
 
       const settings = new SettingsStorageService(message.fullDomain);
@@ -294,7 +303,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       }
 
       const serverConfig = await ensureServerConfig(gameDatabaseAccess, fullDomain);
-      if(!serverConfig) {
+      if (!serverConfig) {
         return false
       }
 
@@ -306,6 +315,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       playerService.registerHandler(SCAVENGE_VILLAGE_ACTION, new ScavengeVillageAction())
     }
   }
+  logInfo(`on message player Service ${fullDomain} ${!!playerServiceCache.get(fullDomain)}`);
   playerServiceCache.get(fullDomain)?.onMessage(message, sender, sendResponse);
   return true
 

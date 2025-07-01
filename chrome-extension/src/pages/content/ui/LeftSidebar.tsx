@@ -86,14 +86,6 @@ export const LeftSidebar = ({
             }}>
               Test Navigate
             </TribalButton>
-            <TribalButton onClick={() => {
-              chrome.runtime.sendMessage({
-                type: "ui_action",
-                content: "test2",
-              });
-            }}>
-              Test Action
-            </TribalButton>
             {currentCommand && (
               <Box mt={2}>
                 <Text><strong>Current Command:</strong></Text>

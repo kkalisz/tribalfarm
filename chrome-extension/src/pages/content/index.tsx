@@ -29,80 +29,89 @@ function onBotCheck(botCheck: boolean) {
   }
 }
 
-// Function to observe changes in elements of class `questlog`
 function observeQuestLog() {
-  // Select all elements with the `questlog` class initially
-  const questLogContainers = document.querySelectorAll('.questlog');
-
-  if (!questLogContainers.length) {
-    console.error('No elements with class "questlog" found');
-    return;
-  }
-
-  // Create a MutationObserver instance
+  // Create a MutationObserver to monitor the entire body for changes
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
-        // Handle added nodes (e.g., new quests dynamically added)
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === 1) { // Only process element nodes
-            const botCheck = node?.textContent?.toLowerCase()?.includes('bot');
-            console.log('Added element:', node);
-            const element = node as HTMLElement; // Narrow the type to HTMLElement
+            const element = node as HTMLElement;
 
-            if (element?.id === 'botprotection_quest' || botCheck) {
-              console.log('Detected bot-related change:', node);
-              onBotCheck(true)
+            // Check if the added element has a class of "questlog" or contains a relevant quest
+            if (element.classList.contains('questlog')) {
+              console.log('Detected new questlog:', element);
+
+              // Observe this questlog for nested changes
+              setupQuestLogObserver(element);
             }
 
-            if (element?.classList.contains('quest')) {
-              console.log('New quest detected:', node);
-            }
+            // Recursively check for `.questlog` elements in new subtree
+            const nestedQuestLogs = element.querySelectorAll('.questlog');
+            nestedQuestLogs.forEach((nestedQuestLog) => {
+              console.log('Detected nested questlog:', nestedQuestLog);
+              setupQuestLogObserver(nestedQuestLog as HTMLElement);
+            });
           }
         });
+      }
+    }
+  });
 
-        // Handle removed nodes (optional logging)
-        mutation.removedNodes.forEach((node) => {
-          console.log('Removed element:', node);
+  // Start observing the document body to detect dynamically-added `questlog` containers
+  observer.observe(document.body, {
+    childList: true,  // Watch for added or removed nodes
+    subtree: true,    // Monitor changes throughout the entire DOM subtree
+  });
+
+  console.log('Started observing the document body for questlog containers.');
+}
+
+// Function to observe a specific questlog container for changes
+function setupQuestLogObserver(questLog: HTMLElement) {
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Only process element nodes
+            const element = node as HTMLElement;
+
+            // Check if it contains a quest or "bot" reference
+            const botCheck = element.textContent?.toLowerCase().includes('bot');
+            if (element.id === 'botprotection_quest' || botCheck) {
+              onBotCheck(true)
+              console.log('Detected bot-related change:', element);
+            }
+
+            if (element.classList.contains('quest')) {
+              console.log('New quest detected:', element);
+            }
+          }
         });
       }
 
       if (mutation.type === 'attributes') {
-        const element = mutation.target as HTMLElement;
-        const botCheck = element?.textContent?.toLowerCase()?.includes('bot');
-        if (botCheck || element?.id === 'botprotection_quest') {
+        const target = mutation.target as HTMLElement;
+        const botCheck = target.textContent?.toLowerCase().includes('bot');
+        if (botCheck || target.id === 'botprotection_quest') {
           onBotCheck(true)
-          console.log(`Detected attribute change related to bot protection or quests on:`, mutation.target);
+          console.log(`Detected attribute change related to bot protection or quests on:`, target);
         }
       }
     }
   });
 
-  // Start observing each `questlog` container
-  questLogContainers.forEach((questLog) => {
-    observer.observe(questLog, {
-      childList: true,      // Watch for added or removed child nodes
-      subtree: true,        // Observe all nested elements in `questlog`
-      attributes: true,     // Watch for changes to attributes
-    });
-
-    // Initial check for "bot" or "botprotection_quest"
-    const botProtection = questLog.querySelector('#botprotection_quest');
-    if (botProtection) {
-      console.log('Detected bot protection quest at startup:', botProtection);
-    }
-
-    const botRelatedQuests = Array.from(questLog.querySelectorAll('.quest'))
-      .filter((quest) => quest?.textContent?.toLowerCase()?.includes('bot'));
-    botRelatedQuests.forEach((quest) => {
-      console.log('Bot-related quest at startup:', quest);
-    });
+  // Start observing the specific `questlog` container
+  observer.observe(questLog, {
+    childList: true,      // Watch for added or removed child nodes
+    subtree: true,        // Observe all nested elements in questlog
+    attributes: true,     // Watch for changes to attributes
   });
 
-  console.log('Started observing quest log containers for changes.');
+  console.log('Started observing questlog container changes:', questLog);
 }
 
-// Start observing when the DOM is fully loaded
+// Execute when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   observeQuestLog();
 });
@@ -199,6 +208,7 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
 
   try {
     attachExecutor = new ExecutorAttacher(context);
+    attachExecutor.attach();
     setupDOMObserver();
 
     console.log('Initializing content script with Chakra UI and Shadow DOM');

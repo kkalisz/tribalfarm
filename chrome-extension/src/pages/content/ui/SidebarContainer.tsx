@@ -5,11 +5,6 @@ import { Box } from "@chakra-ui/react";
 
 /** React Component for the Sidebar Views */
 export const SidebarContainer = () => {
-    // Use custom hook for command data
-    const {
-        currentCommand,
-        logs
-    } = useCommandsData();
 
     // Use custom hook for GUI settings
     const { leftSidebar, rightSidebar, gui } = useGuiSettings();
@@ -32,14 +27,14 @@ export const SidebarContainer = () => {
                     <LeftSidebar
                         leftSidebarVisible={leftSidebar.visible}
                         setLeftSidebarVisible={leftSidebar.setVisible}
-                        currentCommand={currentCommand}
+                        currentCommand={null}
                     />
 
                     {/* Right Sidebar - Logs */}
                     <RightSidebar
                         rightSidebarVisible={rightSidebar.visible}
                         setRightSidebarVisible={rightSidebar.setVisible}
-                        logs={logs}
+                        logs={[]}
                     />
                 </>
             )}

@@ -71,7 +71,7 @@ export async function startScavengingOnScreen(context: BackendActionContext, inp
 
   const troopsThatCanBeUsed = subtractTroops( troopsCount, lockedTroops)
 
-  const scavengePlan = calculateScavenge(troopsThatCanBeUsed, context.worldConfig.speed, scavengeOptions, input.scavengeCalculationMode, 0)
+  const scavengePlan = calculateScavenge(troopsThatCanBeUsed, context.serverConfig.worldConfig.speed, scavengeOptions, input.scavengeCalculationMode, 0)
 
   for (const mission of scavengePlan.missions) {
     if(countTroops(mission.unitsAllocated) <= 10){

@@ -28,6 +28,7 @@ export class PlayerService {
     private mainTabId: number
   ) {
     // Explicitly declare actionContext in the class (if not done already)
+    console.log(JSON.stringify(this.serverConfig, null, 2))
     this.actionContext = {
       helpers: new BackendActionHelpers(),
       messenger: new MessengerWrapper(this.tabMessanger),

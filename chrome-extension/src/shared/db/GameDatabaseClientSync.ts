@@ -22,6 +22,10 @@ export interface DBSyncResponse {
 
 export class GameDatabaseClientSync {
   constructor(private fullDomain: string) {
+    chrome.runtime.sendMessage({
+      type: 'db_init',
+      fullDomain: this.fullDomain,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,7 +33,7 @@ export class GameDatabaseClientSync {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(payload, (response: DBSyncResponse) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
+          reject(new Error(chrome.runtime.lastError.message + `${payload.operation}`));
         } else if (!response || !response.success) {
           reject(new Error(response?.error || 'Unknown error'));
         } else {
