@@ -23,7 +23,8 @@
     "storage",
     "downloads",
     "scripting",
-    "webRequest"
+    "webRequest",
+    "notifications"
   ],
   "background": {
     "service_worker": "src/pages/background/index.ts",

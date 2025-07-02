@@ -9,9 +9,11 @@ import TribalSwitch from "@src/shared/ui/TribalSwitch";
 import TribalText from "@src/shared/ui/TribalText";
 import TroopCountsForm from "@pages/content/ui/TroopCountsForm";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
-import {usePlayerContext} from "@src/shared/contexts/PlayerContext";
 import {SCAVENGE_VILLAGE_ACTION} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
 import {playSound} from "@pages/content/helpers/playSound";
+import { useActionExecutorContext } from '@src/shared/contexts/ActionExecutorContext';
+import { useStateManagerField } from '@pages/content/hooks/useStateManagerField';
+import BlinkingButton from '@pages/content/ui/components/BlinkingButton';
 
 interface LeftSidebarProps {
   leftSidebarVisible: boolean;
@@ -26,7 +28,9 @@ export const LeftSidebar = ({
 }: LeftSidebarProps) => {
   // Use the feature settings hook to get and set the autoScavenge setting
   const {autoScavenge} = useFeatureSettings();
-  const { gameUrlInfo } = usePlayerContext();
+  const executor = useActionExecutorContext();
+  const [isPaused, setPaused] = useStateManagerField(executor.stateManager, "paused")
+  const gameUrlInfo = executor.contentPageContext.gameUrlInfo
 
   const onChangeUnits = useCallback((value: TroopsCount) => {
   }, [])
@@ -45,6 +49,7 @@ export const LeftSidebar = ({
           onClick={() => setLeftSidebarVisible(!leftSidebarVisible)}
           position="left"
         />
+        { isPaused && <BlinkingButton isBlinking pointerEvents="auto" onClick={() => setPaused(false)}>PAUSED</BlinkingButton>}
       </Flex>
 
 

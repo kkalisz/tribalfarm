@@ -9,115 +9,43 @@ import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {hasValidPlayerSettings,} from "@src/shared/services/hasValidPlayerSettings";
 import {GameUrlInfo, getGameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
 import {GameDatabaseContext, StorageContext} from "@src/shared/contexts/StorageContext";
-import {PlayerUiContext, PlayerUiContextState} from '@src/shared/contexts/PlayerContext';
 import {fetchWorldConfig} from "@src/shared/helpers/fetchWorldConfig";
 import {DatabaseSchema} from "@src/shared/db/GameDataBase";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
 import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
 import {ExecutorAttacher} from "@pages/content/execute/ExecutorAttacher";
-import {playSound} from "@pages/content/helpers/playSound";
+import { playSound, setupAudio } from '@pages/content/helpers/playSound';
+import { observeBotProtectionQuest } from '@pages/content/helpers/botProtectionObserver';
+import { ActionExecutorContext } from '@src/shared/contexts/ActionExecutorContext';
+import { PlayerUiContext } from '@src/shared/contexts/PlayerContext';
+import { BotCheckStatus } from '@pages/content/helpers/BotCheckStatus';
+
 
 let attachExecutor: ExecutorAttacher | null = null;
+let botDetected: BotCheckStatus = BotCheckStatus.NONE;
 
-
-
-function onBotCheck(botCheck: boolean) {
+function onBotCheck(botCheck: BotCheckStatus) {
+  botDetected = botCheck;
   playSound()
-  if(!attachExecutor){
-    return
-  }
+  attachExecutor?.setPaused(botCheck !== BotCheckStatus.NONE)
 }
-
-function observeQuestLog() {
-  // Create a MutationObserver to monitor the entire body for changes
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === 1) { // Only process element nodes
-            const element = node as HTMLElement;
-
-            // Check if the added element has a class of "questlog" or contains a relevant quest
-            if (element.classList.contains('questlog')) {
-              console.log('Detected new questlog:', element);
-
-              // Observe this questlog for nested changes
-              setupQuestLogObserver(element);
-            }
-
-            // Recursively check for `.questlog` elements in new subtree
-            const nestedQuestLogs = element.querySelectorAll('.questlog');
-            nestedQuestLogs.forEach((nestedQuestLog) => {
-              console.log('Detected nested questlog:', nestedQuestLog);
-              setupQuestLogObserver(nestedQuestLog as HTMLElement);
-            });
-          }
-        });
-      }
-    }
-  });
-
-  // Start observing the document body to detect dynamically-added `questlog` containers
-  observer.observe(document.body, {
-    childList: true,  // Watch for added or removed nodes
-    subtree: true,    // Monitor changes throughout the entire DOM subtree
-  });
-
-  console.log('Started observing the document body for questlog containers.');
-}
-
-// Function to observe a specific questlog container for changes
-function setupQuestLogObserver(questLog: HTMLElement) {
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === 1) { // Only process element nodes
-            const element = node as HTMLElement;
-
-            // Check if it contains a quest or "bot" reference
-            const botCheck = element.textContent?.toLowerCase().includes('bot');
-            if (element.id === 'botprotection_quest' || botCheck) {
-              onBotCheck(true)
-              console.log('Detected bot-related change:', element);
-            }
-
-            if (element.classList.contains('quest')) {
-              console.log('New quest detected:', element);
-            }
-          }
-        });
-      }
-
-      if (mutation.type === 'attributes') {
-        const target = mutation.target as HTMLElement;
-        const botCheck = target.textContent?.toLowerCase().includes('bot');
-        if (botCheck || target.id === 'botprotection_quest') {
-          onBotCheck(true)
-          console.log(`Detected attribute change related to bot protection or quests on:`, target);
-        }
-      }
-    }
-  });
-
-  // Start observing the specific `questlog` container
-  observer.observe(questLog, {
-    childList: true,      // Watch for added or removed child nodes
-    subtree: true,        // Observe all nested elements in questlog
-    attributes: true,     // Watch for changes to attributes
-  });
-
-  console.log('Started observing questlog container changes:', questLog);
-}
-
-// Execute when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-  observeQuestLog();
-});
 
 // DOM Observer to detect modals and popups
 export function setupDOMObserver() {
+
+  // Start observing when the DOM is fully loaded
+  setupAudio(document.body)
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log('DOM already loaded, starting bot protection observer');
+    observeBotProtectionQuest(onBotCheck)
+  } else{
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM fully loaded, starting bot protection observer');
+      observeBotProtectionQuest(onBotCheck)
+    });
+  }
+
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
@@ -183,9 +111,9 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
   }
   const settings = new SettingsStorageService(gameUrlInfo.fullDomain);
 
-  //const database = new GameDataBase(gameUrlInfo.fullDomain);
-  //await database.init();
-  const gameDatabase = new GameDataBaseAccess(new ProxyIDBPDatabase<DatabaseSchema>(new GameDatabaseClientSync(gameUrlInfo.fullDomain)));
+  const clientSync = new GameDatabaseClientSync(gameUrlInfo.fullDomain);
+  await clientSync.init();
+  const gameDatabase = new GameDataBaseAccess(new ProxyIDBPDatabase<DatabaseSchema>(clientSync));
   const playerSettings = await gameDatabase.settingDb.getPlayerSettings();
   if (playerSettings == null || !hasValidPlayerSettings(playerSettings)) {
     console.log('No valid player settings found, skipping initialization');
@@ -198,7 +126,7 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
     await gameDatabase.settingDb.saveWorldConfig(worldConfig)
   }
 
-  const context: PlayerUiContextState = {
+  const context: PlayerUiContext = {
     settings: settings,
     gameUrlInfo: gameUrlInfo,
     playerSettings: playerSettings,
@@ -209,9 +137,10 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
   try {
     attachExecutor = new ExecutorAttacher(context);
     attachExecutor.attach();
+    //TODO maybe swap order
     setupDOMObserver();
 
-    console.log('Initializing content script with Chakra UI and Shadow DOM');
+    console.log('Initializing content script with Chakra UI and Shadow DOM xdd');
 
     // Create a container and attach a shadow DOM
     const container = document.createElement('div');
@@ -219,7 +148,7 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
     const shadowRoot = container.attachShadow({mode: 'open'});
     document.body.appendChild(container);
 
-    console.log('Shadow root created and attached to container');
+    console.log('Shadow root created and attached to container uff');
 
     container.style.position = 'fixed';
     container.style.bottom = '0';
@@ -264,13 +193,13 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
     root.render(
       <CacheProvider value={shadowCache}>
         <ChakraProvider theme={theme} resetCSS={false}>
-          <PlayerUiContext.Provider value={context}>
+          <ActionExecutorContext.Provider value={attachExecutor}>
             <StorageContext.Provider value={context.settings}>
               <GameDatabaseContext.Provider value={context.gameDatabase}>
                 <SidebarContainer/>
               </GameDatabaseContext.Provider>
             </StorageContext.Provider>
-          </PlayerUiContext.Provider>
+          </ActionExecutorContext.Provider>
         </ChakraProvider>
       </CacheProvider>
     );

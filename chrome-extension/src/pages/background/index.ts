@@ -274,13 +274,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   const messageType = message.type;
   if (!fullDomain) {
     logInfo('No full domain in message, skipping');
-    return;
+    return false;
   }
 
   if (messageType === "db_init") {
     logInfo("db_init")
     await ensureDatabase(fullDomain)
-    return false;
+    sendResponse({ success: true });
+    return true;
   }
 
   if (messageType === "contentScriptReady") {
@@ -317,7 +318,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   }
   logInfo(`on message player Service ${fullDomain} ${!!playerServiceCache.get(fullDomain)}`);
   playerServiceCache.get(fullDomain)?.onMessage(message, sender, sendResponse);
-  return true
+  return false
 
 
   // // Handle different message types

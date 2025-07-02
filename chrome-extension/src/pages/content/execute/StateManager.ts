@@ -12,104 +12,110 @@ export type StateSubscriber = () => void;
  */
 export class StateManager {
   // State variables
-  private currentCommand: CommandMessage | null = null;
-  private commandStatus: string = 'idle';
-  private logs: string[] = [];
-  private paused: boolean = false;
-  private keyPrefix: string = '';
-
-  // Subscribers for state changes (only used by UI components)
-  private subscribers: StateSubscriber[] = [];
-
-  constructor(prefix: string = '') {
-    this.keyPrefix = prefix;
-  }
-
-  // State setters
-  public setCurrentCommand(command: CommandMessage | null): void {
-    this.currentCommand = command;
-    // Only notify subscribers if there are any
-    if (this.subscribers.length > 0) {
-      this.notifySubscribers();
-    }
-  }
-
-  public setCommandStatus(status: string): void {
-    this.commandStatus = status;
-    // Only notify subscribers if there are any
-    if (this.subscribers.length > 0) {
-      this.notifySubscribers();
-    }
-  }
-
-  public setPaused(paused: boolean): void {
-    this.paused = paused;
-    // Only notify subscribers if there are any
-    if (this.subscribers.length > 0) {
-      this.notifySubscribers();
-    }
-  }
-
-  public isPaused(): boolean {
-    return this.paused;
-  }
-
-  public setLogs(newLogs: string[]): void {
-    this.logs = newLogs;
-    // Only notify subscribers if there are any
-    if (this.subscribers.length > 0) {
-      this.notifySubscribers();
-    }
-  }
-
-  public addLog(message: string): void {
-    this.logs = [...this.logs, `${new Date().toLocaleTimeString()}: ${message}`];
-    // Only notify subscribers if there are any
-    if (this.subscribers.length > 0) {
-      this.notifySubscribers();
-    }
-  }
-
-  // Notify all subscribers when state changes
-  private notifySubscribers(): void {
-    this.subscribers.forEach(subscriber => subscriber());
-  }
-
-  // Subscribe to state changes (only used by UI components)
-  public subscribeToState(callback: StateSubscriber): () => void {
-    this.subscribers.push(callback);
-    return () => {
-      const index = this.subscribers.indexOf(callback);
-      if (index !== -1) {
-        this.subscribers.splice(index, 1);
-      }
-    };
-  }
-
-  // Get current state
-  public getState(): {
+  private state: {
     currentCommand: CommandMessage | null;
     commandStatus: string;
     logs: string[];
     paused: boolean;
-  } {
-    return {
-      currentCommand: this.currentCommand,
-      commandStatus: this.commandStatus,
-      logs: this.logs,
-      paused: this.paused
+  } = {
+    currentCommand: null,
+    commandStatus: 'idle',
+    logs: [],
+    paused: false,
+  };
+
+  // Field-specific subscribers
+  private fieldSubscribers: Record<string, ((newValue: any) => void)[]> = {};
+
+  constructor(private keyPrefix: string = '') {}
+
+  /**
+   * Subscribe to changes for a specific field.
+   * @param field The field name to subscribe to.
+   * @param callback The callback that will be invoked with the new value of the field when it changes.
+   * @returns A function to unsubscribe from the field's changes.
+   */
+  public subscribeToField<K extends keyof typeof this.state>(
+    field: K,
+    callback: (newValue: typeof this.state[K]) => void
+  ): () => void {
+    if (!this.fieldSubscribers[field]) {
+      this.fieldSubscribers[field] = [];
+    }
+    this.fieldSubscribers[field].push(callback);
+
+    // Return an unsubscribe function
+    return () => {
+      const index = this.fieldSubscribers[field].indexOf(callback);
+      if (index !== -1) {
+        this.fieldSubscribers[field].splice(index, 1);
+      }
     };
+  }
+
+  /**
+   * Generic state property updater with field change notifications.
+   * @param field The field name to update.
+   * @param value The new value for the field.
+   */
+  public setField<K extends keyof typeof this.state>(field: K, value: typeof this.state[K]): void {
+    if (this.state[field] === value) return; // Prevent unnecessary updates
+    this.state[field] = value; // Update the field value
+    this.notifyFieldSubscribers(field); // Notify subscribers of this specific field
+  }
+
+
+  /**
+   * Notify all subscribers of a specific field with its new value.
+   * @param field The field name to notify subscribers about.
+   */
+  private notifyFieldSubscribers<K extends keyof typeof this.state>(field: K): void {
+    const subscribers = this.fieldSubscribers[field];
+    if (subscribers) {
+      const newValue = this.state[field];
+      subscribers.forEach(callback => callback(newValue));
+    }
+  }
+
+  /**
+   * Generic setter for state fields, with field-specific notifications.
+   * @param field The field name to set.
+   * @param value The new value to set for the field.
+   */
+  private setStateField<K extends keyof typeof this.state>(field: K, value: typeof this.state[K]): void {
+    if (this.state[field] === value) return; // No updates if the value hasn't changed
+    this.state[field] = value;
+    this.notifyFieldSubscribers(field); // Notify subscribers with the new value
+  }
+
+  // Field-specific setters
+  public setCurrentCommand(command: CommandMessage | null): void {
+    this.setStateField('currentCommand', command);
+  }
+
+  public setCommandStatus(status: string): void {
+    this.setStateField('commandStatus', status);
+  }
+
+  public addLog(message: string): void {
+    const newLog = `${new Date().toLocaleTimeString()}: ${message}`;
+    const updatedLogs = [...this.state.logs, newLog]; // Create a new logs array
+    this.setStateField('logs', updatedLogs); // Update the state and notify subscribers
+  }
+
+
+  public setLogs(newLogs: string[]): void {
+    this.setStateField('logs', newLogs);
+  }
+
+  public setPaused(paused: boolean): void {
+    this.setStateField('paused', paused);
   }
 
   // Save state to session storage
   public saveStateToStorage(key: string = 'tribalFarmState'): void {
     const prefixedKey = this.keyPrefix ? `${this.keyPrefix}_${key}` : key;
-    sessionStorage.setItem(prefixedKey, JSON.stringify({
-      currentCommand: this.currentCommand,
-      commandStatus: this.commandStatus,
-      logs: this.logs,
-      paused: this.paused
-    }));
+    sessionStorage.setItem(prefixedKey, JSON.stringify(this.state));
   }
 
   // Load state from session storage
@@ -119,10 +125,11 @@ export class StateManager {
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        this.setCurrentCommand(parsed.currentCommand);
-        this.setCommandStatus(parsed.commandStatus);
-        this.setLogs(parsed.logs || []);
-        this.setPaused(parsed.paused || false);
+        Object.keys(parsed).forEach(key => {
+          if (key in this.state) {
+            this.setStateField(key as keyof typeof this.state, parsed[key as keyof typeof this.state]);
+          }
+        });
         return true;
       } catch (e) {
         console.error('Failed to parse saved state:', e);
@@ -132,12 +139,15 @@ export class StateManager {
     return false;
   }
 
+  // Retrieve the full state
+  public getState(): typeof this.state {
+    return { ...this.state };
+  }
+
+
   // Clear state from session storage
   public clearStateFromStorage(key: string = 'tribalFarmState'): void {
     const prefixedKey = this.keyPrefix ? `${this.keyPrefix}_${key}` : key;
     sessionStorage.removeItem(prefixedKey);
   }
 }
-
-// Create a singleton instance
-export const stateManager = new StateManager();

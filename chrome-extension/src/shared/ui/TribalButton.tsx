@@ -13,7 +13,7 @@ import { Button, ButtonProps, Icon, Flex, Box } from "@chakra-ui/react";
  * @param isFullWidth - Whether the button should take up the full width of its container
  * @param children - Content to be displayed inside the button
  */
-interface TribalButtonProps extends Omit<ButtonProps, 'variant' | 'size'> {
+export interface TribalButtonProps extends Omit<ButtonProps, 'variant' | 'size'> {
   variant?: "primary" | "secondary" | "icon";
   size?: "md" | "sm";
   leftIcon?: ReactElement;

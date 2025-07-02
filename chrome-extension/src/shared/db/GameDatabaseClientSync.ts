@@ -22,11 +22,26 @@ export interface DBSyncResponse {
 
 export class GameDatabaseClientSync {
   constructor(private fullDomain: string) {
-    chrome.runtime.sendMessage({
-      type: 'db_init',
-      fullDomain: this.fullDomain,
+
+  }
+
+  public init(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({
+        type: 'db_init',
+        fullDomain: this.fullDomain,
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (!response || !response.success) {
+          reject(new Error(response?.error || 'Unknown error during db_init'));
+        } else {
+          resolve();
+        }
+      });
     });
   }
+
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sendMessage<T = any>(payload: DBSyncRequest): Promise<T> {
