@@ -44,6 +44,46 @@ export function observeBotProtectionQuest(
     //   attributeName: m.attributeName || null, // Name of the changed attribute (if applicable)
     // })), null, 2)}`);
 
+    // Check for attribute changes (aria-hidden)
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'aria-hidden') {
+        const target = mutation.target as HTMLElement;
+        const ariaHiddenValue = target.getAttribute('aria-hidden');
+
+        // If aria-hidden was removed or set to "false", check for hcaptcha iframes
+        if (ariaHiddenValue !== 'true') {
+          // Check if this element contains an hcaptcha iframe
+          const iframes = target.querySelectorAll('iframe[src*="hcaptcha.com/captcha"]');
+          if (iframes.length > 0) {
+            // Filter out iframes that are inside a table with class "main"
+            const validIframes = Array.from(iframes).filter(iframe => {
+              return !(iframe as HTMLElement).closest('table.main');
+            });
+
+            if (validIframes.length > 0) {
+              console.log('Detected hcaptcha modal iframe after aria-hidden change:', validIframes[0]);
+              botCheckDetected = true;
+              onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
+              return;
+            }
+          }
+
+          // Check if this element is an ancestor of an hcaptcha iframe
+          // Find all hcaptcha iframes in the document
+          const allIframes = document.querySelectorAll('iframe[src*="hcaptcha.com/captcha"]');
+          for (const iframe of allIframes) {
+            // Check if the iframe is a descendant of the target element
+            if (target.contains(iframe) && !(iframe as HTMLElement).closest('table.main')) {
+              console.log('Detected hcaptcha modal iframe after aria-hidden change on ancestor:', iframe);
+              botCheckDetected = true;
+              onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
+              return;
+            }
+          }
+        }
+      }
+    }
+
     // First check if any mutation has added an iframe to a .captcha div inside a td.bot-protection-row
     // This is a special case for when a CONTENT element becomes a CONTENT_TEST element
     for (const mutation of mutationsList) {
@@ -278,6 +318,8 @@ export function observeBotProtectionQuest(
   observer.observe(rootElement, {
     childList: true, // Observe changes to child elements
     subtree: true, // Observe all child nodes recursively
+    attributes: true, // Observe attribute changes
+    attributeFilter: ['aria-hidden'], // Only observe changes to aria-hidden attribute
   });
 
   // Check if the hcaptcha modal exists on initial load (highest priority)
@@ -365,67 +407,8 @@ export function observeBotProtectionQuest(
 
   console.log('Started observing for bot protection elements (quests, rows with and without captcha, popups, hcaptcha modals, forced protection, and blur protection).');
 
-  // Set up a periodic check for hcaptcha iframe as a fallback
-  // This is needed because some iframes might be added directly to the body by another iframe
-  // which might not trigger the MutationObserver
-  const intervalId = setInterval(() => {
-    // if (botCheckDetected) {
-    //   clearInterval(intervalId);
-    //   return;
-    // }
-
-    console.log('Checking for hcaptcha iframe in periodic check...');
-    // Get all hcaptcha iframes
-    const allHcaptchaIframes = document.querySelectorAll('iframe[src*="hcaptcha.com/captcha"]');
-
-    // Filter out iframes that are inside a table with class "main" or have an ancestor with aria-hidden="true"
-    const hcaptchaIframesNotInMainTable = Array.from(allHcaptchaIframes).filter(iframe => {
-      // Check if this iframe is inside a table with class "main"
-      const isInsideMainTable = !!iframe.closest('table.main');
-
-      // Check if any ancestor has aria-hidden="true"
-      let parent = iframe.parentElement;
-      let hasAriaHiddenAncestor = false;
-      while (parent && !hasAriaHiddenAncestor) {
-        if (parent.getAttribute('aria-hidden') === 'true') {
-          hasAriaHiddenAncestor = true;
-        }
-        parent = parent.parentElement;
-      }
-
-      // We want iframes that are NOT inside a table with class "main" and do NOT have an ancestor with aria-hidden="true"
-      return !isInsideMainTable && !hasAriaHiddenAncestor;
-    });
-
-    hcaptchaIframesNotInMainTable.forEach(iframe => {
-      let parent = iframe.parentElement;
-      const parentClassNames = [];
-
-      // Traverse up the DOM and collect class names
-      while (parent) {
-        if (parent.className) {
-          parentClassNames.push(parent.className);
-        }
-        parent = parent.parentElement;
-      }
-
-      // Log the class names for this iframe's ancestors
-      console.log(`Iframe Parents' Class Names:`, parentClassNames);
-    });
-
-
-    if (hcaptchaIframesNotInMainTable.length) {
-      console.log(`Detected hcaptcha modal in periodic check (not inside table.main): ${hcaptchaIframesNotInMainTable.length}`, hcaptchaIframesNotInMainTable);
-      //botCheckDetected = true;
-      onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
-      ////observer.disconnect();
-      //clearInterval(intervalId);
-    }
-  }, 1000); // Check every second
-
-  // Return a cleanup function to stop the observation and clear the interval
+  // Return a cleanup function to stop the observation
   return () => {
-    //observer.disconnect();
-    //clearInterval(intervalId);
+    observer.disconnect();
   };
 }
