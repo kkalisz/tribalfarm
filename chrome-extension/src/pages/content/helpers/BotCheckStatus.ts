@@ -2,6 +2,7 @@ export enum BotCheckStatus {
   NONE,
   QUEST_LOG,
   CONTENT,
-  POPUP
+  POPUP_TEST,
+  CONTENT_TEST
 
 }
