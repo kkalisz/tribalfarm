@@ -441,6 +441,60 @@ describe('observeBotProtectionQuest', () => {
     stopObserving();
   });
 
+  it('should detect when an iframe is added to an existing .captcha div within a td.bot-protection-row', () => {
+    // Arrange: Create a root element with a td.bot-protection-row that has an empty .captcha div
+    const rootElement = document.createElement('div');
+    rootElement.innerHTML = `
+      <table class="main">
+        <tbody>
+          <tr>
+            <td class="bot-protection-row">
+              <h2>Ochrona botowa</h2>
+              <p>Aby Plemiona były bezpieczne i sprawiedliwe dla wszystkich, przed kontynuowaniem gry musisz przejść kontrolę ochrony botowej.</p>
+              <div class="captcha"></div>
+              <a href="#" class="btn btn-default">Rozpocznij sprawdzanie ochrony botowej</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+
+    const mockCallback = vi.fn();
+
+    // Act: Start observing
+    const stopObserving = observeBotProtectionQuest(mockCallback, rootElement);
+
+    // Clear the initial callback (which would be BotCheckStatus.CONTENT)
+    mockCallback.mockClear();
+
+    // Dynamically add an iframe to the existing .captcha div after 1ms
+    setTimeout(() => {
+      const captchaDiv = rootElement.querySelector('.captcha');
+      if (captchaDiv) {
+        const iframe = document.createElement('iframe');
+        iframe.src = './bot_content_page_files/hcaptcha.html';
+        iframe.tabIndex = 0;
+        iframe.frameBorder = '0';
+        iframe.scrolling = 'no';
+        iframe.allow = "private-state-token-issuance 'src'; private-state-token-redemption 'src'";
+        iframe.title = 'Widżet zawierający pole wyboru dla wyzwania bezpieczeństwa hCaptcha';
+        iframe.dataset.hcaptchaWidgetId = '1vbx37c24o2';
+        iframe.style.cssText = 'pointer-events: auto; background-color: rgba(255, 255, 255, 0); border-radius: 4px; width: 302px; height: 76px; overflow: hidden;';
+
+        captchaDiv.appendChild(iframe);
+      }
+    }, 1);
+
+    // Assert after a timeout to ensure the mutation is detected
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        expect(mockCallback).toHaveBeenCalledWith(BotCheckStatus.CONTENT_TEST);
+        stopObserving(); // Cleanup
+        resolve();
+      }, 50); // Allow time for the mutation observer to pick up the change
+    });
+  });
+
   it('should not call the callback if there are unrelated changes', () => {
     // Arrange: Create an empty root element
     const rootElement = document.createElement('div');

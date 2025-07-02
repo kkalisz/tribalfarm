@@ -29,21 +29,45 @@ export function observeBotProtectionQuest(
   // MutationObserver to observe DOM changes
   const observer = new MutationObserver((mutationsList: MutationRecord[]) => {
 
-    console.log(`mutation done: ${JSON.stringify(mutationsList.map(m => ({
-      type: m.type,
-      removed: m.removedNodes.length,
-      added: m.addedNodes.length, // Example of an added property
-      target: m.target.nodeName,  // The tag name of the target node
-      attributeName: m.attributeName || null, // Name of the changed attribute (if applicable)
-    })), null, 2)}`);
+    // console.log(`mutation done: ${JSON.stringify(mutationsList.map(m => ({
+    //   type: m.type,
+    //   removed: m.removedNodes.length,
+    //   added: m.addedNodes.length, // Example of an added property
+    //   target: m.target.nodeName,  // The tag name of the target node
+    //   attributeName: m.attributeName || null, // Name of the changed attribute (if applicable)
+    // })), null, 2)}`);
+
+    // First check if any mutation has added an iframe to a .captcha div inside a td.bot-protection-row
+    // This is a special case for when a CONTENT element becomes a CONTENT_TEST element
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        // Check if the target is a .captcha div or a child of it
+        // The closest() method is only available on Element objects, not on Node objects
+        const captchaDiv = mutation.target instanceof Element ? mutation.target.closest('.captcha') : null;
+        if (captchaDiv) {
+          // Check if the captcha div is inside a td.bot-protection-row
+          const botProtectionRow = captchaDiv.closest('td.bot-protection-row');
+          if (botProtectionRow) {
+            // Check if there's an iframe inside the captcha div now
+            const iframe = captchaDiv.querySelector('iframe');
+            if (iframe) {
+              console.log('Detected iframe added to captcha div inside bot protection row:', botProtectionRow);
+              onBotCheck(BotCheckStatus.CONTENT_TEST);
+              return;
+            }
+          }
+        }
+      }
+    }
 
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
         // Check added nodes for the target element
         mutation.addedNodes.forEach((node) => {
+          //console.log('Added node:', JSON.stringify({ type: node.nodeType, o: node.nodeName, tc: node.textContent}, null, 2));
           if (node.nodeType === 1) {
             const element = node as HTMLElement;
-            console.log(JSON.stringify(element, null, 2))
+            console.log(JSON.stringify({ }, null, 2))
 
             // Check if the element is the specific bot protection popup (highest priority)
             if (
@@ -114,6 +138,7 @@ export function observeBotProtectionQuest(
             }
 
             // Check within the subtree for bot protection row with captcha (higher priority than regular content)
+            console.log(`type ${element.nodeType} ${element.nodeName} ${element.classList} ${element.classList}`)
             const innerBotProtectionRowWithCaptcha = element.querySelector(
               'td.bot-protection-row .captcha iframe'
             ) as HTMLElement | null;
