@@ -5,6 +5,4 @@ export enum BotCheckStatus {
   POPUP_TEST,
   CONTENT_TEST,
   HCAPTCHA_MODAL,
-  FORCED_PROTECTION,
-  BLUR_PROTECTION
 }

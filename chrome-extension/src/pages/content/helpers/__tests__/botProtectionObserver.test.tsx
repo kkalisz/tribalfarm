@@ -845,4 +845,70 @@ describe('observeBotProtectionQuest', () => {
       }, 50); // Allow time for the mutation observer to pick up the change
     });
   });
+
+  it('should detect when all bot protection methods have disappeared', () => {
+    // Arrange: Create a root element with a bot protection element
+    const rootElement = document.createElement('div');
+    rootElement.innerHTML = `
+      <div class="questlog">
+        <div class="quest" id="botprotection_quest" data-title="Ochrona botowa"></div>
+      </div>
+    `;
+
+    const mockCallback = vi.fn();
+
+    // Act: Start observing with detectAllMethodsDisappeared=true
+    const stopObserving = observeBotProtectionQuest(mockCallback, rootElement, true);
+
+    // Clear the initial callback (which would be BotCheckStatus.QUEST_LOG)
+    mockCallback.mockClear();
+
+    // Remove the bot protection element
+    setTimeout(() => {
+      const questElement = rootElement.querySelector('#botprotection_quest');
+      if (questElement && questElement.parentNode) {
+        questElement.parentNode.removeChild(questElement);
+      }
+    }, 1);
+
+    // Assert after a timeout to ensure the mutation is detected
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        expect(mockCallback).toHaveBeenCalledWith(BotCheckStatus.NONE);
+        stopObserving(); // Cleanup
+        resolve();
+      }, 50); // Allow time for the mutation observer to pick up the change
+    });
+  });
+
+  it('should detect when no bot protection elements are present on initial page load', () => {
+    // Arrange: Create an empty root element with no bot protection elements
+    const rootElement = document.createElement('div');
+    rootElement.innerHTML = `
+      <div class="questlog">
+        <div class="quest" id="some_other_quest" data-title="Some Other Quest"></div>
+      </div>
+      <table class="main">
+        <tbody>
+          <tr>
+            <td class="some-other-row">
+              <h2>Some Other Content</h2>
+              <p>This is not a bot protection element.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+
+    const mockCallback = vi.fn();
+
+    // Act: Start observing
+    const stopObserving = observeBotProtectionQuest(mockCallback, rootElement);
+
+    // Assert: Ensure the callback is triggered with NONE status
+    expect(mockCallback).toHaveBeenCalledWith(BotCheckStatus.NONE);
+
+    // Cleanup: Stop observing
+    stopObserving();
+  });
 });

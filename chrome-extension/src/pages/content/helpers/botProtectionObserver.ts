@@ -12,6 +12,8 @@ import { BotCheckStatus } from '@pages/content/helpers/BotCheckStatus';
  * 5. Modal with iframe containing "hcaptcha.com/captcha" in its source (returns BotCheckStatus.HCAPTCHA_MODAL)
  * 6. Body element with data-bot-protect="forced" attribute (returns BotCheckStatus.FORCED_PROTECTION)
  * 7. Div with class "bot-protection-blur" (returns BotCheckStatus.BLUR_PROTECTION)
+ * 
+ * Can also detect when all bot protection methods are not present (returns BotCheckStatus.ALL_METHODS_DISAPPEARED)
  *
  * Note: BotCheckStatus.HCAPTCHA_MODAL and BotCheckStatus.POPUP_TEST take precedence over all other types.
  * BotCheckStatus.CONTENT_TEST takes precedence over QUEST_LOG and CONTENT.
@@ -19,30 +21,48 @@ import { BotCheckStatus } from '@pages/content/helpers/BotCheckStatus';
  *
  * @param onBotCheck - A callback function to execute when a bot protection element is detected.
  * @param rootElement - Optional root element to observe. Defaults to `document.body`.
+ * @param detectAllMethodsDisappeared - Optional boolean to enable/disable detection of all methods disappearing. Defaults to false.
  * @returns A function for stopping the observation.
  */
 export function observeBotProtectionQuest(
   onBotCheck: (isDetected: BotCheckStatus) => void,
-  rootElement: HTMLElement = document.body
+  rootElement: HTMLElement = document.body,
+  detectAllMethodsDisappeared: boolean = false
 ): () => void {
   // Ensure the `onBotCheck` parameter is a valid function
   if (!onBotCheck || typeof onBotCheck !== 'function') {
     throw new Error('A valid onBotCheck function must be provided as the first parameter.');
   }
 
-  // Flag to track if we've already detected and handled a bot check
-  let botCheckDetected = false;
+  // Flag to track if any bot protection method was previously detected
+  let anyMethodPreviouslyDetected = false;
+
+  // Function to check if all bot protection methods have disappeared
+  const checkAllMethodsDisappeared = () => {
+    if (!detectAllMethodsDisappeared || !anyMethodPreviouslyDetected) {
+      return false;
+    }
+
+    // Check if any bot protection method is currently present
+    const hcaptchaIframePresent = rootElement.querySelector('iframe[src*="hcaptcha.com/captcha"]') !== null;
+    const popupPresent = rootElement.querySelector('#popup_box_bot_protection, [data-id="bot_protection"]') !== null;
+    const rowWithCaptchaPresent = rootElement.querySelector('td.bot-protection-row .captcha iframe') !== null;
+    const questPresent = rootElement.querySelector('#botprotection_quest') !== null;
+    const rowPresent = rootElement.querySelector('td.bot-protection-row') !== null;
+
+    // If all methods are not present, return true
+    return !hcaptchaIframePresent && !popupPresent && !rowWithCaptchaPresent && !questPresent && !rowPresent;
+  };
 
   // MutationObserver to observe DOM changes
   const observer = new MutationObserver((mutationsList: MutationRecord[]) => {
 
-    // console.log(`mutation done: ${JSON.stringify(mutationsList.map(m => ({
-    //   type: m.type,
-    //   removed: m.removedNodes.length,
-    //   added: m.addedNodes.length, // Example of an added property
-    //   target: m.target.nodeName,  // The tag name of the target node
-    //   attributeName: m.attributeName || null, // Name of the changed attribute (if applicable)
-    // })), null, 2)}`);
+    // Check if all methods have disappeared
+    if (checkAllMethodsDisappeared()) {
+      console.log('Detected all bot protection methods have disappeared');
+      onBotCheck(BotCheckStatus.NONE);
+      return;
+    }
 
     // Check for attribute changes (aria-hidden)
     for (const mutation of mutationsList) {
@@ -62,7 +82,7 @@ export function observeBotProtectionQuest(
 
             if (validIframes.length > 0) {
               console.log('Detected hcaptcha modal iframe after aria-hidden change:', validIframes[0]);
-              botCheckDetected = true;
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
               return;
             }
@@ -75,7 +95,7 @@ export function observeBotProtectionQuest(
             // Check if the iframe is a descendant of the target element
             if (target.contains(iframe) && !(iframe as HTMLElement).closest('table.main')) {
               console.log('Detected hcaptcha modal iframe after aria-hidden change on ancestor:', iframe);
-              botCheckDetected = true;
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
               return;
             }
@@ -111,17 +131,8 @@ export function observeBotProtectionQuest(
       if (mutation.type === 'childList') {
         // Check added nodes for the target element
         mutation.addedNodes.forEach((node) => {
-          //console.log('Added node:', JSON.stringify({ type: node.nodeType, o: node.nodeName, tc: node.textContent}, null, 2));
           if (node.nodeType === 1) {
             const element = node as HTMLElement;
-            console.log(JSON.stringify({
-              tag: element.tagName,
-              attr: Array.from(element.attributes).map(attr => ({
-                name: attr.name,
-                value: attr.value,
-              })),
-            }, null, 2));
-
 
             // Check if the element is an hcaptcha iframe (highest priority)
             if (
@@ -144,10 +155,8 @@ export function observeBotProtectionQuest(
               // Only proceed if the iframe is NOT inside a table with class "main" and does NOT have an ancestor with aria-hidden="true"
               if (!isInsideMainTable && !hasAriaHiddenAncestor) {
                 console.log('Detected hcaptcha modal iframe dynamically added:', element);
-                botCheckDetected = true;
+                anyMethodPreviouslyDetected = true;
                 onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
-                // Stop observing since this has highest precedence
-                ////observer.disconnect();
                 return;
               }
             }
@@ -158,10 +167,8 @@ export function observeBotProtectionQuest(
               element.getAttribute('data-id') === 'bot_protection'
             ) {
               console.log('Detected bot protection popup dynamically added:', element);
-              botCheckDetected = true;
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.POPUP_TEST);
-              // Stop observing since this has highest precedence
-              ////observer.disconnect();
               return;
             }
 
@@ -171,7 +178,8 @@ export function observeBotProtectionQuest(
               element.classList.contains('quest')
             ) {
               console.log('Detected bot protection quest dynamically added:', element);
-              //onBotCheck(BotCheckStatus.QUEST_LOG);
+              anyMethodPreviouslyDetected = true;
+              onBotCheck(BotCheckStatus.QUEST_LOG);
             }
 
             // Check if the element is the specific bot protection row with captcha (higher priority than regular content)
@@ -181,7 +189,8 @@ export function observeBotProtectionQuest(
               element.querySelector('.captcha iframe')
             ) {
               console.log('Detected bot protection row with captcha dynamically added:', element);
-              //onBotCheck(BotCheckStatus.CONTENT_TEST);
+              anyMethodPreviouslyDetected = true;
+              onBotCheck(BotCheckStatus.CONTENT_TEST);
               return;
             }
 
@@ -191,30 +200,9 @@ export function observeBotProtectionQuest(
               element.classList.contains('bot-protection-row')
             ) {
               console.log('Detected bot protection row dynamically added:', element);
-              //onBotCheck(BotCheckStatus.CONTENT);
+              anyMethodPreviouslyDetected = true;
+              onBotCheck(BotCheckStatus.CONTENT);
             }
-
-            // // Check if the element is a div with class "bot-protection-blur"
-            // if (
-            //   element.tagName === 'DIV' &&
-            //   element.classList.contains('bot-protection-blur')
-            // ) {
-            //   console.log('Detected bot protection blur div dynamically added:', element);
-            //   //onBotCheck(BotCheckStatus.BLUR_PROTECTION);
-            // }
-            //
-            // // Check if the element is a body with data-bot-protect="forced" attribute
-            // if (
-            //   element.tagName === 'BODY' &&
-            //   element.getAttribute('data-bot-protect') === 'forced'
-            // ) {
-            //   console.log('Detected forced bot protection on body element dynamically added:', element);
-            //   botCheckDetected = true;
-            //   onBotCheck(BotCheckStatus.FORCED_PROTECTION);
-            //   // This is a strong indicator, so we can stop observing
-            //   ////observer.disconnect();
-            //   return;
-            // }
 
             // Check within the subtree for hcaptcha iframe (highest priority)
             const innerHcaptchaIframes = element.querySelectorAll(
@@ -245,7 +233,7 @@ export function observeBotProtectionQuest(
                 'Detected hcaptcha modal iframe dynamically added inside a subtree:',
                 validInnerHcaptchaIframes[0]
               );
-              botCheckDetected = true;
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
               // Stop observing since this has highest precedence
               //observer.disconnect();
@@ -261,7 +249,7 @@ export function observeBotProtectionQuest(
                 'Detected bot protection popup dynamically added inside a subtree:',
                 innerBotProtectionPopup
               );
-              botCheckDetected = true;
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.POPUP_TEST);
               // Stop observing since this has highest precedence
               //observer.disconnect();
@@ -277,11 +265,11 @@ export function observeBotProtectionQuest(
                 'Detected bot protection quest dynamically added inside a subtree:',
                 innerBotProtectionQuest
               );
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.QUEST_LOG);
             }
 
             // Check within the subtree for bot protection row with captcha (higher priority than regular content)
-            console.log(`type ${element.nodeType} ${element.nodeName} ${element.classList} ${element.classList}`)
             const innerBotProtectionRowWithCaptcha = element.querySelector(
               'td.bot-protection-row .captcha iframe'
             ) as HTMLElement | null;
@@ -292,6 +280,7 @@ export function observeBotProtectionQuest(
                   'Detected bot protection row with captcha dynamically added inside a subtree:',
                   parentRow
                 );
+                anyMethodPreviouslyDetected = true;
                 onBotCheck(BotCheckStatus.CONTENT_TEST);
                 return;
               }
@@ -306,6 +295,7 @@ export function observeBotProtectionQuest(
                 'Detected bot protection row dynamically added inside a subtree:',
                 innerBotProtectionRow
               );
+              anyMethodPreviouslyDetected = true;
               onBotCheck(BotCheckStatus.CONTENT);
             }
           }
@@ -344,22 +334,16 @@ export function observeBotProtectionQuest(
 
   if (validHcaptchaIframes.length > 0) {
     console.log('Detected hcaptcha modal on initial load:', validHcaptchaIframes[0]);
-    botCheckDetected = true;
+    anyMethodPreviouslyDetected = true;
     onBotCheck(BotCheckStatus.HCAPTCHA_MODAL);
-    // Stop observing since this has highest precedence
-    //observer.disconnect();
-    //return () => {}; // Return empty cleanup function since we already disconnected
   }
 
   // Check if the bot protection popup exists on initial load (highest priority)
   const botProtectionPopup = rootElement.querySelector('#popup_box_bot_protection, [data-id="bot_protection"]') as HTMLElement | null;
   if (botProtectionPopup) {
     console.log('Detected bot protection popup on initial load:', botProtectionPopup);
-    botCheckDetected = true;
+    anyMethodPreviouslyDetected = true;
     onBotCheck(BotCheckStatus.POPUP_TEST);
-    // Stop observing since this has highest precedence
-    //observer.disconnect();
-    //return () => {}; // Return empty cleanup function since we already disconnected
   }
 
   // Check if the bot protection row with captcha exists on initial load (higher priority than regular content)
@@ -368,7 +352,7 @@ export function observeBotProtectionQuest(
     const parentRow = botProtectionRowWithCaptcha.closest('td.bot-protection-row') as HTMLElement | null;
     if (parentRow) {
       console.log('Detected bot protection row with captcha on initial load:', parentRow);
-      botCheckDetected = true;
+      anyMethodPreviouslyDetected = true;
       onBotCheck(BotCheckStatus.CONTENT_TEST);
       //return () => observer.disconnect();
     }
@@ -378,6 +362,7 @@ export function observeBotProtectionQuest(
   const botProtectionQuest = rootElement.querySelector('#botprotection_quest') as HTMLElement | null;
   if (botProtectionQuest) {
     console.log('Detected bot protection quest on initial load:', botProtectionQuest);
+    anyMethodPreviouslyDetected = true;
     onBotCheck(BotCheckStatus.QUEST_LOG);
   }
 
@@ -385,27 +370,26 @@ export function observeBotProtectionQuest(
   const botProtectionRow = rootElement.querySelector('td.bot-protection-row') as HTMLElement | null;
   if (botProtectionRow) {
     console.log('Detected bot protection row on initial load:', botProtectionRow);
+    anyMethodPreviouslyDetected = true;
     onBotCheck(BotCheckStatus.CONTENT);
   }
 
-  // Check if the body has data-bot-protect="forced" attribute on initial load
-  // if (document.body.getAttribute('data-bot-protect') === 'forced') {
-  //   console.log('Detected forced bot protection on body element on initial load');
-  //   botCheckDetected = true;
-  //   onBotCheck(BotCheckStatus.FORCED_PROTECTION);
-  //   // This is a strong indicator, so we can stop observing
-  //   //observer.disconnect();
-  //   //return () => {}; // Return empty cleanup function since we already disconnected
-  // }
-  //
-  // // Check if the bot protection blur div exists on initial load
-  // const botProtectionBlur = rootElement.querySelector('.bot-protection-blur') as HTMLElement | null;
-  // if (botProtectionBlur) {
-  //   console.log('Detected bot protection blur div on initial load:', botProtectionBlur);
-  //   onBotCheck(BotCheckStatus.BLUR_PROTECTION);
-  // }
+  // Check if all methods have disappeared on initial load
+  if (detectAllMethodsDisappeared && anyMethodPreviouslyDetected && checkAllMethodsDisappeared()) {
+    console.log('Detected all bot protection methods have disappeared on initial load');
+    onBotCheck(BotCheckStatus.NONE);
+  }
+
+  // Check if no bot protection elements were found on initial load
+  if (!anyMethodPreviouslyDetected) {
+    console.log('No bot protection elements found on initial load');
+    onBotCheck(BotCheckStatus.NONE);
+  }
 
   console.log('Started observing for bot protection elements (quests, rows with and without captcha, popups, hcaptcha modals, forced protection, and blur protection).');
+  if (detectAllMethodsDisappeared) {
+    console.log('Also observing for all methods disappearing');
+  }
 
   // Return a cleanup function to stop the observation
   return () => {

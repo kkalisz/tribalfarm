@@ -27,7 +27,10 @@ let botDetected: BotCheckStatus = BotCheckStatus.NONE;
 
 function onBotCheck(botCheck: BotCheckStatus) {
   botDetected = botCheck;
-  playSound()
+  console.log(`Bot check status: ${botCheck}`)
+  if(botCheck !== BotCheckStatus.NONE){
+    playSound()
+  }
   attachExecutor?.setPaused(botCheck !== BotCheckStatus.NONE)
 }
 
@@ -38,11 +41,11 @@ export function setupDOMObserver() {
   setupAudio(document.body)
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     console.log('DOM already loaded, starting bot protection observer');
-    observeBotProtectionQuest(onBotCheck)
+    observeBotProtectionQuest(onBotCheck, document.body, true)
   } else{
     document.addEventListener('DOMContentLoaded', () => {
       console.log('DOM fully loaded, starting bot protection observer');
-      observeBotProtectionQuest(onBotCheck)
+      observeBotProtectionQuest(onBotCheck, document.body, true)
     });
   }
 
