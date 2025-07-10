@@ -5,6 +5,7 @@ import {TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
 import {PlayerService} from './PlayerService';
 import {ActionScheduler} from "@src/shared/actions/backend/core/ActionScheduler";
 import {SCAVENGE_VILLAGE_ACTION, ScavengeVillageAction} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
+import {GET_OVERVIEW_ACTION, GetOverviewAction} from "@src/shared/actions/backend/metadata/GetOverviewAction";
 import {DatabaseSchema, GameDataBase} from "@src/shared/db/GameDataBase";
 import {fetchWorldConfig} from "@src/shared/helpers/fetchWorldConfig";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
@@ -314,6 +315,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const playerService = new PlayerService(settings, playerSettings, serverConfig, activeTabMessenger, scheduler, database.databaseAccess, tabId);
       playerServiceCache.set(fullDomain, playerService);
       playerService.registerHandler(SCAVENGE_VILLAGE_ACTION, new ScavengeVillageAction())
+      playerService.registerHandler(GET_OVERVIEW_ACTION, new GetOverviewAction())
     }
   }
   logInfo(`on message player Service ${fullDomain} ${!!playerServiceCache.get(fullDomain)}`);

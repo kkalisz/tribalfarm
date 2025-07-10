@@ -22,7 +22,6 @@ export class PageParser {
     const wrappedHtml = `<html><body>${htmlString}</body></html>`;
 
     const { document } = parseHTML(wrappedHtml);
-    console.log(`parsed ${document.body.innerHTML.length}`)
     this.document = document;
   }
 

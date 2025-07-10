@@ -51,6 +51,10 @@ export class PlayerService {
     );
   }
 
+  registerStartHandlers(){
+
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   registerHandler(type: string, action: BackendAction<any, any>) {
     this.handlers[type] = action;
