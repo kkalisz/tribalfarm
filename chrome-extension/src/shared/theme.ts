@@ -1,6 +1,5 @@
 // src/shared/theme.ts
 import { extendTheme } from '@chakra-ui/react';
-import { mode } from '@chakra-ui/theme-tools';
 
 // Define the custom theme colors and styles based on Tribal Wars aesthetic
 const theme = extendTheme({

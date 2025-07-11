@@ -19,6 +19,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.10.7",
     "@chakra-ui/react-types": "^2.0.6",
     "@emotion/react": "^11.14.0",

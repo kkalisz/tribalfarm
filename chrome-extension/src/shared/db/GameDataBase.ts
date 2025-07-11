@@ -4,6 +4,7 @@ import { WorldConfig } from '@src/shared/models/game/WorldConfig';
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import {Troop} from "@src/shared/models/game/Troop";
 import {Building} from "@src/shared/models/game/Building"; // For generating unique identifiers
+import {VillageOverview} from "@src/shared/models/game/BaseVillageInfo";
 
 // Define the database schema using TypeScript interfaces
 export interface DatabaseSchema {
@@ -36,6 +37,10 @@ export interface DatabaseSchema {
     key: string; // Primary key
     value: Building;
   };
+  villageOverviews: {
+    key: string; // Primary key (villageId)
+    value: VillageOverview;
+  };
 }
 
 export class GameDataBase {
@@ -49,7 +54,7 @@ export class GameDataBase {
 
   // Initialize the database (singleton behavior per instance)
   public async init(): Promise<void> {
-    this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 1, {
+    this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 2, {
       upgrade(db) {
         // Create the "troopsCounts" store
         if (!db.objectStoreNames.contains('troopsCounts')) {
@@ -82,6 +87,13 @@ export class GameDataBase {
         if (!db.objectStoreNames.contains('buildingConfig')) {
           db.createObjectStore('buildingConfig', {
             keyPath: 'name', // Use `name` as the key
+          });
+        }
+
+        // Create the "villageOverviews" store
+        if (!db.objectStoreNames.contains('villageOverviews')) {
+          db.createObjectStore('villageOverviews', {
+            keyPath: 'villageId', // Use `villageId` as the key
           });
         }
       },

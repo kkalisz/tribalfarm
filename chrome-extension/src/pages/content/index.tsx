@@ -20,6 +20,8 @@ import { observeBotProtectionQuest } from '@pages/content/helpers/botProtectionO
 import { ActionExecutorContext } from '@src/shared/contexts/ActionExecutorContext';
 import { PlayerUiContext } from '@src/shared/contexts/PlayerContext';
 import { BotCheckStatus } from '@pages/content/helpers/BotCheckStatus';
+import log from "eslint-plugin-react/lib/util/log";
+import {logError} from "@src/shared/helpers/sendLog";
 
 
 let attachExecutor: ExecutorAttacher | null = null;
@@ -115,7 +117,12 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
   const settings = new SettingsStorageService(gameUrlInfo.fullDomain);
 
   const clientSync = new GameDatabaseClientSync(gameUrlInfo.fullDomain);
-  await clientSync.init();
+  try {
+    await clientSync.init();
+  }
+  catch (e) {
+    logError("error db init", e)
+  }
   const gameDatabase = new GameDataBaseAccess(new ProxyIDBPDatabase<DatabaseSchema>(clientSync));
   const playerSettings = await gameDatabase.settingDb.getPlayerSettings();
   if (playerSettings == null || !hasValidPlayerSettings(playerSettings)) {
@@ -195,7 +202,7 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
     console.log(`React app created ${!!root}`);
     root.render(
       <CacheProvider value={shadowCache}>
-        <ChakraProvider theme={theme} resetCSS={false}>
+        <ChakraProvider theme={theme}>
           <ActionExecutorContext.Provider value={attachExecutor}>
             <StorageContext.Provider value={context.settings}>
               <GameDatabaseContext.Provider value={context.gameDatabase}>

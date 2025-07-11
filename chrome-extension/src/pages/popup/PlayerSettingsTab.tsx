@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import {defaultPlayerSettings, PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
+import {PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
 import TribalInput from '@src/shared/ui/TribalInput';
 import TribalButton from '@src/shared/ui/TribalButton';
 import {useGameDatabase} from "@src/shared/contexts/StorageContext";

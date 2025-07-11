@@ -201,12 +201,17 @@
     copy-to-clipboard "3.3.3"
     framesync "6.1.2"
 
+"@chakra-ui/icons@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.npmjs.org/@chakra-ui/icons/-/icons-2.2.4.tgz"
+  integrity sha512-l5QdBgwrAg3Sc2BRqtNkJpfuLw/pWRDwwT58J6c4PqQT6wzXxyNa8Q0PForu1ltB5qEiFb1kxr/F/HO1EwNa6g==
+
 "@chakra-ui/react-types@^2.0.6":
   version "2.0.6"
   resolved "https://registry.npmjs.org/@chakra-ui/react-types/-/react-types-2.0.6.tgz"
   integrity sha512-aAq/nl//PneEfeaDb94zwfXor4OP/d5kc6dEXOZB2HJgCt3hu2+F/1u1QpPLPPTys5xexkQojuZQLnnD9lmQFw==
 
-"@chakra-ui/react@^2.10.7":
+"@chakra-ui/react@^2.10.7", "@chakra-ui/react@>=2.0.0":
   version "2.10.7"
   resolved "https://registry.npmjs.org/@chakra-ui/react/-/react-2.10.7.tgz"
   integrity sha512-GX1dCmnvrxxyZEofDX9GMAtRakZJKnUqFM9k8qhaycPaeyfkiTNNTjhPNX917hgVx1yhC3kcJOs5IeC7yW56/g==

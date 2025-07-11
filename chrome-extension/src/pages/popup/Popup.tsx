@@ -1,35 +1,15 @@
 import React, {useMemo} from 'react';
 import {useGuiSettings} from '@src/shared/hooks/useGuiSettings';
-import {Box, Flex, FormLabel, Link, TabPanels, Text} from '@chakra-ui/react';
+import {Box, Flex, Link, TabPanels, Text} from '@chakra-ui/react';
 import {usePluginSettings} from "@src/shared/hooks/usePluginSettings";
 import TribalCard from "@src/shared/ui/TribalCard";
-import TribalSwitch from "@src/shared/ui/TribalSwitch";
 import PlayerSettingsTab from "./PlayerSettingsTab";
 import {TribalTab, TribalTabList, TribalTabPanel, TribalTabs} from "@src/shared/ui/TribalTabs";
 import TribalText from "@src/shared/ui/TribalText";
 import {getGameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
 import {useCurrentTabUrl} from "@src/shared/hooks/useCurrentTabUrl";
+import {SettingsSwitch} from "@src/shared/SettingsSwitch";
 
-interface SettingsSwitchProps {
-  label: string;
-  name: string;
-  enabled: boolean;
-  onChange: (value: boolean) => void;
-}
-
-const SettingsSwitch: React.FC<SettingsSwitchProps> = ({label, name, enabled, onChange}) => {
-  return (
-    <Flex mt={2} alignItems="center" justifyContent="space-between">
-      <FormLabel htmlFor={name} mb={0}>{label}</FormLabel>
-      <TribalSwitch
-        id={name}
-        isChecked={enabled}
-        onChange={(e) => onChange(e.target.checked)}
-        size="md"
-      />
-    </Flex>
-  );
-};
 
 export default function Popup() {
   const {gui} = useGuiSettings();

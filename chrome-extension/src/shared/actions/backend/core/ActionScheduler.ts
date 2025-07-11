@@ -1,4 +1,5 @@
 import {BackendAction} from "@src/shared/actions/backend/core/BackendAction";
+import {logInfo} from "@src/shared/helpers/sendLog";
 
 interface TaskWrapper {
   id: string;
@@ -82,11 +83,14 @@ export class ActionScheduler {
   }
 
   private async runLoop(): Promise<void> {
+    logInfo("action scheduler loop start")
     if (this.paused) return;
     const now = Date.now();
 
     this.exclusiveQueue.sort((a, b) => a.nextRun - b.nextRun || (b.priority ?? 0) - (a.priority ?? 0));
     this.parallelQueue.sort((a, b) => a.nextRun - b.nextRun || (b.priority ?? 0) - (a.priority ?? 0));
+
+    //logInfo(`action scheduler loop ex ->${this.exclusiveQueue.length} par ->${this.parallelQueue.length}`)
 
     if (!this.isExclusiveRunning) {
       const exclusive = this.exclusiveQueue.find(t => !t.running && now >= t.nextRun);
@@ -126,6 +130,7 @@ export class ActionScheduler {
         this.save();
       });
     }
+    //logInfo("action scheduler loop end")
   }
 
   private async runTask(task: TaskWrapper): Promise<void> {
