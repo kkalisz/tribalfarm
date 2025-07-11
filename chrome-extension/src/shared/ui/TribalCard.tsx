@@ -68,7 +68,6 @@ const TribalCard: FC<PropsWithChildren<TribalCardProps>> = ({
           borderColor="tribal.cardHeaderBorder"
           px={3}
           py={1}
-          mb={2}
           fontWeight="bold"
           color="tribal.cardHeaderText"
           fontSize="sm"

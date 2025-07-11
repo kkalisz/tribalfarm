@@ -9,7 +9,7 @@ import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {hasValidPlayerSettings,} from "@src/shared/services/hasValidPlayerSettings";
 import {GameUrlInfo, getGameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
 import {GameDatabaseContext, StorageContext} from "@src/shared/contexts/StorageContext";
-import {fetchWorldConfig} from "@src/shared/helpers/fetchWorldConfig";
+import {fetchWorldConfig} from "@src/shared/services/fetchWorldConfig";
 import {DatabaseSchema} from "@src/shared/db/GameDataBase";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";

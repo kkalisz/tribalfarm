@@ -1,7 +1,7 @@
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import {AllTroopNames, TroopName} from "@src/shared/models/game/Troop";
-import {ScavengeMissionInfo} from "@src/shared/helpers/calculateScavenge";
-import {PageParser} from "@src/shared/helpers/PageParser";
+import {ScavengeMissionInfo} from "@src/shared/actions/backend/scavenge/calculateScavenge";
+import {PageParser} from "@src/shared/parser/PageParser";
 import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
 import {parseTimeToMiliSeconds} from "@src/shared/helpers/parseTimeToMiliSeconds";
 import {addMiliSecondsTo} from "@src/shared/helpers/addMiliSecondsToNow";

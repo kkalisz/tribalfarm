@@ -10,6 +10,6 @@ export const defaultPlayerSettings: PlayerSettings = {
   login: '',
   password: '',
   world: '',
-  server: ''
+  server: '',
 };
 

@@ -3,7 +3,7 @@ import {logInfo} from "@src/shared/helpers/sendLog";
 
 interface TaskWrapper {
   id: string;
-  action: BackendAction<never, never>;
+  action: BackendAction<any, any>;
   type: string;
   lastRun: number | null;
   nextRun: number;
@@ -19,13 +19,13 @@ export class ActionScheduler {
   private exclusiveQueue: TaskWrapper[] = [];
   private parallelQueue: TaskWrapper[] = [];
   private readonly intervalHandle: ReturnType<typeof setInterval>;
-  private executor: (type: string, action: BackendAction<never,never>) => Promise<void> = () => Promise.resolve();
+  private executor: (type: string, action: BackendAction<any,any>) => Promise<void> = () => Promise.resolve();
 
   constructor(private persist?: (state: never) => void, private restore?: () => never) {
     this.intervalHandle = setInterval(() => this.runLoop(), 1000);
   }
 
-  public setExecutor(executor: (type: string, action: BackendAction<never,never>) => Promise<void>): void {
+  public setExecutor(executor: (type: string, action: BackendAction<any,any>) => Promise<void>): void {
     this.executor = executor;
   }
 
@@ -41,7 +41,7 @@ export class ActionScheduler {
     clearInterval(this.intervalHandle);
   }
 
-  public scheduleTask(type: string, input: BackendAction<never, never>,  exclusive: boolean, priority: number, runAt?: Date, intervalMs?: number): string {
+  public scheduleTask(type: string, input: BackendAction<any, any>, exclusive?: boolean, priority?: number, runAt?: Date, intervalMs?: number): string {
     const id = `${Date.now()}_${this.taskIdCounter++}`;
     const task: TaskWrapper = {
       id,
@@ -50,7 +50,7 @@ export class ActionScheduler {
       lastRun: null,
       nextRun: runAt ? runAt.getTime() : Date.now(),
       running: false,
-      priority: priority,
+      priority: priority ? priority : 0,
       intervalMs: intervalMs ? intervalMs : null
     };
 

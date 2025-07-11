@@ -1,7 +1,6 @@
-import { PageParser } from "@src/shared/helpers/PageParser";
-import { Coordinates } from "@src/shared/models/actions/SendAttackAction";
-import { ResourceCost } from "@src/shared/models/events/BuildResponseEvent";
+import { PageParser } from "@src/shared/parser/PageParser";
 import { VillageOverview } from '@src/shared/models/game/VillageOverview';
+import {Coordinates} from "@src/shared/models/game/Coordinates";
 
 /**
  * Parses HTML content from the village overview page and extracts village details

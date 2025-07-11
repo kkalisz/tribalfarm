@@ -1,5 +1,5 @@
 import {TroopName} from "@src/shared/models/game/Troop";
-import {calculateScavengeImpl} from "@src/shared/helpers/calculateScavengeImpl";
+import {calculateScavengeImpl} from "@src/shared/actions/backend/scavenge/calculateScavengeImpl";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 
 export type TroopsWithCount = Record<TroopName, number>;

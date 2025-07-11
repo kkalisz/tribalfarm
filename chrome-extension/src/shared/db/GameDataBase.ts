@@ -4,7 +4,7 @@ import { WorldConfig } from '@src/shared/models/game/WorldConfig';
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import {Troop} from "@src/shared/models/game/Troop";
 import {Building} from "@src/shared/models/game/Building"; // For generating unique identifiers
-import {VillageOverview} from "@src/shared/models/game/BaseVillageInfo";
+import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
 
 // Define the database schema using TypeScript interfaces
 export interface DatabaseSchema {
@@ -39,7 +39,7 @@ export interface DatabaseSchema {
   };
   villageOverviews: {
     key: string; // Primary key (villageId)
-    value: VillageOverview;
+    value: BaseVillageInfo;
   };
 }
 

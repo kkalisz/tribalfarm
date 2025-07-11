@@ -1,0 +1,151 @@
+<table class="main" align="left">
+    <tbody><tr>
+        <td id="content_value">
+
+
+            <!--[if IE]><style type="text/css">
+            table.vis.vis_menu {
+                border-collapse: collapse;
+                margin-top: -2px;
+                margin-left: -2px;
+                margin-right: -2px;
+
+                border-left: none;
+                border-right: none;
+                border-top: none;
+
+            }
+
+            table.main {
+                border-collapse: collapse;
+            }
+
+            .main td{
+                overflow: hidden;
+            }
+
+        </style><![endif]-->
+
+            <script type="text/javascript">
+                //<![CDATA[
+                if(window.opera) { $("#content_value").css("overflow", "hidden"); }
+                // This not bold thing is some kind of hack, because a tooltip contains a title and a body.
+                // If they are not splitted like the most tooltips everything is handeld as title and printed bold
+                // when using the bodyHandler function the title is removed, but i just return the normal tooltip text
+                // the non-bold class is just copyed from previous solutuon
+                $( function() { UI.ToolTip( $( '.village_note' ), { bodyHandler: function() { return this.tooltipText; }, extraClass: "tooltip-style not-bold" } ); } );
+                //]]>
+            </script>
+
+
+
+            <input type="hidden" id="overview" value="prod">
+            <table class="vis modemenu" width="100%" id="overview_menu"><tbody><tr>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=combined">Kombinowany </a></td>
+                <td style="text-align:center" class="selected"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=prod">Produkcja </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=trader">Transporty </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=units">Wojska </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=commands">Rozkazy </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=incomings">Przybywające </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=buildings">Budynki </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=tech">Technologia </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=groups">Grupy </a></td>
+                <td style="text-align:center"><a href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=am">Menedżer Konta </a></td>
+            </tr></tbody></table><br>
+
+
+
+
+            <div id="paged_view_content">
+
+                <div class="vis_item" align="center">Grupy: <a class="group-menu-item" data-group-id="11872" data-group-type="dynamic" href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=prod&amp;group=11872" data-title="">[Pełny atak]</a>  <a class="group-menu-item" data-group-id="11873" data-group-type="dynamic" href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=prod&amp;group=11873" data-title="">[Nadchodzący atak]</a>  <a class="group-menu-item" data-group-id="11874" data-group-type="dynamic" href="/game.php?village=8337&amp;screen=overview_villages&amp;mode=prod&amp;group=11874" data-title="">[Ma szlachcica]</a>  <strong class="group-menu-item" data-group-id="0" data-group-type="all" data-title="">&gt;wszystkie&lt; </strong> </div><script>$(function() { VillageGroupMenu.Nav.init(); });</script>
+
+                <table class="vis" width="100%">
+                </table>
+
+
+
+                <script type="text/javascript">
+                    $(function(){
+                        VillageGroups.initOverviews();
+                    });
+                </script>
+
+
+                <table id="production_table" class="vis overview_table" width="100%">
+
+                    <thead>
+                    <tr>
+                        <th><img src="https://dspl.innogamescdn.com/asset/7d3266bc/graphic/overview/note.webp" alt=""></th>
+                        <th><a href="/game.php?village=8337&amp;screen=overview_villages&amp;
+				page=-1
+				&amp;order=name
+				&amp;dir=desc&amp;mode=prod&amp;group=0">Wioska</a> (1)</th>
+                        <th><a href="/game.php?village=8337&amp;screen=overview_villages&amp;
+				page=-1
+				&amp;order=points
+				&amp;dir=desc&amp;mode=prod&amp;group=0">P.</a></th>
+                        <th>Surowce</th>
+                        <th><a href="/game.php?village=8337&amp;screen=overview_villages&amp;
+				page=-1
+				&amp;order=storage_max
+				&amp;dir=desc&amp;mode=prod&amp;group=0">Spichlerz</a></th>
+                        <th><a href="/game.php?village=8337&amp;screen=overview_villages&amp;
+				page=-1
+				&amp;order=trader_available
+				&amp;dir=desc&amp;mode=prod&amp;group=0">Kupcy</a></th>    <th><a href="/game.php?village=8337&amp;screen=overview_villages&amp;
+				page=-1
+				&amp;order=pop
+				&amp;dir=desc&amp;mode=prod&amp;group=0">Zagroda</a></th>
+                        <th>Budowa</th>
+                        <th>Technologia</th>
+                        <th>Rekrutacja</th>
+                    </tr>
+                    </thead>
+
+                    <tbody><tr class="nowrap  selected row_a">
+                        <td></td>
+                        <td>
+        <span class="quickedit-vn" data-id="8337" data-length="32">
+    <span class="quickedit-content">
+        <a href="/game.php?village=8337&amp;screen=overview">
+                        <span class="quickedit-label" data-text="Wioska eMCeKamil">
+                 Wioska eMCeKamil (455|578) K54             </span>
+                                </a>
+        <a class="rename-icon" href="#" data-title="Zmień nazwę"></a>
+    </span>
+</span>
+                        </td>
+                        <td>1<span class="grey">.</span>117</td>
+                        <td><span class="res wood">1<span class="grey">.</span>339</span> <span class="res stone">1<span class="grey">.</span>485</span> <span class="res iron">1<span class="grey">.</span>243</span> </td>
+                        <td>33523</td>
+                        <td><a href="/game.php?village=8337&amp;screen=market">16/46</a></td>        <td>2413/2598</td>
+                        <td>
+                            dzisiaj o 14:34                <br>
+                            <ul style="width: 10em;" id="building_order_8337" class="order_queue">			<li id="order_0" class="order ">
+                                <div class="order-status-light" style="background-color: green;"></div>
+
+                                <div class="queue_icon"><img src="https://dspl.innogamescdn.com/asset/7d3266bc/graphic/buildings/farm.webp" class="" data-title="Zagroda - dzisiaj o 14:34"></div>
+                            </li></ul>
+                        </td>
+                        <td></td>
+                        <td>
+                            <ul style="width: 10em;" id="unit_order_8337" class="order_queue">			<li id="order_0" class="order">
+                                <div class="order-status-light" style="background-color: green;"></div>
+                                <div class="queue_icon"><img src="https://dspl.innogamescdn.com/asset/7d3266bc/graphic/unit/unit_sword.webp" class="" data-title="69 - Miecznik - jutro o 01:46"></div>
+                            </li></ul>
+                        </td>
+                    </tr>
+                    </tbody></table>
+
+                <script>
+                    $(function(){
+                        $('.quickedit-vn').QuickEdit({
+                            url: TribalWars.buildURL('POST', 'main', { ajaxaction: 'change_name', village: '__ID__' })
+                        });
+                    });
+                </script></div>
+
+        </td>
+    </tr>
+    </tbody></table>

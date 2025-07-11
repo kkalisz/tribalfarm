@@ -1,7 +1,7 @@
 import {vi, describe, it, expect, beforeEach} from 'vitest';
 import startScavengeAction from '../startScavengeAction';
 import {BackendActionContext} from '@src/shared/actions/backend/core/BackendActionContext';
-import {PageParser} from '@src/shared/helpers/PageParser';
+import {PageParser} from '@src/shared/parser/PageParser';
 import {MessengerWrapper} from "@src/shared/actions/content/core/MessengerWrapper";
 import {TestMessenger} from "@src/shared/actions/backend/__tests__/TestMessenger";
 import {PAGE_STATUS_ACTION, PageStatusResponse} from "@src/shared/actions/content/pageStatus/PageStatusAction";

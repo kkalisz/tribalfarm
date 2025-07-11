@@ -2,7 +2,7 @@ import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActi
 import {validateTribalWarsUrl} from "@src/shared/helpers/location/validateTribalWarsUrl";
 import {buildGameUrlWithScreen} from "@src/shared/helpers/buildUrl";
 import {extractScavengingEndTimes, parseScavengePageContent} from "@src/shared/actions/backend/scavenge/helpers";
-import {calculateScavenge, ScavengeCalculationMode, ScavengeMissionsPlan} from "@src/shared/helpers/calculateScavenge";
+import {calculateScavenge, ScavengeCalculationMode, ScavengeMissionsPlan} from "@src/shared/actions/backend/scavenge/calculateScavenge";
 import {countTroops, subtractTroops, TroopsCount} from "@src/shared/models/game/TroopCount";
 import {troopsCountToScavengeInputFill} from "@src/shared/actions/helper/troopsCountToScavengeInputFill";
 import {singleClick} from "@src/shared/actions/content/click/ClickAction";

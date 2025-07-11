@@ -3,7 +3,7 @@ import {
   ScavengeMissionsPlan,
   ScavengeCalculationMode,
   ScavengeMissionInfo
-} from "@src/shared/helpers/calculateScavenge";
+} from "@src/shared/actions/backend/scavenge/calculateScavenge";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 
 interface  UnitInfo {

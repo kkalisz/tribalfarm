@@ -23,7 +23,7 @@ import {
  * @param children - Should include TabList and TabPanels components
  */
 interface TribalTabsProps extends Omit<TabsProps, 'variant' | 'size'> {
-  variant?: "enclosed" | "line";
+  variant?: "enclosed" | "line" | "unstyled";
   size?: "md" | "sm";
   children: ReactNode;
 }
@@ -38,9 +38,26 @@ export const TribalTabList: FC<TabListProps> = ({ children, ...rest }) => {
     <TabList
       mb={2}
       p={2}
+      gap={2}
       borderRadius="none"
       bg="tribal.cardSecondary"
-      borderWidth="2px"
+      borderWidth="2x"
+      borderColor="tribal.primaryBorder"
+      {...rest}
+    >
+      {children}
+    </TabList>
+  );
+};
+
+export const TribalSimpleTabList: FC<TabListProps> = ({ children, ...rest }) => {
+  return (
+    <TabList
+      mb={2}
+      gap={2}
+      borderRadius="none"
+      bg="transparent"
+      borderWidth="0x"
       borderColor="tribal.primaryBorder"
       {...rest}
     >

@@ -1,7 +1,10 @@
-import React from "react";
+import React, {useState} from "react";
 import {Box, Flex, Text} from "@chakra-ui/react";
 import {SidebarToggleButton} from "@pages/content/ui/SidebarToggleButton";
 import TribalCard from "@src/shared/ui/TribalCard";
+import {VillageSelector} from "@src/shared/ui/VillageSelector/VillageSelector";
+import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
+import {SettingsContainer} from "@pages/content/ui/SettingsContainer";
 
 interface RightSidebarProps {
   rightSidebarVisible: boolean;
@@ -14,6 +17,9 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   setRightSidebarVisible,
   logs
 }) => {
+
+  // State for villages
+  const [selectedVillage, setSelectedVillage] = useState<BaseVillageInfo | null>();
   return (
     <Box
       pointerEvents={rightSidebarVisible ? "auto" : "none"}
@@ -44,25 +50,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           flexDirection="column"
           overflow="hidden"
         >
-          <TribalCard 
-            title="Logs" 
+          <TribalCard
+            title="Settings"
             style={{ 
               height: "100%", 
               display: "flex", 
               flexDirection: "column"
             }}
           >
-            <Box 
-              fontSize="sm"
-              flex="1" 
-              overflowY="auto" 
-              overflowX="hidden" 
-              height="100%"
-            >
-              {logs.map((log, index) => (
-                <Text key={index}>{log}</Text>
-              ))}
-            </Box>
+            <SettingsContainer isOpen={rightSidebarVisible}/>
           </TribalCard>
         </Box>
       )}

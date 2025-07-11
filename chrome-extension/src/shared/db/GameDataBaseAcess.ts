@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import {DatabaseSchema} from "@src/shared/db/GameDataBase";
 import {Troop} from "@src/shared/models/game/Troop";
-import {Building} from "@src/shared/models/game/Building"; // For generating unique identifiers
-import {VillageOverview} from "@src/shared/models/game/BaseVillageInfo";
+import {Building} from "@src/shared/models/game/Building";
+import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
 
 export class GameDataBaseAccess {
 
@@ -39,35 +39,49 @@ export class GameDataBaseAccess {
   /* ---------- VillageOverview Methods ---------- */
 
   // Save a VillageOverview
-  public async saveVillageOverview(village: VillageOverview): Promise<void> {
+  public async saveVillageOverview(village: BaseVillageInfo): Promise<void> {
     await this.db.put('villageOverviews', village);
   }
 
   // Save multiple VillageOverviews
-  public async saveVillageOverviews(villages: VillageOverview[]): Promise<void> {
+  public async saveVillageOverviews(villages: BaseVillageInfo[]): Promise<void> {
     await Promise.all(villages.map(village => this.saveVillageOverview(village)));
   }
 
-  // Get a VillageOverview by ID
-  public async getVillageOverview(villageId: string): Promise<VillageOverview | undefined> {
-    return await this.db.get('villageOverviews', villageId);
-  }
+  accountDb = {
 
-  // Get all VillageOverviews
-  public async getAllVillageOverviews(): Promise<VillageOverview[]> {
-    return await this.db.getAll('villageOverviews');
-  }
+    // VillageOverview methods
+    saveVillageOverview: async (village: BaseVillageInfo): Promise<void> => {
+      await this.db.put('villageOverviews', village);
+    },
 
-  // Delete a VillageOverview by ID
-  public async deleteVillageOverview(villageId: string): Promise<void> {
-    await this.db.delete('villageOverviews', villageId);
-  }
+    saveVillageOverviews: async (villages: BaseVillageInfo[]): Promise<void> => {
+      await this.accountDb.deleteAllVillageOverviews();
+      await Promise.all(villages.map(village => this.db.put('villageOverviews', village)));
+    },
 
-  // Delete all VillageOverviews
-  public async deleteAllVillageOverviews(): Promise<void> {
-    const allVillages = await this.getAllVillageOverviews();
-    await Promise.all(allVillages.map(village => this.deleteVillageOverview(village.villageId)));
-  }
+    // Get a VillageOverview by ID
+    getVillageOverview: async (villageId: string): Promise<BaseVillageInfo | undefined> => {
+      return await this.db.get('villageOverviews', villageId);
+    },
+
+    // Get all VillageOverviews
+    getAllVillageOverviews: async (): Promise<BaseVillageInfo[]> => {
+      return await this.db.getAll('villageOverviews');
+    },
+
+    // Delete a VillageOverview by ID
+    deleteVillageOverview: async (villageId: string): Promise<void> => {
+      await this.db.delete('villageOverviews', villageId);
+    },
+
+    // Delete all VillageOverviews
+    deleteAllVillageOverviews: async (): Promise<void> => {
+      const allVillages = await this.accountDb.getAllVillageOverviews();
+      await Promise.all(allVillages.map(village => this.accountDb.deleteVillageOverview(village.villageId)));
+    },
+  };
+
 
   /* ---------- PlayerSettings Methods ---------- */
 
@@ -135,32 +149,6 @@ export class GameDataBaseAccess {
     getBuildingConfigs: async (): Promise<Building[]> => {
       const record = await this.db.getAll('buildingConfig');
       return record ? record : [];
-    },
-
-    // VillageOverview methods
-    saveVillageOverview: async (village: VillageOverview): Promise<void> => {
-      await this.db.put('villageOverviews', village);
-    },
-
-    saveVillageOverviews: async (villages: VillageOverview[]): Promise<void> => {
-      await Promise.all(villages.map(village => this.db.put('villageOverviews', village)));
-    },
-
-    getVillageOverview: async (villageId: string): Promise<VillageOverview | undefined> => {
-      return await this.db.get('villageOverviews', villageId);
-    },
-
-    getAllVillageOverviews: async (): Promise<VillageOverview[]> => {
-      return await this.db.getAll('villageOverviews');
-    },
-
-    deleteVillageOverview: async (villageId: string): Promise<void> => {
-      await this.db.delete('villageOverviews', villageId);
-    },
-
-    deleteAllVillageOverviews: async (): Promise<void> => {
-      const allVillages = await this.db.getAll('villageOverviews');
-      await Promise.all(allVillages.map(village => this.db.delete('villageOverviews', village.villageId)));
     },
   };
 }

@@ -1,9 +1,11 @@
 import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
 import { buildGameUrlWithScreen} from "@src/shared/helpers/buildUrl";
-import { parseVillageOverview, VillageOverviewData } from "./parseVillageOverview";
+import { parseVillageOverview } from "./parseVillageOverview";
+import {VillageOverview} from "@src/shared/models/game/VillageOverview";
+import {parseVillageOverviewPremium} from "@src/shared/actions/backend/metadata/parseVillageOverviewPremium";
 
 export interface GetOverviewResult {
-  villages: VillageOverviewData[];
+  villages: VillageOverview[];
 }
 
 export default async function getOverview(context: BackendActionContext): Promise<GetOverviewResult> {
@@ -21,7 +23,11 @@ export default async function getOverview(context: BackendActionContext): Promis
   const pageStatus = await messenger.executePageStatusAction({});
 
   // Extract all villages from the overview page
-  const villages = parseVillageOverview(pageStatus.details?.pageContent ?? '');
+  const villages = await context.helpers.runBasedOnPremium(() => parseVillageOverviewPremium(pageStatus.details?.pageContent ?? ''),
+    () => parseVillageOverview(pageStatus.details?.pageContent ?? ''));
+  if(villages.length > 0){
+    await context.gameDatabase.accountDb.saveVillageOverviews(villages)
+  }
 
   return { villages };
 }

@@ -55,7 +55,22 @@ const theme = extendTheme({
     bold: 700, // Bold
   },
   components: {
-    // Define custom component styles here
+    Button: {
+      sizes: {
+        md: {
+          h: '32px',
+        },
+      },
+    },
+    Input: {
+      sizes: {
+        md: {
+          field: {
+            h: '32px',
+          },
+        },
+      },
+    },
   },
   styles: {
     global: () => ({

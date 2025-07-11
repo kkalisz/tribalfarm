@@ -1,4 +1,4 @@
-import { Coordinates } from '@src/shared/models/actions';
+import {Coordinates} from "@src/shared/models/game/Coordinates";
 
 export interface VillageOverview {
   villageId: string;

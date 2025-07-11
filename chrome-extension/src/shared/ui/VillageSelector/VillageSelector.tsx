@@ -1,145 +1,56 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Box, 
-  Input, 
-  Flex, 
-  Text, 
-  FormControl, 
-  FormLabel,
-  InputGroup,
-  InputLeftElement,
-  Icon,
-  Spinner
+  Box,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
-import TribalCard from '@src/shared/ui/TribalCard';
-import TribalButton from '@src/shared/ui/TribalButton';
-import TribalSelect from '@src/shared/ui/TribalSelect';
-import { VillageSelectorProps, VillageComponentProps } from './types';
+import {Nullable} from "vitest";
+import {useAsync} from "@src/shared/hooks/useAsync";
+import {useGameDatabase} from "@src/shared/contexts/StorageContext";
+import {BaseVillageInfo } from "@src/shared/models/game/BaseVillageInfo";
+import TribalText from "@src/shared/ui/TribalText";
+import Autocomplete from "@src/shared/ui/Autocomplete/Autocomplete";
+import {AutocompleteOption} from "@src/shared/ui/Autocomplete";
+import {coordinatesToString} from "@src/shared/models/game/Coordinates";
+import findVillageById from "@src/shared/models/helpers/findVillageById";
+
+interface VillageSelectorProps {
+  villages?: BaseVillageInfo[];
+  selectedVillageId?: Nullable<string>
+  onSelectVillage: (village: BaseVillageInfo | null) => void;
+}
 
 export const VillageSelector: React.FC<VillageSelectorProps> = ({
-  villages,
-  selectedVillage,
-  onSelectVillage,
-  onSelectCurrentVillage,
-  isLoading = false,
-  error
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedVillageId, setSelectedVillageId] = useState<string | undefined>(
-    selectedVillage?.villageId
-  );
+                                                                  selectedVillageId: defaultSelectedVillageId,
+                                                                  onSelectVillage,
+  villages: predefinedVillages,
+}: VillageSelectorProps) => {
+  const gameDatabase = useGameDatabase();
 
-  // Update selected village ID when selectedVillage prop changes
-  useEffect(() => {
-    if (selectedVillage) {
-      setSelectedVillageId(selectedVillage.villageId);
-    }
-  }, [selectedVillage]);
+  const { data: dbVillages, loading } = useAsync(() => {
+    return gameDatabase.accountDb.getAllVillageOverviews();
+  }, [], !predefinedVillages)
 
-  // Filter villages based on search term
-  const filteredVillages = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return villages;
-    }
-    
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return villages.filter(village => 
-      village.villageName.toLowerCase().includes(lowerSearchTerm) ||
-      `${village.coordinates.x}|${village.coordinates.y}`.includes(lowerSearchTerm)
-    );
-  }, [villages, searchTerm]);
+  const villages = predefinedVillages ?? dbVillages;
 
   // Handle village selection from dropdown
-  const handleVillageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const villageId = e.target.value;
-    setSelectedVillageId(villageId);
-    
-    const selectedVillage = villages.find(v => v.villageId === villageId);
-    if (selectedVillage) {
-      onSelectVillage(selectedVillage);
+  const handleVillageChange = (value: string, e?: AutocompleteOption) => {
+    const villageId = e?.value
+    if(!villageId){
+      onSelectVillage(null);
+      return;
     }
+    const village = findVillageById(villages ?? [],villageId);
+    onSelectVillage(village ?? null);
   };
 
-  return (
-    <TribalCard title="Village Selection">
-      <FormControl>
-        <FormLabel htmlFor="village-search">Search Village</FormLabel>
-        <InputGroup>
-          <InputLeftElement pointerEvents="none">
-            <Icon as={SearchIcon} color="tribal.primaryBorder" />
-          </InputLeftElement>
-          <Input
-            id="village-search"
-            placeholder="Search by name or coordinates"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            bg="tribal.primaryBg"
-            color="tribal.primaryText"
-            borderColor="tribal.primaryBorder"
-            _hover={{ borderColor: "tribal.accent" }}
-            _focus={{ borderColor: "tribal.accent" }}
-          />
-        </InputGroup>
-      </FormControl>
+  const options: AutocompleteOption[] = villages?.map((entry) =>  { return {
+    value: entry.villageId,
+    label: `${entry.name} ${coordinatesToString(entry.coordinates)}`
+  }}) ?? []
 
-      <FormControl mt={3}>
-        <FormLabel htmlFor="village-select">Select Village</FormLabel>
-        {isLoading ? (
-          <Flex justify="center" align="center" py={2}>
-            <Spinner color="tribal.accent" />
-          </Flex>
-        ) : error ? (
-          <Text color="red.500" fontSize="sm">{error}</Text>
-        ) : (
-          <TribalSelect
-            id="village-select"
-            value={selectedVillageId}
-            onChange={handleVillageChange}
-            placeholder="Choose a village"
-          >
-            {filteredVillages.map(village => (
-              <option key={village.villageId} value={village.villageId}>
-                {village.villageName} ({village.coordinates.x}|{village.coordinates.y})
-              </option>
-            ))}
-          </TribalSelect>
-        )}
-      </FormControl>
-
-      <Flex mt={3} justify="space-between">
-        <TribalButton 
-          onClick={onSelectCurrentVillage}
-          isDisabled={isLoading || !onSelectCurrentVillage}
-          size="sm"
-        >
-          Use Current Village
-        </TribalButton>
-      </Flex>
-
-      {/* Container for village-specific components */}
-      {selectedVillage && (
-        <Box mt={4} p={3} bg="tribal.secondaryBg" borderRadius="md">
-          <Text fontWeight="bold" mb={2}>
-            Village: {selectedVillage.villageName} ({selectedVillage.coordinates.x}|{selectedVillage.coordinates.y})
-          </Text>
-          {/* This is where village-specific components will be rendered */}
-          <Box>
-            {/* Initially empty as per requirements */}
-          </Box>
-        </Box>
-      )}
-    </TribalCard>
-  );
-};
-
-export const VillageComponent: React.FC<VillageComponentProps> = ({ village }) => {
   return (
     <Box>
-      {/* This component will be used to display village-specific information */}
-      <Text>Village ID: {village.villageId}</Text>
-      <Text>Village Name: {village.villageName}</Text>
-      <Text>Coordinates: ({village.coordinates.x}|{village.coordinates.y})</Text>
+       <TribalText>Select Village</TribalText>
+       <Autocomplete isDisabled={loading} options={options} onChange={handleVillageChange} value={defaultSelectedVillageId ?? undefined}></Autocomplete>
     </Box>
   );
 };

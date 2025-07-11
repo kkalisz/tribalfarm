@@ -158,7 +158,8 @@ src/
 
 #### Chakra UI Integration
 
-- Use Chakra UI's component library for UI elements (e.g., Button, Box, Flex, etc.)
+- Always prefer components from the `/chrome-extension/src/shared/ui` folder (e.g., TribalButton, TribalTabs) over direct Chakra UI components when available
+- Use Chakra UI's component library for UI elements only when a corresponding Tribal component doesn't exist
 - Leverage Chakra UI's theme system for consistent styling
 - Prefer CSS-in-JS with Chakra UI's sx prop or styled components for custom styles
 - Avoid inline CSS or external stylesheets unless absolutely necessary
@@ -321,6 +322,33 @@ The VillageOverview implementation provides a good example of how to add a new d
    - Calls getAllVillageOverviews to fetch villages from the database
    - Maps the VillageOverview objects to the format needed by the UI
    - Handles loading and error states appropriately
+
+## Shadow DOM Development
+
+When working with Shadow DOM in the extension, especially with TypeScript, follow these key guidelines:
+
+1. **Type Assertions**: Cast ShadowRoot to EventTarget for event listeners:
+   ```typescript
+   (shadowRoot as unknown as EventTarget).addEventListener('mousedown', handler);
+   ```
+
+2. **Event Types**: Use generic `Event` type instead of specific types like `MouseEvent`:
+   ```typescript
+   const handleClickOutside = (event: Event) => { /* ... */ };
+   ```
+
+3. **Context Verification**: Always check if an element is within Shadow DOM:
+   ```typescript
+   if (shadowRoot instanceof ShadowRoot) {
+     // Shadow DOM-specific code
+   } else {
+     // Regular DOM fallback
+   }
+   ```
+
+4. **Custom Hooks**: Create specialized hooks for Shadow DOM operations (e.g., `useShadowDomOutsideClick`)
+
+5. **Debugging Tips**: Use generic types and apply type assertions only when necessary
 
 ## Future Enhancements
 

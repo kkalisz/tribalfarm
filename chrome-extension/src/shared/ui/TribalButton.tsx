@@ -73,7 +73,7 @@ const TribalButton: FC<TribalButtonProps> = ({
     icon: {
       bg: "transparent",
       color: "tribal.primaryText",
-      borderColor: "transparent",
+      borderColor: "tribal.primaryBorder",
       p: 1,
       minW: "auto",
       _hover: {
@@ -84,27 +84,10 @@ const TribalButton: FC<TribalButtonProps> = ({
     },
   };
 
-  // Size-specific styles
-  const sizeStyles = {
-    md: {
-      fontSize: "sm",
-      px: 4,
-      py: 2,
-      height: "auto",
-    },
-    sm: {
-      fontSize: "xs",
-      px: 3,
-      py: 1,
-      height: "auto",
-    },
-  };
-
   // Combine all styles
   const buttonStyles = {
     ...baseStyles,
     ...variantStyles[variant],
-    ...sizeStyles[size],
   };
 
   // For icon variant, render a simplified button
