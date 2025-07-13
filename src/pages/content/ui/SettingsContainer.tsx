@@ -56,7 +56,7 @@ export const SettingsContainer: React.FC<SettingsContainerProps> = ({
       <Flex alignItems="flex-end" width="100%">
         <Box flex="1">
           <VillageSelector
-            selectedVillageId={selectedVillage?.villageId ?? currentUrlVillage}
+            selectedVillageId={selectedVillage?.villageId}
             onSelectVillage={setSelectedVillage}
           />
         </Box>

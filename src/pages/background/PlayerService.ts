@@ -30,13 +30,12 @@ export class PlayerService {
     // Explicitly declare actionContext in the class (if not done already)
     console.log(JSON.stringify(this.serverConfig, null, 2))
     this.actionContext = {
-      helpers: new BackendActionHelpers(true),
+      helpers: new BackendActionHelpers(this.database),
       messenger: new MessengerWrapper(this.tabMessanger),
       playerSettings: this.playerSettings,
       scheduler: this.actionScheduler,
       serverConfig: this.serverConfig,
       gameDatabase: this.database,
-      hasPremium: true
     };
 
     // Set up the executor for the action scheduler

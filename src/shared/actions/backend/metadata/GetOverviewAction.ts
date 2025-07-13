@@ -1,6 +1,6 @@
 import { BackendAction } from '@src/shared/actions/backend/core/BackendAction';
 import { BackendActionContext } from '@src/shared/actions/backend/core/BackendActionContext';
-import getOverview, { GetOverviewResult } from './getOverview';
+import getVillageOverview, { GetOverviewResult } from './getVillageOverview';
 
 export const GET_OVERVIEW_ACTION = 'getOverviewAction';
 
@@ -14,6 +14,6 @@ export interface GetOverviewActionOutput extends GetOverviewResult {
 
 export class GetOverviewAction implements BackendAction<GetOverviewActionInput, GetOverviewActionOutput> {
   async execute(context: BackendActionContext, action: GetOverviewActionInput): Promise<GetOverviewActionOutput> {
-    return getOverview(context);
+    return getVillageOverview(context);
   }
 }

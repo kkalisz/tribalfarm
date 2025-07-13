@@ -12,7 +12,6 @@ import {
   InputRightElement,
   Icon,
   Text,
-  useOutsideClick
 } from "@chakra-ui/react";
 import { ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
 import { AutocompleteProps, AutocompleteOption } from "./types";

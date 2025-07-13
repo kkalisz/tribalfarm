@@ -82,6 +82,10 @@ export class GameDataBaseAccess {
     },
   };
 
+  scavengeDb = {
+
+  }
+
 
   /* ---------- PlayerSettings Methods ---------- */
 

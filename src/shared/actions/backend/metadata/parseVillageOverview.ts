@@ -20,8 +20,8 @@ export function parseVillageOverview(htmlContent: string): VillageOverview[] {
   // Get all rows from the table body (skip the header row)
   const rows = pageParser.query("#production_table tbody tr");
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
+  for (const element of rows) {
+    const row = element;
     const rowHtml = (row as HTMLElement).outerHTML;
     const rowParser = new PageParser(rowHtml);
 

@@ -7,7 +7,13 @@ import {ServerConfig} from "@pages/background/serverConfig";
 
 export class BackendActionHelpers {
 
-  constructor(private havePremium: boolean) {
+  constructor(private readonly database: GameDataBaseAccess) {
+  }
+
+  async hasPremium(): Promise<boolean> {
+    const hasPremium =  (await this.database.settingDb.getPlayerSettings())?.hasPremium ?? false;
+    console.log('hasPremium', hasPremium);
+    return hasPremium;
   }
 
   async delayRun(){
@@ -18,7 +24,7 @@ export class BackendActionHelpers {
     premiumFn: () => T,
     freeFn: () => T
   ): Promise<T> {
-    return this.havePremium ? premiumFn() : freeFn();
+    return (await this.hasPremium()) ? premiumFn() : freeFn();
   }
 }
 
@@ -29,5 +35,4 @@ export interface BackendActionContext {
   helpers: BackendActionHelpers;
   scheduler: ActionScheduler;
   gameDatabase: GameDataBaseAccess;
-  hasPremium: boolean;
 }

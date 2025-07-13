@@ -4,6 +4,7 @@ export interface PlayerSettings {
   password: string;
   world: string;
   server: string;
+  hasPremium: boolean;
 }
 
 export const defaultPlayerSettings: PlayerSettings = {
@@ -11,5 +12,6 @@ export const defaultPlayerSettings: PlayerSettings = {
   password: '',
   world: '',
   server: '',
+  hasPremium: false,
 };
 

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import {PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
+import {defaultPlayerSettings, PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
 import TribalInput from '@src/shared/ui/TribalInput';
 import TribalButton from '@src/shared/ui/TribalButton';
 import {useGameDatabase} from "@src/shared/contexts/StorageContext";
@@ -15,13 +15,6 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
 
   const gameDatabase = useGameDatabase();
 
-
-  const defaultPlayerSettings: PlayerSettings = {
-    login: '',
-    password: '',
-    world: gameUrlInfo.subdomain ?? "",
-    server: gameUrlInfo.fullDomain ?? ""
-  }
   const { loading, error, data: playerSettingsRaw, execute } = useAsync(() => gameDatabase.settingDb.getPlayerSettings(), []);
 
   const [ playerSettings, setPlayerSettings ] = useState(defaultPlayerSettings)
@@ -34,13 +27,15 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
     login: false,
     password: false,
     world: false,
-    server: false
+    server: false,
+    hasPremium: false,
   });
   const [touched, setTouched] = useState<Record<keyof typeof playerSettings, boolean>>({
     login: false,
     password: false,
     world: false,
-    server: false
+    server: false,
+    hasPremium: false,
   });
 
   const validateField = (field: keyof typeof playerSettings, value: string): boolean => {
@@ -77,7 +72,8 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
       login: !validateField('login', playerSettings.login),
       password: !validateField('password', playerSettings.password),
       world: !validateField('world', playerSettings.world),
-      server: !validateField('server', playerSettings.server)
+      server: !validateField('server', playerSettings.server),
+      hasPremium: false,
     };
 
     setErrors(newErrors);
@@ -87,7 +83,8 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
       login: true,
       password: true,
       world: true,
-      server: true
+      server: true,
+      hasPremium: true,
     });
 
     // If no errors, save settings
@@ -143,6 +140,11 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
           mb={3}
           isInvalid={errors.server && touched.server}
           errorMessage="Server is required"
+        />
+        <TribalInput
+          label="Premium Account"
+          value={playerSettings.hasPremium ? "Yes" : "No"}
+          isReadOnly={true}
         />
       </Box>
       <Flex justifyContent="flex-end">

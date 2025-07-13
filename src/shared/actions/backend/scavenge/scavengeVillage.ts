@@ -7,7 +7,6 @@ import {countTroops, subtractTroops, TroopsCount} from "@src/shared/models/game/
 import {troopsCountToScavengeInputFill} from "@src/shared/actions/helper/troopsCountToScavengeInputFill";
 import {singleClick} from "@src/shared/actions/content/click/ClickAction";
 import {logInfo} from "@src/shared/helpers/sendLog";
-import {action} from "webextension-polyfill";
 
 export interface StartScavengeActionInput{
   villageId?: string

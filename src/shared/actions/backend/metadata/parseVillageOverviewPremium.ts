@@ -1,6 +1,6 @@
-import { PageParser } from "@src/shared/parser/PageParser";
-import { VillageOverview } from '@src/shared/models/game/VillageOverview';
-import { Coordinates } from "@src/shared/models/game/Coordinates";
+import {PageParser} from "@src/shared/parser/PageParser";
+import {VillageOverview} from '@src/shared/models/game/VillageOverview';
+import {Coordinates} from "@src/shared/models/game/Coordinates";
 
 /**
  * Parses HTML content from the premium village overview page and extracts village details
@@ -20,9 +20,8 @@ export function parseVillageOverviewPremium(htmlContent: string): VillageOvervie
   // Get all rows from the table body (skip the header row)
   const rows = pageParser.query("#production_table tbody tr");
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const rowHtml = (row as HTMLElement).outerHTML;
+  for (const element of rows) {
+    const rowHtml = (element as HTMLElement).outerHTML;
     const rowParser = new PageParser(rowHtml);
 
     // Get all cells in the row
