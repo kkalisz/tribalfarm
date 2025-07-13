@@ -7,17 +7,18 @@ import {DatabaseSchema} from "@src/shared/db/GameDataBase";
 import {Troop} from "@src/shared/models/game/Troop";
 import {Building} from "@src/shared/models/game/Building";
 import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
+import {ScavengeSettings} from "@src/shared/models/game/ScavengeSettings";
 
 export class GameDataBaseAccess {
 
-  constructor(private db: IDBPDatabase<DatabaseSchema>) {
+  constructor(private readonly db: IDBPDatabase<DatabaseSchema>) {
   }
 
   /* ---------- TroopsCount Methods ---------- */
 
   // Upsert (insert or update) a TroopsCount entry
   public async upsertTroopsCount(id: string | undefined, troopsCount: TroopsCount): Promise<string> {
-    const troopsId = id || uuidv4();
+    const troopsId = id ?? uuidv4();
     await this.db.put('troopsCounts', {
       id: troopsId,
       troops: troopsCount,
@@ -83,7 +84,31 @@ export class GameDataBaseAccess {
   };
 
   scavengeDb = {
+    // Save scavenge settings for a village
+    saveScavengeSettings: async (settings: ScavengeSettings): Promise<void> => {
+      await this.db.put('scavengeSettings', settings);
+    },
 
+    // Get scavenge settings for a village
+    getScavengeSettings: async (villageId: string): Promise<ScavengeSettings | undefined> => {
+      return await this.db.get('scavengeSettings', villageId);
+    },
+
+    // Delete scavenge settings for a village
+    deleteScavengeSettings: async (villageId: string): Promise<void> => {
+      await this.db.delete('scavengeSettings', villageId);
+    },
+
+    // Get all scavenge settings
+    getAllScavengeSettings: async (): Promise<ScavengeSettings[]> => {
+      return await this.db.getAll('scavengeSettings');
+    },
+
+    // Delete all scavenge settings
+    deleteAllScavengeSettings: async (): Promise<void> => {
+      const allSettings = await this.scavengeDb.getAllScavengeSettings();
+      await Promise.all(allSettings.map(settings => this.scavengeDb.deleteScavengeSettings(settings.villageId)));
+    }
   }
 
 
@@ -136,7 +161,7 @@ export class GameDataBaseAccess {
 
     getTroopConfigs: async (): Promise<Troop[]> => {
       const record = await this.db.getAll('troopConfig');
-      return record ? record : [];
+      return record ?? [];
     },
 
     //
@@ -152,7 +177,7 @@ export class GameDataBaseAccess {
 
     getBuildingConfigs: async (): Promise<Building[]> => {
       const record = await this.db.getAll('buildingConfig');
-      return record ? record : [];
+      return record ?? [];
     },
   };
 }

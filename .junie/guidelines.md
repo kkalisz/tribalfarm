@@ -239,6 +239,8 @@ To add a new database object type, follow these steps:
 
    In the `init` method of the GameDataBase class, add code to create a new object store for your data type if it doesn't already exist. Specify the keyPath for the store, which is usually the primary key field of your data model.
 
+   **Important**: After adding new entities, you must update the database version (the second parameter in the openDB function) to trigger the upgrade callback and create the new object store.
+
 ### Adding Database Access Methods
 
 After defining the database schema, add methods to access the data:

@@ -1,12 +1,8 @@
 import React, {useEffect, useState} from "react";
-import {Box, Flex, Text} from "@chakra-ui/react";
-import {SidebarToggleButton} from "@pages/content/ui/SidebarToggleButton";
-import TribalCard from "@src/shared/ui/TribalCard";
+import {Box, Flex} from "@chakra-ui/react";
 import {VillageSelector} from "@src/shared/ui/VillageSelector/VillageSelector";
 import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
 import TribalButton from "@src/shared/ui/TribalButton";
-import {AtSignIcon} from "@chakra-ui/icons";
-import TribalInput from "@src/shared/ui/TribalInput";
 import {useQueryParams} from "@src/shared/hooks/useQueryParams";
 import {useAsync} from "@src/shared/hooks/useAsync";
 import {useGameDatabase} from "@src/shared/contexts/StorageContext";
@@ -22,7 +18,7 @@ export const SettingsContainer: React.FC<SettingsContainerProps> = ({
 }) => {
   const gameDatabase = useGameDatabase();
 
-  const { data: villages, loading } = useAsync(() => {
+  const { data: villages } = useAsync(() => {
     return gameDatabase.accountDb.getAllVillageOverviews();
   })
 
