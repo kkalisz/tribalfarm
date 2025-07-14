@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import {defaultPlayerSettings, PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
+import {PlayerSettings} from '@src/shared/hooks/usePlayerSettings';
 import TribalInput from '@src/shared/ui/TribalInput';
 import TribalButton from '@src/shared/ui/TribalButton';
 import {useGameDatabase} from "@src/shared/contexts/StorageContext";
@@ -15,12 +15,19 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
 
   const gameDatabase = useGameDatabase();
 
+  const initialPlayerSettings: PlayerSettings = {
+    login: '',
+    password: '',
+    world: gameUrlInfo.subdomain ?? "",
+    server: gameUrlInfo.fullDomain ?? "",
+    hasPremium: false
+  }
   const { loading, error, data: playerSettingsRaw, execute } = useAsync(() => gameDatabase.settingDb.getPlayerSettings(), []);
 
-  const [ playerSettings, setPlayerSettings ] = useState(defaultPlayerSettings)
+  const [ playerSettings, setPlayerSettings ] = useState(initialPlayerSettings)
 
   useEffect(() => {
-    setPlayerSettings(playerSettingsRaw ?? defaultPlayerSettings)
+    setPlayerSettings(playerSettingsRaw ?? initialPlayerSettings)
   },[playerSettingsRaw])
 
   const [errors, setErrors] = useState<Record<keyof typeof playerSettings, boolean>>({

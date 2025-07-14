@@ -13,6 +13,10 @@ import {GameDatabaseBackgroundSync} from "@src/shared/db/GameDatabaseBackgroundS
 import {fetchTroopInfo} from "@src/shared/services/fetchTroopInfo";
 import {fetchBuildingInfo} from "@src/shared/services/fetchBuildings";
 import {ServerConfig} from "@pages/background/serverConfig";
+import {
+  SCAVENGE_ALL_VILLAGES_ACTION,
+  ScavengeAllVillagesAction
+} from "@src/shared/actions/backend/scavenge/ScavengeAllVillagesAction";
 
 interface DatabaseHolder {
   dbSync: GameDatabaseBackgroundSync<DatabaseSchema>;
@@ -121,7 +125,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       playerServiceCache.set(fullDomain, playerService);
       playerService.registerHandler(SCAVENGE_VILLAGE_ACTION, new ScavengeVillageAction())
       playerService.registerHandler(GET_OVERVIEW_ACTION, new GetOverviewAction())
-      scheduler.scheduleTask(GET_OVERVIEW_ACTION, new GetOverviewAction(), )
+      playerService.registerHandler(SCAVENGE_ALL_VILLAGES_ACTION, new ScavengeAllVillagesAction())
+
+      // Using the new parameter object approach
+      scheduler.scheduleTask(GET_OVERVIEW_ACTION)
+      scheduler.scheduleTask(SCAVENGE_ALL_VILLAGES_ACTION,)
+
     }
   }
   logInfo(`on message player Service ${fullDomain} ${!!playerServiceCache.get(fullDomain)}`);

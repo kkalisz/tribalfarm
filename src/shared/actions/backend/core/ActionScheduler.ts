@@ -1,15 +1,24 @@
-import {BackendAction} from "@src/shared/actions/backend/core/BackendAction";
 import {logInfo} from "@src/shared/helpers/sendLog";
+
+export interface ScheduleTaskOptions<T> {
+  type: string;
+  input?: T;
+  exclusive?: boolean;
+  priority?: number;
+  runAt?: Date;
+  intervalMs?: number;
+}
 
 interface TaskWrapper {
   id: string;
-  action: BackendAction<any, any>;
+  input: Record<any, any>;
   type: string;
   lastRun: number | null;
   nextRun: number;
   running: boolean;
   priority: number;
-  intervalMs: number | null
+  intervalMs: number | null;
+  tag?: string;
 }
 
 export class ActionScheduler {
@@ -19,13 +28,13 @@ export class ActionScheduler {
   private exclusiveQueue: TaskWrapper[] = [];
   private parallelQueue: TaskWrapper[] = [];
   private readonly intervalHandle: ReturnType<typeof setInterval>;
-  private executor: (type: string, action: BackendAction<any,any>) => Promise<void> = () => Promise.resolve();
+  private executor: (type: string, action: Record<any,any>) => Promise<void> = () => Promise.resolve();
 
   constructor(private persist?: (state: never) => void, private restore?: () => never) {
     this.intervalHandle = setInterval(() => this.runLoop(), 1000);
   }
 
-  public setExecutor(executor: (type: string, action: BackendAction<any,any>) => Promise<void>): void {
+  public setExecutor(executor: (type: string, action: Record<any,any>) => Promise<void>): void {
     this.executor = executor;
   }
 
@@ -41,17 +50,28 @@ export class ActionScheduler {
     clearInterval(this.intervalHandle);
   }
 
-  public scheduleTask(type: string, input: BackendAction<any, any>, exclusive?: boolean, priority?: number, runAt?: Date, intervalMs?: number): string {
+  public scheduleTask<T = any>(typeOrOptions: string | ScheduleTaskOptions<T>): string {
+    // If first parameter is an object, use it as options
+    if (typeof typeOrOptions === 'object') {
+      return this.scheduleTaskWithOptions(typeOrOptions);
+    }
+    return this.scheduleTaskWithOptions({
+      type: typeOrOptions
+    })
+  }
+
+  private scheduleTaskWithOptions<T>(options: ScheduleTaskOptions<T>): string {
+    const { type, input, exclusive, priority, runAt, intervalMs } = options;
     const id = `${Date.now()}_${this.taskIdCounter++}`;
     const task: TaskWrapper = {
       id,
-      action: input,
+      input: input as Record<any, any>,
       type: type,
       lastRun: null,
       nextRun: runAt ? runAt.getTime() : Date.now(),
       running: false,
-      priority: priority ? priority : 0,
-      intervalMs: intervalMs ? intervalMs : null
+      priority: priority ?? 0,
+      intervalMs: intervalMs ?? null
     };
 
     if (exclusive) {
@@ -60,26 +80,17 @@ export class ActionScheduler {
       this.parallelQueue.push(task);
     }
 
-    this.save();
     return id;
   }
 
   public removeById(id: string): void {
     this.exclusiveQueue = this.exclusiveQueue.filter(t => t.id !== id);
     this.parallelQueue = this.parallelQueue.filter(t => t.id !== id);
-    this.save();
   }
-
-  // public removeByType(type: string): void {
-  //   this.exclusiveQueue = this.exclusiveQueue.filter(t => t.action.type !== type);
-  //   this.parallelQueue = this.parallelQueue.filter(t => t.action.type !== type);
-  //   this.save();
-  // }
 
   public removeByPredicate(predicate: (input: TaskWrapper) => boolean): void {
     this.exclusiveQueue = this.exclusiveQueue.filter(t => !predicate(t));
     this.parallelQueue = this.parallelQueue.filter(t => !predicate(t));
-    this.save();
   }
 
   private async runLoop(): Promise<void> {
@@ -108,8 +119,6 @@ export class ActionScheduler {
           } else {
             this.exclusiveQueue = this.exclusiveQueue.filter(t => t.id !== exclusive.id);
           }
-
-          this.save();
         });
       }
     }
@@ -126,37 +135,15 @@ export class ActionScheduler {
         } else {
           this.parallelQueue = this.parallelQueue.filter(t => t.id !== task.id);
         }
-
-        this.save();
       });
     }
-    //logInfo("action scheduler loop end")
   }
 
   private async runTask(task: TaskWrapper): Promise<void> {
     try {
-      await this.executor(task.type, task.action)
+      await this.executor(task.type, task.input)
     } catch (err) {
       console.error(`[TaskScheduler] Task failed`, err);
     }
-  }
-
-  private save(): void {
-    // if (this.persist) {
-    //   this.persist({
-    //     exclusiveQueue: this.exclusiveQueue,
-    //     parallelQueue: this.parallelQueue,
-    //     taskIdCounter: this.taskIdCounter
-    //   });
-    // }
-  }
-
-  public restoreFromStorage(): void {
-    if (!this.restore) return;
-    const state = this.restore();
-    if (!state) return;
-    // this.exclusiveQueue = state.exclusiveQueue || [];
-    // this.parallelQueue = state.parallelQueue || [];
-    // this.taskIdCounter = state.taskIdCounter || 0;
   }
 }

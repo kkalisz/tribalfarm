@@ -40,13 +40,13 @@ export class PlayerService {
 
     // Set up the executor for the action scheduler
     this.actionScheduler.setExecutor(
-      async (type: string, action: unknown): Promise<void> => {
+      async (type: string, params: unknown): Promise<void> => {
         const handler = this.handlers[type]; // Safely access handlers
         if (!handler) {
           logError(`No handler for given action type: ${type}`);
           throw new Error(`Handler not found for action type: ${type}`);
         }
-        await handler.execute(this.actionContext, action); // Execute the action
+        await handler.execute(this.actionContext, params); // Execute the action
       }
     );
   }

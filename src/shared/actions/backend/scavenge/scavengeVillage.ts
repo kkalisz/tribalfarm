@@ -2,17 +2,24 @@ import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActi
 import {validateTribalWarsUrl} from "@src/shared/helpers/location/validateTribalWarsUrl";
 import {buildGameUrlWithScreen} from "@src/shared/helpers/buildUrl";
 import {extractScavengingEndTimes, parseScavengePageContent} from "@src/shared/actions/backend/scavenge/helpers";
-import {calculateScavenge, ScavengeCalculationMode, ScavengeMissionsPlan} from "@src/shared/actions/backend/scavenge/calculateScavenge";
+import {
+  calculateScavenge,
+  ScavengeCalculationMode,
+  ScavengeMissionsPlan
+} from "@src/shared/actions/backend/scavenge/calculateScavenge";
 import {countTroops, subtractTroops, TroopsCount} from "@src/shared/models/game/TroopCount";
 import {troopsCountToScavengeInputFill} from "@src/shared/actions/helper/troopsCountToScavengeInputFill";
 import {singleClick} from "@src/shared/actions/content/click/ClickAction";
 import {logInfo} from "@src/shared/helpers/sendLog";
+import {SCAVENGE_VILLAGE_ACTION} from "@src/shared/actions/backend/scavenge/ScavengeVillageAction";
+import {ScavengeSettings} from "@src/shared/models/game/ScavengeSettings";
 
 export interface StartScavengeActionInput{
-  villageId?: string
+  villageId: string
   lockedTroops?: TroopsCount
-  scavengeCalculationMode: ScavengeCalculationMode
+  scavengeCalculationMode?: ScavengeCalculationMode
   addRepeatScavengeTimer: boolean
+  oneTimeRun?: boolean
 }
 
 export interface StartScavengeActionOutput{
@@ -21,6 +28,15 @@ export interface StartScavengeActionOutput{
 }
 
 export async function scavengeVillage(context: BackendActionContext, action: StartScavengeActionInput,): Promise<StartScavengeActionOutput> {
+  const scavengeSettings = await context.gameDatabase.scavengeDb.getScavengeSettings(action.villageId)
+
+  if(scavengeSettings?.enabled === false && !action.oneTimeRun){
+    return {
+      isScavengeRunning: false,
+      endTimes: [],
+    }
+  }
+
   const currentPageStatus = await context.messenger.executePageStatusAction({});
   const urlParams = {
     mode: "scavenge",
@@ -30,8 +46,6 @@ export async function scavengeVillage(context: BackendActionContext, action: Sta
 
   const isOnProperPage = validateTribalWarsUrl(currentPageStatus.details?.url ?? "", urlParams);
 
-
-  logInfo(`is on propper page ${isOnProperPage}`)
   if (!isOnProperPage) {
     const url = buildGameUrlWithScreen(context.playerSettings.server, urlParams)
     await context.messenger.executeNavigateToPageAction({url, reload: true})
@@ -48,11 +62,25 @@ export async function scavengeVillage(context: BackendActionContext, action: Sta
     }
   }
 
-  await startScavengingOnScreen(context, action, pageContent.details?.pageContent ?? "");
+
+  await startScavengingOnScreen(context, action, scavengeSettings ?? null, pageContent.details?.pageContent ?? "");
   const scavengingEndTimes = await extractScavengingEndTimes(context);
 
-  if(action.addRepeatScavengeTimer){
+  if(action.addRepeatScavengeTimer && !!scavengingEndTimes.length){
+    const lowestEndTime =  Math.min(...scavengingEndTimes.map(date => date.getTime()))
+    const runAt = new Date(lowestEndTime + 1000); // Schedule 1 second after the earliest scavenge completes
 
+    // Using the new parameter object approach
+    context.scheduler.scheduleTask<StartScavengeActionInput>({
+      type: SCAVENGE_VILLAGE_ACTION,
+      input: {
+        villageId: action.villageId,
+        lockedTroops: action.lockedTroops,
+        scavengeCalculationMode: action.scavengeCalculationMode,
+        addRepeatScavengeTimer: action.addRepeatScavengeTimer
+      },
+      runAt: runAt,
+    });
   }
   return {
     isScavengeRunning: scavengingEndTimes.length > 0,
@@ -60,17 +88,15 @@ export async function scavengeVillage(context: BackendActionContext, action: Sta
   }
 }
 
-export async function startScavengingOnScreen(context: BackendActionContext, input: StartScavengeActionInput, pageContent: string ): Promise<ScavengeMissionsPlan> {
+export async function startScavengingOnScreen(context: BackendActionContext, input: StartScavengeActionInput, scavengeSettings: ScavengeSettings | null, pageContent: string ): Promise<ScavengeMissionsPlan> {
 
   const { troopsCount, scavengeOptions } = parseScavengePageContent(pageContent)
 
-  const lockedTroops = !input.lockedTroops
-    ? await getLockedTroopsForScavenge(input.villageId, context)
-    : input.lockedTroops;
-
+  const lockedTroops = input.lockedTroops ?? scavengeSettings?.troopsExcluded ?? {}
   const troopsThatCanBeUsed = subtractTroops( troopsCount, lockedTroops)
+  const calculationMode = input.scavengeCalculationMode ?? scavengeSettings?.calculationMode ?? ScavengeCalculationMode.SAME_RETURN_TIME
 
-  const scavengePlan = calculateScavenge(troopsThatCanBeUsed, context.serverConfig.worldConfig.speed, scavengeOptions, input.scavengeCalculationMode, 0)
+  const scavengePlan = calculateScavenge(troopsThatCanBeUsed, context.serverConfig.worldConfig.speed, scavengeOptions, calculationMode, 0)
 
   for (const mission of scavengePlan.missions) {
     if(countTroops(mission.unitsAllocated) <= 10){
@@ -83,8 +109,4 @@ export async function startScavengingOnScreen(context: BackendActionContext, inp
     await context.messenger.executeClickAction(singleClick(`.scavenge-option:nth-of-type(${mission.missionIndex+1}) .status-specific .free_send_button`))
   }
   return scavengePlan;
-}
-
-async function getLockedTroopsForScavenge(villageId: string | undefined, context: BackendActionContext): Promise<TroopsCount>{
-  return { }
 }

@@ -36,19 +36,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         />
       </Flex>
 
-      {/* Sidebar Content - Completely hidden when not visible */}
-      {rightSidebarVisible && (
         <Box
+          visibility={rightSidebarVisible ? "visible" : "hidden"}
           flex="1"
           pointerEvents="auto"
           display="flex"
           flexDirection="column"
-          overflow="hidden"
+          overflow="auto"
         >
           <TribalCard
             title="Settings"
             style={{
-              overflowY: "visible",
+              overflowY: "auto",
               height: "100%",
               display: "flex", 
               flexDirection: "column"
@@ -57,7 +56,6 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             <SettingsContainer isOpen={rightSidebarVisible}/>
           </TribalCard>
         </Box>
-      )}
     </Box>
   );
 };

@@ -45,7 +45,7 @@ const TribalCard: FC<PropsWithChildren<TribalCardProps>> = ({
       borderWidth={noBorder ? "0px" : "1px"}
       borderColor={borderColor}
       boxShadow="inner"
-      overflow="hidden"
+      overflow="auto"
       // borderRadius="md"
       style={style}
       _before={variant === "highlighted" ? {
@@ -86,7 +86,7 @@ const TribalCard: FC<PropsWithChildren<TribalCardProps>> = ({
         display="flex"
         flexDirection="column"
         gap={gap ?? "2"}
-        overflow="hidden"
+        overflow="auto"
       >
         {children}
       </Box>

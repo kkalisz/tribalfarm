@@ -10,8 +10,8 @@ export function validateTribalWarsUrl(
     throw new Error("Current URL cannot be blank");
   }
 
-  if (gameUrlParams.village && !Number.isInteger(gameUrlParams.village)) {
-    throw new Error("Village ID must be a positive integer");
+  if (gameUrlParams.village && !Number(gameUrlParams.village)) {
+    throw new Error(`Village ID must be a positive integer but is ${gameUrlParams.village}`);
   }
 
 

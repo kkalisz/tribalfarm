@@ -18,6 +18,15 @@ import TroopCountsForm from "@src/pages/content/ui/TroopCountsForm";
 import { useAsync } from "@src/shared/hooks/useAsync";
 import { useGameDatabase } from "@src/shared/contexts/StorageContext";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
+import {TroopName} from "@src/shared/models/game/Troop";
+
+const troopsToHide: TroopName[] = [
+  "noble",
+  "ram",
+  "catapult",
+  "militia",
+  "scout"
+]
 
 interface ScavengeTabProps {
   village: BaseVillageInfo;
@@ -25,7 +34,6 @@ interface ScavengeTabProps {
 
 export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
   const gameDatabase = useGameDatabase();
-  const toast = useToast();
 
   // State for form fields
   const [enabled, setEnabled] = useState(false);
@@ -53,7 +61,6 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
 
   // Save settings
   const handleSave = async () => {
-    try {
       const newSettings: ScavengeSettings = {
         villageId: village.villageId,
         enabled,
@@ -64,25 +71,11 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
 
       await gameDatabase.scavengeDb.saveScavengeSettings(newSettings);
       await refreshSettings();
-
-      toast({
-        title: "Settings saved",
-        description: "Scavenge settings have been saved successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (err) {
-      toast({
-        title: "Error saving settings",
-        description: "There was an error saving your scavenge settings.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-      console.error("Error saving scavenge settings:", err);
-    }
   };
+
+  if(loading){
+    return null;
+  }
 
   return (
     <Box>
@@ -90,59 +83,61 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
         {loading && <TribalText>Loading settings...</TribalText>}
         {error && <TribalText color="red.500">Error loading settings: {error.message}</TribalText>}
 
-        <FormControl display="flex" alignItems="center">
-          <TribalFormLabel htmlFor="scavenge-enabled" mb="0">
-            Enable Scavenge
-          </TribalFormLabel>
-          <TribalCheckbox 
-            id="scavenge-enabled" 
-            isChecked={enabled} 
-            onChange={(e) => setEnabled(e.target.checked)}
-          />
-        </FormControl>
+        <HStack spacing={4} justify="space-between" width="100%">
+          <FormControl display="flex" alignItems="center" width="auto">
+            <TribalFormLabel htmlFor="scavenge-enabled" mb="0" mr={2}>
+              Enable Scavenge
+            </TribalFormLabel>
+            <TribalCheckbox 
+              id="scavenge-enabled" 
+              isChecked={enabled} 
+              onChange={(e) => setEnabled(e.target.checked)}
+            />
+          </FormControl>
 
-        <FormControl>
-          <TribalFormLabel htmlFor="calculation-mode">Calculation Mode</TribalFormLabel>
-          <TribalSelect 
-            id="calculation-mode" 
-            value={calculationMode} 
-            onChange={(e) => setCalculationMode(Number(e.target.value) as ScavengeCalculationMode)}
-          >
-            <option value={ScavengeCalculationMode.MAX_RESOURCES_PER_RUN}>
-              Max Resources Per Run
-            </option>
-            <option value={ScavengeCalculationMode.SAME_RETURN_TIME}>
-              Same Return Time
-            </option>
-            <option value={ScavengeCalculationMode.MAX_RESOURCES_PER_HOUR}>
-              Max Resources Per Hour
-            </option>
-          </TribalSelect>
-        </FormControl>
+          <FormControl width="auto" flex="1">
+            <TribalSelect
+              placeholder="Calculation Mode"
+              id="calculation-mode" 
+              value={calculationMode} 
+              onChange={(e) => setCalculationMode(Number(e.target.value) as ScavengeCalculationMode)}
+            >
+              <option value={ScavengeCalculationMode.MAX_RESOURCES_PER_RUN}>
+                Max Resources Per Run
+              </option>
+              <option value={ScavengeCalculationMode.SAME_RETURN_TIME}>
+                Same Return Time
+              </option>
+              <option value={ScavengeCalculationMode.MAX_RESOURCES_PER_HOUR}>
+                Max Resources Per Hour
+              </option>
+            </TribalSelect>
+          </FormControl>
+
+          <TribalButton variant="primary" onClick={handleSave}>
+            Save Settings
+          </TribalButton>
+        </HStack>
 
         <HStack spacing={4} align="start">
           <Box>
-            <TribalText mb={2}>Troops Limit (Max troops to be used)</TribalText>
             <TroopCountsForm
               initialCounts={troopsLimit}
               onChange={setTroopsLimit}
-              title="Troops Limit"
+              title="Locked"
+              troopsToHide={troopsToHide}
             />
           </Box>
-
           <Box>
-            <TribalText mb={2}>Troops Excluded (Can't be used)</TribalText>
             <TroopCountsForm
               initialCounts={troopsExcluded}
               onChange={setTroopsExcluded}
-              title="Troops Excluded"
+              title="Excluded"
+              troopsToHide={troopsToHide}
             />
           </Box>
         </HStack>
 
-        <TribalButton variant="primary" onClick={handleSave}>
-          Save Settings
-        </TribalButton>
       </VStack>
     </Box>
   );

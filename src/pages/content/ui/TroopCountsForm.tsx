@@ -1,32 +1,43 @@
-import React, {useState, useCallback} from "react";
+import React, {useState, useCallback, useEffect} from "react";
 import { Box, Flex, Image } from "@chakra-ui/react";
 import TribalCard from "@src/shared/ui/TribalCard";
 import TribalInput from "@src/shared/ui/TribalInput";
 import {AllTroopNames, TroopName} from "@src/shared/models/game/Troop";
-import {TroopCounts} from "@src/shared/models/actions";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import TribalLink from "@src/shared/ui/TribalLink";
 
 
 interface TroopCountsFormProps {
   initialCounts?: TroopsCount;
-  onChange: (counts: TroopCounts) => void;
+  onChange: (counts: TroopsCount) => void;
   title?: string;
   availableTroops?: TroopsCount;
+  troopsToHide?: TroopName[];
+  troopsToShow?: TroopName[];
 }
 
 export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
   initialCounts = {},
   onChange,
   title = "Troop Counts",
-  availableTroops = {}
+  availableTroops,
+  troopsToHide = [],
+  troopsToShow = []
 }) => {
-  const [counts, setCounts] = useState<TroopCounts>(initialCounts);
+  const [counts, setCounts] = useState<TroopsCount>(initialCounts);
 
   // Update counts when initialCounts changes
-  // useEffect(() => {
-  //   setCounts(initialCounts);
-  // }, [initialCounts]);
+  useEffect(() => {
+    // Create a copy of initialCounts
+    const newCounts = { ...initialCounts };
+
+    // Ensure troops in troopsToHide have a value of 0
+    troopsToHide.forEach(troopName => {
+      newCounts[troopName] = 0;
+    });
+
+    setCounts(newCounts);
+  }, [initialCounts, troopsToHide, troopsToShow]);
 
   const handleInputChange = useCallback((troopName: TroopName, value: string) => {
     const numValue = value === "" ? 0 : parseInt(value, 10);
@@ -38,14 +49,20 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
       ...counts,
       [troopName]: isNaN(numValue) ? 0 : numValue
     };
+
+    // Ensure troops in troopsToHide have a value of 0
+    troopsToHide.forEach(troopName => {
+      newCounts[troopName] = 0;
+    });
+
     setCounts(newCounts);
     onChange(newCounts);
-  }, [counts, onChange]);
+  }, [counts, onChange, troopsToHide, troopsToShow]);
 
   // Calculate available troops for a specific troop type
   const getAvailableTroops = useCallback((troopName: TroopName) => {
-    const available = availableTroops[troopName] || 0;
-    const current = counts[troopName] || 0;
+    const available = availableTroops?.[troopName] ?? 0;
+    const current = counts[troopName] ?? 0;
     return Math.max(0, available - current);
   }, [availableTroops, counts]);
 
@@ -65,10 +82,16 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
   }, [counts, getAvailableTroops, onChange]);
 
 
+  // Determine which troops to show based on troopsToShow and troopsToHide
+  const visibleTroops = (troopsToShow.length > 0 ? troopsToShow : AllTroopNames)
+    .filter(name => !troopsToHide.includes(name));
+
+  const width = availableTroops ? "140px" : "90px";
+
   return (
     <TribalCard title={title}>
-      <Box width="140px">
-        {AllTroopNames.map((name) => (
+      <Box width={width}>
+        {visibleTroops.map((name) => (
           <Flex 
             key={name} 
             alignItems="center" 
@@ -89,7 +112,7 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
                   onChange={(e) => handleInputChange(name, e.target.value)}
                 />
               </Box>
-              {availableTroops[name] !== undefined && (
+              {availableTroops?.[name] !== undefined && (
                 <TribalLink
                   onClick={() => handleCounterClick(name)}
                   textAlign="left"
