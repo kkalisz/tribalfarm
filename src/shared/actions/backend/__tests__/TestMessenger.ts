@@ -2,6 +2,7 @@ import {
   BasePageAction,
   BasePageResponse,
   GenericStatusPayload,
+  Message,
   Messenger,
   doneResponse
 } from '@src/shared/actions/content/core/types';
@@ -21,6 +22,9 @@ export interface ResponseConfig<RESPONSE extends BasePageResponse> {
  * that allows defining responses based on actionName and execution count.
  */
 export class TestMessenger implements Messenger {
+  waitFor(type: 'status' | 'event' | 'error', predicate: (message: Message) => boolean, timeoutMs: number, actionId?: string): Promise<Record<string, unknown>> {
+      return Promise.resolve({})
+  }
   // Map to store responses by actionName
   private responsesByAction: Map<string, ResponseConfig<any>[]> = new Map();
   

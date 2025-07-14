@@ -31,6 +31,18 @@ export function subtractTroops(troops1: TroopsCount, troops2: TroopsCount): Troo
   return result;
 }
 
+export function ensureNoNegativeTroops(troops: TroopsCount): TroopsCount {
+  const result: TroopsCount = {};
+
+  // Use AllTroopNames to iterate over all defined troop names
+  for (const troop of AllTroopNames) {
+    const count = troops[troop] ?? 0; // Assume 0 if key doesn't exist
+    result[troop] = Math.max(count,0);    // Subtract counts
+  }
+
+  return result;
+}
+
 export function getMinTroops(troops1: TroopsCount, troops2: TroopsCount): TroopsCount {
   const result: TroopsCount = {};
 
