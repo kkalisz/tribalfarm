@@ -32,8 +32,9 @@ export class GameDatabaseClientSync {
         fullDomain: this.fullDomain,
       }, (response) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else if (!response || !response.success) {
+          console.log(chrome.runtime.lastError + ` db_init`);
+        }
+        if (!response || !response.success) {
           reject(new Error(response?.error || 'Unknown error during db_init'));
         } else {
           resolve();
@@ -48,8 +49,9 @@ export class GameDatabaseClientSync {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(payload, (response: DBSyncResponse) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message + `${payload.operation}`));
-        } else if (!response || !response.success) {
+          console.log(chrome.runtime.lastError+` ${payload.operation}`);
+        }
+        if (!response || !response.success) {
           reject(new Error(response?.error || 'Unknown error'));
         } else {
           resolve(response.value as T);

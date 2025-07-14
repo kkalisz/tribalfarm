@@ -61,21 +61,22 @@ export class PlayerService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-  async onMessage(message: any, sender: MessageSender, sendResponse: (response?: any) => void): Promise<void> {
+  async onMessage(message: any, sender: MessageSender, sendResponse: (response?: any) => void): Promise<boolean> {
     const type = message.type;
     if(type !== "ui_action"){
       logInfo(`we are not handling action different than "ui_action": ${type}`); // Correct
-      return
+      return false
     }
 
-    const actionType = message.payload.action
+    const actionType = message.payload.type
     const handler = this.handlers[actionType];
     if(!handler){
-      logError(`no handler for given action type: ${type}`); // Correct
-      return;
+      logError(`no handler for given action type: ${actionType}`); // Correct
+      return false
     }
     const actionContent = message.payload.parameters;
     logInfo(`start execute action ${message.payload.action}`)
-    return handler.execute(this.actionContext, actionContent);
+    handler.execute(this.actionContext, actionContent);
+    return false;
   }
 }

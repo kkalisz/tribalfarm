@@ -66,7 +66,7 @@ export class TabMessenger implements Messenger{
       // Only process messages from our tab
       if (sender.tab?.id !== this.tabId) return;
 
-      logInfo(`TabMessenger received message from tab ${this.tabId}:`, JSON.stringify(message));
+      //logInfo(`TabMessenger received message from tab ${this.tabId}:`, JSON.stringify(message));
 
       // Handle responses to pending requests
       if ((message.type === 'status' || message.type === 'error') && message.actionId) {

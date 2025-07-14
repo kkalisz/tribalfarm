@@ -14,7 +14,7 @@ import {DatabaseSchema} from "@src/shared/db/GameDataBase";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
 import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
-import {ExecutorAttacher} from "@pages/content/execute/ExecutorAttacher";
+import {ContentActionExecutor} from "@pages/content/execute/ContentActionExecutor";
 import { playSound, setupAudio } from '@pages/content/helpers/playSound';
 import { observeBotProtectionQuest } from '@pages/content/helpers/botProtectionObserver';
 import { ActionExecutorContext } from '@src/shared/contexts/ActionExecutorContext';
@@ -24,7 +24,7 @@ import log from "eslint-plugin-react/lib/util/log";
 import {logError} from "@src/shared/helpers/sendLog";
 
 
-let attachExecutor: ExecutorAttacher | null = null;
+let attachExecutor: ContentActionExecutor | null = null;
 let botDetected: BotCheckStatus = BotCheckStatus.NONE;
 
 function onBotCheck(botCheck: BotCheckStatus) {
@@ -145,7 +145,7 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
   }
 
   try {
-    attachExecutor = new ExecutorAttacher(context);
+    attachExecutor = new ContentActionExecutor(context);
     attachExecutor.attach();
     //TODO maybe swap order
     setupDOMObserver();

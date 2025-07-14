@@ -7,7 +7,7 @@ import {
   ScavengeCalculationMode,
   ScavengeMissionsPlan
 } from "@src/shared/actions/backend/scavenge/calculateScavenge";
-import {countTroops, subtractTroops, TroopsCount} from "@src/shared/models/game/TroopCount";
+import {countTroops, ensureNoNegativeTroops, subtractTroops, TroopsCount} from '@src/shared/models/game/TroopCount';
 import {troopsCountToScavengeInputFill} from "@src/shared/actions/helper/troopsCountToScavengeInputFill";
 import {singleClick} from "@src/shared/actions/content/click/ClickAction";
 import {logInfo} from "@src/shared/helpers/sendLog";
@@ -93,10 +93,12 @@ export async function startScavengingOnScreen(context: BackendActionContext, inp
   const { troopsCount, scavengeOptions } = parseScavengePageContent(pageContent)
 
   const lockedTroops = input.lockedTroops ?? scavengeSettings?.troopsExcluded ?? {}
-  const troopsThatCanBeUsed = subtractTroops( troopsCount, lockedTroops)
+  const troopsThatCanBeUsed = ensureNoNegativeTroops(subtractTroops( troopsCount, lockedTroops));
   const calculationMode = input.scavengeCalculationMode ?? scavengeSettings?.calculationMode ?? ScavengeCalculationMode.SAME_RETURN_TIME
 
   const scavengePlan = calculateScavenge(troopsThatCanBeUsed, context.serverConfig.worldConfig.speed, scavengeOptions, calculationMode, 0)
+
+  console.log("scavengePlan", JSON.stringify(scavengePlan))
 
   for (const mission of scavengePlan.missions) {
     if(countTroops(mission.unitsAllocated) <= 10){

@@ -1,5 +1,7 @@
 import {logInfo} from "@src/shared/helpers/sendLog";
 
+const fiveMinutesInMs = 5 * 60 * 1000;
+
 export interface ScheduleTaskOptions<T> {
   type: string;
   input?: T;
@@ -21,6 +23,51 @@ interface TaskWrapper {
   tag?: string;
 }
 
+/**
+ * Extracts essential details from a TaskWrapper object
+ * @param task The TaskWrapper to extract details from
+ * @returns An object containing the task type and formatted next run time
+ */
+export function extractTaskDetails(task: TaskWrapper): { type: string; nextRunTime: string; nextRunTimeLocal: string } {
+  const nextRunDate = new Date(task.nextRun);
+  return {
+    type: task.type,
+    nextRunTime: nextRunDate.toISOString(),
+    nextRunTimeLocal: nextRunDate.toLocaleString(),
+  };
+}
+
+/**
+ * Logs details of tasks in both parallel and exclusive queues
+ * @param parallelQueue Array of parallel tasks
+ * @param exclusiveQueue Array of exclusive tasks
+ */
+export function logQueueDetails(parallelQueue: TaskWrapper[], exclusiveQueue: TaskWrapper[]): void {
+  console.log('--- Queue Details ---');
+  
+  console.log('Parallel Queue:');
+  if (parallelQueue.length === 0) {
+    console.log('  No tasks in parallel queue');
+  } else {
+    parallelQueue.forEach((task, index) => {
+      const details = extractTaskDetails(task);
+      console.log(`  Task ${index + 1}: Type: ${details.type}, Next Run: ${details.nextRunTime} -> local ${details.nextRunTimeLocal}`);
+    });
+  }
+  
+  console.log('Exclusive Queue:');
+  if (exclusiveQueue.length === 0) {
+    console.log('  No tasks in exclusive queue');
+  } else {
+    exclusiveQueue.forEach((task, index) => {
+      const details = extractTaskDetails(task);
+      console.log(`  Task ${index + 1}: Type: ${details.type}, Next Run: ${details.nextRunTime} -> local ${details.nextRunTimeLocal}`);
+    });
+  }
+  
+  console.log('-------------------');
+}
+
 export class ActionScheduler {
   private taskIdCounter = 0;
   private paused = false;
@@ -29,6 +76,7 @@ export class ActionScheduler {
   private parallelQueue: TaskWrapper[] = [];
   private readonly intervalHandle: ReturnType<typeof setInterval>;
   private executor: (type: string, action: Record<any,any>) => Promise<void> = () => Promise.resolve();
+  private lastLogTime = 0; // Track the last time queue details were logged
 
   constructor(private persist?: (state: never) => void, private restore?: () => never) {
     this.intervalHandle = setInterval(() => this.runLoop(), 1000);
@@ -97,12 +145,16 @@ export class ActionScheduler {
     logInfo("action scheduler loop start")
     if (this.paused) return;
     const now = Date.now();
+    
+    // Check if 5 minutes (300,000 ms) have passed since the last log
+    if (now - this.lastLogTime >= fiveMinutesInMs) {
+      logQueueDetails(this.parallelQueue, this.exclusiveQueue);
+      this.lastLogTime = now;
+    }
 
     this.exclusiveQueue.sort((a, b) => a.nextRun - b.nextRun || (b.priority ?? 0) - (a.priority ?? 0));
     this.parallelQueue.sort((a, b) => a.nextRun - b.nextRun || (b.priority ?? 0) - (a.priority ?? 0));
-
-    //logInfo(`action scheduler loop ex ->${this.exclusiveQueue.length} par ->${this.parallelQueue.length}`)
-
+    
     if (!this.isExclusiveRunning) {
       const exclusive = this.exclusiveQueue.find(t => !t.running && now >= t.nextRun);
       if (exclusive) {
@@ -147,3 +199,5 @@ export class ActionScheduler {
     }
   }
 }
+
+

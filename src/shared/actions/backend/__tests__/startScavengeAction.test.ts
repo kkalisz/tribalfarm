@@ -1,16 +1,14 @@
 import {vi, describe, it, expect, beforeEach} from 'vitest';
-import startScavengeAction from '../startScavengeAction';
 import {BackendActionContext} from '@src/shared/actions/backend/core/BackendActionContext';
-import {PageParser} from '@src/shared/parser/PageParser';
 import {MessengerWrapper} from "@src/shared/actions/content/core/MessengerWrapper";
 import {TestMessenger} from "@src/shared/actions/backend/__tests__/TestMessenger";
 import {PAGE_STATUS_ACTION, PageStatusResponse} from "@src/shared/actions/content/pageStatus/PageStatusAction";
 import {loadFileAsString} from "@src/shared/actions/backend/__tests__/loadFileAsString";
 import {
   NAVIGATE_TO_PAGE_ACTION,
-  NavigateToPageAction,
   NavigateToPageActionResponse
 } from "@src/shared/actions/content/navigateToPage/NavigateToPageAction";
+import {scavengeVillage} from '@src/shared/actions/backend/scavenge/scavengeVillage';
 
 
 describe('startScavengeAction', () => {
@@ -28,7 +26,8 @@ describe('startScavengeAction', () => {
         server: 'https://example.com',
         login: 'testuser',
         password: 'testpass',
-        world: 'world1'
+        world: 'world1',
+        hasPremium: false,
       }
     };
   });
@@ -58,10 +57,10 @@ describe('startScavengeAction', () => {
         "done")
 
       // Arrange
-      const input = {villageId: '123'};
+      const input = {villageId: '123', addRepeatScavengeTimer: false};
 
       // Act
-      await startScavengeAction(mockContext, input);
+      await scavengeVillage(mockContext, input);
 
       // Assert
       // Verify that messenger methods were called with correct parameters

@@ -134,8 +134,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     }
   }
   logInfo(`on message player Service ${fullDomain} ${!!playerServiceCache.get(fullDomain)}`);
-  playerServiceCache.get(fullDomain)?.onMessage(message, sender, sendResponse);
-  return false
+  const result = await playerServiceCache.get(fullDomain)?.onMessage(message, sender, sendResponse);
+  return result ?? false;
 
 });
 

@@ -5,6 +5,7 @@ import {PageParser} from "@src/shared/parser/PageParser";
 import {BackendActionContext} from "@src/shared/actions/backend/core/BackendActionContext";
 import {parseTimeToMiliSeconds} from "@src/shared/helpers/parseTimeToMiliSeconds";
 import {addMiliSecondsTo} from "@src/shared/helpers/addMiliSecondsToNow";
+import {delayRun} from '@src/shared/helpers/delayRun';
 
 
 function getScavengeStatus(index: number, element: Element): ScavengeMissionInfo {
@@ -67,12 +68,14 @@ export function parseScavengePageContent(pageContent: string) {
 }
 
 export async function extractScavengingEndTimes(context: BackendActionContext) {
+  await delayRun(2000)
   const refreshedPageContent = await context.messenger.executePageStatusAction({})
   const pageParser = new PageParser(refreshedPageContent.details?.pageContent ?? "");
-  const countdowns = pageParser.queryByClass("return_countdown")
+  const countdowns = pageParser.queryByClass("return-countdown")
 
   // for now simplify we don't need info what exact level is finished when
   return Array.from(countdowns).map(countdown => {
+    console.log(`countdown: ${countdown.textContent}`);
     return parseTimeToMiliSeconds(countdown.textContent)
-  }).filter(minutes => minutes !== null).map(minutes => addMiliSecondsTo(minutes));
+  }).filter(miliSeconds => miliSeconds !== null).map(miliSeconds => addMiliSecondsTo(miliSeconds));
 }

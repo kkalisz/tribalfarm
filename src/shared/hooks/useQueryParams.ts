@@ -44,6 +44,9 @@ export function useQueryParams(): QueryParamsResult {
     const initialParams = parseQueryParams(window.location.href);
     setQueryParams(initialParams);
 
+    // Store the current URL to compare against for changes
+    let previousUrl = window.location.href;
+
     // Create a function to handle URL changes
     const handleUrlChange = () => {
       const newParams = parseQueryParams(window.location.href);
@@ -56,11 +59,14 @@ export function useQueryParams(): QueryParamsResult {
     // Use a MutationObserver to detect changes to the URL that don't trigger popstate
     // This is useful for single-page applications that use history.pushState
     const observer = new MutationObserver((mutations) => {
-      mutations.forEach(() => {
-        const currentUrl = window.location.href;
+      const currentUrl = window.location.href;
+      
+      // Only process if the URL has actually changed
+      if (currentUrl !== previousUrl) {
+        previousUrl = currentUrl; // Update the previous URL
         const newParams = parseQueryParams(currentUrl);
         setQueryParams(newParams);
-      });
+      }
     });
 
     // Observe changes to the URL

@@ -1,10 +1,10 @@
 import { createContext, useContext } from 'react';
-import { ExecutorAttacher } from '@pages/content/execute/ExecutorAttacher';
+import { ContentActionExecutor } from '@pages/content/execute/ContentActionExecutor';
 
 // Create the context with a default undefined value
-export const ActionExecutorContext = createContext<ExecutorAttacher | undefined>(undefined);
+export const ActionExecutorContext = createContext<ContentActionExecutor | undefined>(undefined);
 
-export const useActionExecutorContext = (): ExecutorAttacher => {
+export const useActionExecutorContext = (): ContentActionExecutor => {
   const context = useContext(ActionExecutorContext);
 
   if (context === undefined) {

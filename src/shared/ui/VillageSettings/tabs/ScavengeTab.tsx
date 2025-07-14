@@ -4,7 +4,6 @@ import {
   VStack, 
   HStack, 
   FormControl, 
-  useToast
 } from "@chakra-ui/react";
 import TribalText from "@src/shared/ui/TribalText";
 import TribalCheckbox from "@src/shared/ui/TribalCheckbox";
@@ -19,6 +18,9 @@ import { useAsync } from "@src/shared/hooks/useAsync";
 import { useGameDatabase } from "@src/shared/contexts/StorageContext";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";
 import {TroopName} from "@src/shared/models/game/Troop";
+import {useActionExecutorContext} from '@src/shared/contexts/ActionExecutorContext';
+import {SCAVENGE_VILLAGE_ACTION} from '@src/shared/actions/backend/scavenge/ScavengeVillageAction';
+import {StartScavengeActionInput} from '@src/shared/actions/backend/scavenge/scavengeVillage';
 
 const troopsToHide: TroopName[] = [
   "noble",
@@ -34,6 +36,7 @@ interface ScavengeTabProps {
 
 export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
   const gameDatabase = useGameDatabase();
+  const actionExecutor = useActionExecutorContext();
 
   // State for form fields
   const [enabled, setEnabled] = useState(false);
@@ -70,6 +73,15 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
       };
 
       await gameDatabase.scavengeDb.saveScavengeSettings(newSettings);
+      if(newSettings.enabled){
+        actionExecutor.sendUiActionRequest<StartScavengeActionInput>({
+          type: SCAVENGE_VILLAGE_ACTION,
+          parameters: {
+            villageId: village.villageId,
+            addRepeatScavengeTimer: true,
+          }
+        })
+      }
       await refreshSettings();
   };
 

@@ -20,7 +20,7 @@ const ACTIONS_WITH_PAGE_REFRESH = ['navigate', 'click'];
  * ExecutorAttacher is responsible for attaching action execution capabilities to the content page.
  * It handles command execution, state management, and communication with the service worker.
  */
-export class ExecutorAttacher {
+export class ContentActionExecutor {
   private fullDomain: string;
   public contentPageContext: PlayerUiContext;
   private actionExecutor: ActionExecutor;
@@ -485,6 +485,14 @@ export class ExecutorAttacher {
           }
         }
       });
+    });
+  }
+
+  public async sendUiActionRequest<T =  any>(payload: { type: string, parameters: T }): Promise<void> {
+    await chrome.runtime.sendMessage({
+      type: "ui_action",
+      fullDomain: this.fullDomain,
+      payload: payload,
     });
   }
 }

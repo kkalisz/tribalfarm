@@ -10,7 +10,7 @@ export class PageStatusActionHandler implements ActionHandler<PageStatusAction, 
     return Promise.resolve(
       doneResponse({
         url: window.location.href,
-        pageContent: window.document.body.innerHTML,
+        pageContent: window.document.body.outerHTML,
       })
     );
   }
