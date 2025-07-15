@@ -3,7 +3,6 @@ import {
   calculateScavengeDistribution,
   UnitCarryCapacity,
   LootConstants,
-  DistributionResult
 } from "../calculateScavenge2Impl";
 
 describe('calculateScavengeDistribution', () => {
