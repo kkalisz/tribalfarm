@@ -1,6 +1,6 @@
 import { GameDataBase } from '../GameDataBase';
 import { GameDataBaseAccess } from '../GameDataBaseAcess';
-import { Log, LogSeverity } from '@src/shared/models/game/Log';
+import { Log, LogSeverity } from '@src/shared/log/Log';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('LogsDb', () => {

@@ -4,6 +4,7 @@ import {delayRunRandom} from "@src/shared/helpers/delayRun";
 import {ActionScheduler} from "@src/shared/actions/backend/core/ActionScheduler";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {ServerConfig} from "@pages/background/serverConfig";
+import {Logger} from "@src/shared/log/Logger";
 
 export class BackendActionHelpers {
 
@@ -35,4 +36,5 @@ export interface BackendActionContext {
   helpers: BackendActionHelpers;
   scheduler: ActionScheduler;
   gameDatabase: GameDataBaseAccess;
+  logger: Logger;
 }

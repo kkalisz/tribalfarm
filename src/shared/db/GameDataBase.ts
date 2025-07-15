@@ -6,7 +6,7 @@ import {Troop} from "@src/shared/models/game/Troop";
 import {Building} from "@src/shared/models/game/Building"; // For generating unique identifiers
 import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
 import {ScavengeSettings} from "@src/shared/models/game/ScavengeSettings";
-import {Log} from "@src/shared/models/game/Log";
+import {Log} from "@src/shared/log/Log";
 
 // Define the database schema using TypeScript interfaces
 export interface DatabaseSchema {
@@ -70,7 +70,7 @@ export class GameDataBase {
 
   // Initialize the database (singleton behavior per instance)
   public async init(): Promise<void> {
-    this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 4, {
+    this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 5, {
       upgrade(db, oldVersion, newVersion) {
         // Create the "troopsCounts" store
         if (!db.objectStoreNames.contains('troopsCounts')) {

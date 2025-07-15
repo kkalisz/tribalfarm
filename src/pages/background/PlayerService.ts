@@ -12,6 +12,7 @@ import {logError, logInfo} from "@src/shared/helpers/sendLog";
 import MessageSender = chrome.runtime.MessageSender;
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {ServerConfig} from "@pages/background/serverConfig";
+import {LoggerImpl} from "@src/shared/log/LoggerImpl";
 
 export class PlayerService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,6 +37,7 @@ export class PlayerService {
       scheduler: this.actionScheduler,
       serverConfig: this.serverConfig,
       gameDatabase: this.database,
+      logger: new LoggerImpl(database)
     };
 
     // Set up the executor for the action scheduler

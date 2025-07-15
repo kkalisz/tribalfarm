@@ -8,7 +8,8 @@ import {Troop} from "@src/shared/models/game/Troop";
 import {Building} from "@src/shared/models/game/Building";
 import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
 import {ScavengeSettings} from "@src/shared/models/game/ScavengeSettings";
-import {Log, LogFilterParams, LogPaginationParams, LogSeverity} from "@src/shared/models/game/Log";
+import {Log} from "@src/shared/log/Log";
+import {LogFilterParams, LogPaginationParams} from "@src/shared/db/logs";
 
 export class GameDataBaseAccess {
 

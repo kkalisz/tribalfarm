@@ -29,7 +29,10 @@ export interface StartScavengeActionOutput{
 
 export async function scavengeVillage(context: BackendActionContext, action: StartScavengeActionInput,): Promise<StartScavengeActionOutput> {
   const scavengeSettings = await context.gameDatabase.scavengeDb.getScavengeSettings(action.villageId)
-
+  context.logger.logInfo({
+    content: "scavenge action",
+    type: "SCAVENGE"
+  })
   if(scavengeSettings?.enabled === false && !action.oneTimeRun){
     return {
       isScavengeRunning: false,

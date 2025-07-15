@@ -5,7 +5,7 @@ import {scavengeAllVillages} from "@src/shared/actions/backend/scavenge/scavenge
 export const SCAVENGE_ALL_VILLAGES_ACTION = 'scavengeAllVillagesAction';
 
 export class ScavengeAllVillagesAction implements BackendAction<void, boolean>{
-    async execute(context: BackendActionContext, action: void,): Promise<boolean> {
+    async execute(context: BackendActionContext, action: void): Promise<boolean> {
       return scavengeAllVillages(context);
     }
 }
