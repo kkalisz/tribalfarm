@@ -1,5 +1,6 @@
 import {ResourceCost} from "@src/shared/models/game/ResourceCost";
 import {Defense} from "@src/shared/models/game/Defence";
+import {TroopsCount} from '@src/shared/models/game/TroopCount';
 
 export type TroopName =
   | "spear"
@@ -61,3 +62,8 @@ export const troopStaticCosts: Record<TroopName, ResourceCost> = {
 };
 
 export const AllTroopNames: TroopName[] = Object.keys(troopStaticCosts).map((key) => key as TroopName);
+
+export const AllZeroTroops: TroopsCount = AllTroopNames.reduce((acc, name) => {
+  acc[name] = 0;
+  return acc;
+}, {} as TroopsCount);

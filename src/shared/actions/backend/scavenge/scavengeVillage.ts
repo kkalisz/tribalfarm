@@ -37,19 +37,14 @@ export async function scavengeVillage(context: BackendActionContext, action: Sta
     }
   }
 
-  const currentPageStatus = await context.messenger.executePageStatusAction({});
   const urlParams = {
     mode: "scavenge",
     screen: "place",
     village: action.villageId
   }
 
-  const isOnProperPage = validateTribalWarsUrl(currentPageStatus.details?.url ?? "", urlParams);
-
-  if (!isOnProperPage) {
-    const url = buildGameUrlWithScreen(context.playerSettings.server, urlParams)
-    await context.messenger.executeNavigateToPageAction({url, reload: true})
-  }
+  const url = buildGameUrlWithScreen(context.playerSettings.server, urlParams)
+  await context.messenger.executeNavigateToPageAction({url, reload: true , waitForSelector: ".options-container"})
 
   const pageContent = await context.messenger.executePageStatusAction({})
 
@@ -68,16 +63,13 @@ export async function scavengeVillage(context: BackendActionContext, action: Sta
 
   if(action.addRepeatScavengeTimer && !!scavengingEndTimes.length){
     const lowestEndTime =  Math.min(...scavengingEndTimes.map(date => date.getTime()))
-    const runAt = new Date(lowestEndTime + 1000); // Schedule 1 second after the earliest scavenge completes
+    const runAt = new Date(lowestEndTime + 10000); // Schedule 1 second after the earliest scavenge completes
 
     // Using the new parameter object approach
     context.scheduler.scheduleTask<StartScavengeActionInput>({
       type: SCAVENGE_VILLAGE_ACTION,
       input: {
-        villageId: action.villageId,
-        lockedTroops: action.lockedTroops,
-        scavengeCalculationMode: action.scavengeCalculationMode,
-        addRepeatScavengeTimer: action.addRepeatScavengeTimer
+        ...action
       },
       runAt: runAt,
     });
@@ -96,12 +88,13 @@ export async function startScavengingOnScreen(context: BackendActionContext, inp
   const troopsThatCanBeUsed = ensureNoNegativeTroops(subtractTroops( troopsCount, lockedTroops));
   const calculationMode = input.scavengeCalculationMode ?? scavengeSettings?.calculationMode ?? ScavengeCalculationMode.SAME_RETURN_TIME
 
+  console.log('troops that can be use', JSON.stringify(troopsThatCanBeUsed))
+  console.log('scavenge options', JSON.stringify(scavengeOptions))
   const scavengePlan = calculateScavenge(troopsThatCanBeUsed, context.serverConfig.worldConfig.speed, scavengeOptions, calculationMode, 0)
-
-  console.log("scavengePlan", JSON.stringify(scavengePlan))
+  console.log('scavenge scavenge plan', JSON.stringify(scavengePlan))
 
   for (const mission of scavengePlan.missions) {
-    if(countTroops(mission.unitsAllocated) <= 10){
+    if(countTroops(mission.unitsAllocated) < 10){
       //TOD log
       continue
     }

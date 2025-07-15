@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Box, 
-  VStack, 
-  HStack, 
-  FormControl, 
-} from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  HStack,
+  FormControl, Tooltip,
+} from '@chakra-ui/react';
 import TribalText from "@src/shared/ui/TribalText";
 import TribalCheckbox from "@src/shared/ui/TribalCheckbox";
 import TribalFormLabel from "@src/shared/ui/TribalFormLabel";
@@ -131,6 +131,9 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
           </TribalButton>
         </HStack>
 
+        <Tooltip label={"sdfsf"}>
+          sdfsdfsd
+        </Tooltip>
         <HStack spacing={4} align="start">
           <Box>
             <TroopCountsForm

@@ -9,4 +9,6 @@ export interface NavigateToPageActionResponse extends BasePageResponse{
 export interface NavigateToPageAction extends BasePageAction<NavigateToPageActionResponse> {
   url: string;
   reload?: boolean;
+  waitForSelector?: string;
+  waitTimeout?: number;
 }

@@ -20,7 +20,8 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
     password: '',
     world: gameUrlInfo.subdomain ?? "",
     server: gameUrlInfo.fullDomain ?? "",
-    hasPremium: false
+    hasPremium: false,
+    discordWebhook: ''
   }
   const { loading, error, data: playerSettingsRaw, execute } = useAsync(() => gameDatabase.settingDb.getPlayerSettings(), []);
 
@@ -36,6 +37,7 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
     world: false,
     server: false,
     hasPremium: false,
+    discordWebhook: false,
   });
   const [touched, setTouched] = useState<Record<keyof typeof playerSettings, boolean>>({
     login: false,
@@ -43,6 +45,7 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
     world: false,
     server: false,
     hasPremium: false,
+    discordWebhook: false,
   });
 
   const validateField = (field: keyof typeof playerSettings, value: string): boolean => {
@@ -81,6 +84,7 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
       world: !validateField('world', playerSettings.world),
       server: !validateField('server', playerSettings.server),
       hasPremium: false,
+      discordWebhook: false, // Optional field, no validation required
     };
 
     setErrors(newErrors);
@@ -92,6 +96,7 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
       world: true,
       server: true,
       hasPremium: true,
+      discordWebhook: true,
     });
 
     // If no errors, save settings
@@ -152,6 +157,14 @@ const PlayerSettingsTab: React.FC<PlayerSettingsTabProps> = ({ gameUrlInfo }) =>
           label="Premium Account"
           value={playerSettings.hasPremium ? "Yes" : "No"}
           isReadOnly={true}
+          mb={3}
+        />
+        <TribalInput
+          label="Discord Webhook (Optional)"
+          placeholder="Enter Discord webhook URL"
+          value={playerSettings.discordWebhook}
+          onChange={handleInputChange('discordWebhook')}
+          mb={3}
         />
       </Box>
       <Flex justifyContent="flex-end">

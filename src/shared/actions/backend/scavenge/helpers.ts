@@ -10,7 +10,8 @@ import {delayRun} from '@src/shared/helpers/delayRun';
 
 function getScavengeStatus(index: number, element: Element): ScavengeMissionInfo {
   const isUnlocked = element.querySelector('.inactive-view') !== null || element.querySelector('.in-progress-view') !== null
-  const isAvailable = element.querySelector('.inactive-view') !== null
+  const isInProgress = element.querySelector('.return-countdown') !== null
+  //const isAvailable = element.querySelector('.inactive-view') !== null
   const durationText = element.querySelector('.duration')?.textContent?.trim(); // E.g., "0:26:32"
   const finishTime = durationText ? calculateFinishTimestamp(durationText) : '';
 
@@ -18,7 +19,7 @@ function getScavengeStatus(index: number, element: Element): ScavengeMissionInfo
     id: index.toString(),
     canBenUsed: true, //TODO
     isUnlocked,
-    isAvailable,
+    isAvailable: !isInProgress,
     finishTime,
   };
 }

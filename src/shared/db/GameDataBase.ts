@@ -6,6 +6,7 @@ import {Troop} from "@src/shared/models/game/Troop";
 import {Building} from "@src/shared/models/game/Building"; // For generating unique identifiers
 import {BaseVillageInfo} from "@src/shared/models/game/BaseVillageInfo";
 import {ScavengeSettings} from "@src/shared/models/game/ScavengeSettings";
+import {Log} from "@src/shared/models/game/Log";
 
 // Define the database schema using TypeScript interfaces
 export interface DatabaseSchema {
@@ -46,6 +47,16 @@ export interface DatabaseSchema {
     key: string; // Primary key (villageId)
     value: ScavengeSettings;
   };
+  logs: {
+    key: string; // Primary key (id)
+    value: Log; // Log object
+    indexes: {
+      'by-severity': string; // Index on severity field
+      'by-type': string; // Index on type field
+      'by-timestamp': number; // Index on timestamp field
+      'by-village': number; // Index on sourceVillage field
+    };
+  };
 }
 
 export class GameDataBase {
@@ -59,8 +70,8 @@ export class GameDataBase {
 
   // Initialize the database (singleton behavior per instance)
   public async init(): Promise<void> {
-    this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 3, {
-      upgrade(db) {
+    this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 4, {
+      upgrade(db, oldVersion, newVersion) {
         // Create the "troopsCounts" store
         if (!db.objectStoreNames.contains('troopsCounts')) {
           db.createObjectStore('troopsCounts', {
@@ -107,6 +118,21 @@ export class GameDataBase {
           db.createObjectStore('scavengeSettings', {
             keyPath: 'villageId', // Use `villageId` as the key
           });
+        }
+
+        // Create the "logs" store with indexes for filtering
+        if (!db.objectStoreNames.contains('logs')) {
+          const logsStore = db.createObjectStore('logs', {
+            keyPath: 'id',
+          });
+          
+          // Create indexes for efficient filtering
+          logsStore.createIndex('by-severity', 'severity');
+          logsStore.createIndex('by-type', 'type');
+          logsStore.createIndex('by-timestamp', 'timestamp');
+          
+          // Create index for sourceVillage (if it exists)
+          logsStore.createIndex('by-village', 'sourceVillage', { multiEntry: false });
         }
       },
     });

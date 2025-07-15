@@ -3,6 +3,7 @@ import {WorldConfig} from "@src/shared/models/game/WorldConfig";
 import {PlayerSettings} from "@src/shared/hooks/usePlayerSettings";
 import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
+import {DiscordNotificationService} from '@src/shared/services/discordNotification';
 
 export interface PlayerUiContext {
   settings: SettingsStorageService;
@@ -10,4 +11,5 @@ export interface PlayerUiContext {
   playerSettings: PlayerSettings;
   worldConfig: WorldConfig;
   gameDatabase: GameDataBaseAccess;
+  notificationService: DiscordNotificationService;
 }

@@ -5,6 +5,7 @@ export interface PlayerSettings {
   world: string;
   server: string;
   hasPremium: boolean;
+  discordWebhook?: string;
 }
 
 export const defaultPlayerSettings: PlayerSettings = {
@@ -13,5 +14,6 @@ export const defaultPlayerSettings: PlayerSettings = {
   world: '',
   server: '',
   hasPremium: false,
+  discordWebhook: '',
 };
 

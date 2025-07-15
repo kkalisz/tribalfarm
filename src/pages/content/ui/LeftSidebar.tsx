@@ -86,17 +86,7 @@ export const LeftSidebar = ({
             </TribalCard>
           <TribalCard variant="secondary" style={{ padding:"2px"}}>
             <TribalButton onClick={() => {
-              chrome.runtime.sendMessage({
-                type: "ui_action",
-                fullDomain: gameUrlInfo.fullDomain,
-                payload: {
-                  action: SCAVENGE_VILLAGE_ACTION,
-                  parameters: {
-                    addRepeatScavengeTimer: false,
-                  },
-                },
-              });
-            }}>
+              executor.contentPageContext.notificationService.sendWarningNotification("test","tests")}}>
               Test Navigate
             </TribalButton>
             {currentCommand && (

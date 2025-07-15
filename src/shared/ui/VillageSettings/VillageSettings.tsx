@@ -1,19 +1,23 @@
 import React, { useState } from "react";
-import { Box } from "@chakra-ui/react";
+import {Box} from '@chakra-ui/react';
 import { BaseVillageInfo } from "@src/shared/models/game/BaseVillageInfo";
 import { ScavengeTab } from "./tabs/ScavengeTab";
 import { FarmingTab } from "./tabs/FarmingTab";
 import { BuildingTab } from "./tabs/BuildingTab";
 import { RecruitmentTab } from "./tabs/RecruitmentTab";
 import { DefenceTab } from "./tabs/DefenceTab";
+import barracks from '@assets/img/barracks.webp';
+import barracks1 from '@assets/img/barracks1.webp';
+import main from '@assets/img/main.webp';
+import wall from '@assets/img/wall1.webp';
+import storage from '@assets/img/storage.webp';
+
 import {
   TribalTabs,
-  TribalTabList,
-  TribalTab,
   TribalTabPanels,
   TribalTabPanel,
-  TribalSimpleTabList
-} from "@src/shared/ui/TribalTabs";
+  TribalSimpleTabList, TribalIconTab
+} from '@src/shared/ui/TribalTabs';
 
 interface VillageSettingsProps {
   village: BaseVillageInfo;
@@ -34,12 +38,12 @@ export const VillageSettings: React.FC<VillageSettingsProps> = ({ village }) => 
         variant="unstyled"
         size="md"
       >
-        <TribalSimpleTabList>
-          <TribalTab>Scavenge</TribalTab>
-          <TribalTab>Farming</TribalTab>
-          <TribalTab>Building</TribalTab>
-          <TribalTab>Recruitment</TribalTab>
-          <TribalTab>Defence</TribalTab>
+        <TribalSimpleTabList width="fit-content">
+          <TribalIconTab iconSrc={storage} alt="Scavenging" />
+          <TribalIconTab iconSrc={barracks} alt="Farm" />
+          <TribalIconTab iconSrc={main} alt="Building" />
+          <TribalIconTab iconSrc={barracks1} alt="Recruiting" />
+          <TribalIconTab iconSrc={wall} alt="Defense" />
         </TribalSimpleTabList>
 
         <TribalTabPanels>

@@ -1,33 +1,36 @@
 import {createRoot} from 'react-dom/client';
 import React from 'react';
-import {SidebarContainer} from "@pages/content/ui/SidebarContainer";
+import {SidebarContainer} from '@pages/content/ui/SidebarContainer';
 import {ChakraProvider} from '@chakra-ui/react';
 import theme from '@src/shared/theme';
 import {CacheProvider} from '@emotion/react';
 import createCache from '@emotion/cache';
-import {SettingsStorageService} from "@src/shared/services/settingsStorage";
-import {hasValidPlayerSettings,} from "@src/shared/services/hasValidPlayerSettings";
-import {GameUrlInfo, getGameUrlInfo} from "@src/shared/helpers/getGameUrlInfo";
-import {GameDatabaseContext, StorageContext} from "@src/shared/contexts/StorageContext";
-import {fetchWorldConfig} from "@src/shared/services/fetchWorldConfig";
-import {DatabaseSchema} from "@src/shared/db/GameDataBase";
-import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
-import {GameDatabaseClientSync} from "@src/shared/db/GameDatabaseClientSync";
-import {ProxyIDBPDatabase} from "@src/shared/db/ProxyIDBPDatabase";
-import {ContentActionExecutor} from "@pages/content/execute/ContentActionExecutor";
-import { playSound, setupAudio } from '@pages/content/helpers/playSound';
-import { observeBotProtectionQuest } from '@pages/content/helpers/botProtectionObserver';
-import { ActionExecutorContext } from '@src/shared/contexts/ActionExecutorContext';
-import { PlayerUiContext } from '@src/shared/contexts/PlayerContext';
-import { BotCheckStatus } from '@pages/content/helpers/BotCheckStatus';
-import log from "eslint-plugin-react/lib/util/log";
-import {logError} from "@src/shared/helpers/sendLog";
+import {SettingsStorageService} from '@src/shared/services/settingsStorage';
+import {hasValidPlayerSettings,} from '@src/shared/services/hasValidPlayerSettings';
+import {GameUrlInfo, getGameUrlInfo} from '@src/shared/helpers/getGameUrlInfo';
+import {GameDatabaseContext, StorageContext} from '@src/shared/contexts/StorageContext';
+import {fetchWorldConfig} from '@src/shared/services/fetchWorldConfig';
+import {DatabaseSchema} from '@src/shared/db/GameDataBase';
+import {GameDataBaseAccess} from '@src/shared/db/GameDataBaseAcess';
+import {GameDatabaseClientSync} from '@src/shared/db/GameDatabaseClientSync';
+import {ProxyIDBPDatabase} from '@src/shared/db/ProxyIDBPDatabase';
+import {ContentActionExecutor} from '@pages/content/execute/ContentActionExecutor';
+import {playSound, setupAudio} from '@pages/content/helpers/playSound';
+import {observeBotProtectionQuest} from '@pages/content/helpers/botProtectionObserver';
+import {ActionExecutorContext} from '@src/shared/contexts/ActionExecutorContext';
+import {PlayerUiContext} from '@src/shared/contexts/PlayerContext';
+import {BotCheckStatus} from '@pages/content/helpers/BotCheckStatus';
+import {logError} from '@src/shared/helpers/sendLog';
+import {DiscordNotificationService} from '@src/shared/services/discordNotification';
 
 
 let attachExecutor: ContentActionExecutor | null = null;
 let botDetected: BotCheckStatus = BotCheckStatus.NONE;
 
 function onBotCheck(botCheck: BotCheckStatus) {
+  if(botDetected == BotCheckStatus.NONE && botCheck !== BotCheckStatus.NONE) {
+    attachExecutor?.contentPageContext?.notificationService?.sendWarningNotification('Bot check detected',"bot detected");
+  }
   botDetected = botCheck;
   console.log(`Bot check status: ${botCheck}`)
   if(botCheck !== BotCheckStatus.NONE){
@@ -136,12 +139,15 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
     await gameDatabase.settingDb.saveWorldConfig(worldConfig)
   }
 
+  const discordNotification = new DiscordNotificationService(playerSettings.discordWebhook)
+
   const context: PlayerUiContext = {
     settings: settings,
     gameUrlInfo: gameUrlInfo,
     playerSettings: playerSettings,
     worldConfig: worldConfig,
-    gameDatabase: gameDatabase
+    gameDatabase: gameDatabase,
+    notificationService: discordNotification
   }
 
   try {

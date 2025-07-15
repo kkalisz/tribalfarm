@@ -26,6 +26,10 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
 }) => {
   const [counts, setCounts] = useState<TroopsCount>(initialCounts);
 
+  useEffect(() => {
+    setCounts(initialCounts);
+  }, [initialCounts]);
+
   // Update counts when initialCounts changes
   useEffect(() => {
     // Create a copy of initialCounts
@@ -41,7 +45,6 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
 
   const handleInputChange = useCallback((troopName: TroopName, value: string) => {
     const numValue = value === "" ? 0 : parseInt(value, 10);
-    console.log(`new value ${numValue} ${isNaN(numValue)}`)
     if(counts[troopName] === numValue){
       return
     }

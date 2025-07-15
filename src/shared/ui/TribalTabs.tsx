@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import {FC, ReactNode, useRef} from 'react';
 import {
   Tabs,
   TabList,
@@ -10,8 +10,9 @@ import {
   TabProps,
   TabPanelsProps,
   TabPanelProps,
-  Box
-} from "@chakra-ui/react";
+  Box,
+  Image, Tooltip
+} from '@chakra-ui/react';
 
 /**
  * TribalTabs Component
@@ -133,6 +134,52 @@ export const TribalTabPanel: FC<TabPanelProps> = ({ children, ...rest }) => {
     >
       {children}
     </TabPanel>
+  );
+};
+
+/**
+ * TribalIconTab Component
+ * 
+ * Tab that displays only an icon without padding or margin.
+ * 
+ * @param iconSrc - URL or source of the icon to display
+ */
+interface TribalIconTabProps extends TabProps {
+  iconSrc: string;
+  alt?: string;
+}
+
+export const TribalIconTab: FC<TribalIconTabProps> = ({ iconSrc, alt, ...rest }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <Tab
+      ref={containerRef}
+      width="auto"
+      height="auto"
+      minWidth="10"
+      minHeight="10"
+      p="0"
+      m="0"
+      borderRadius="none"
+      bg={"tribal.cardPrimary"}
+      borderWidth="1px"
+      borderColor="tribal.primaryBorder"
+      _selected={{
+        bg: "tribal.accent",
+        boxShadow: "md",
+        borderWidth: "1px",
+        borderColor: "tribal.primaryBorder"
+      }}
+      _hover={{
+        bg: "tribal.hover"
+      }}
+      {...rest}
+    >
+      <Tooltip label={alt} isDisabled={!alt} hasArrow portalProps={{ containerRef: containerRef}}>
+        <Image width="15" height="15" src={iconSrc} alt={ alt ?? "Tab icon"} />
+      </Tooltip>
+    </Tab>
   );
 };
 

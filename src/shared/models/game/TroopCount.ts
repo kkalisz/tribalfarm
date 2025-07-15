@@ -1,4 +1,4 @@
-import {AllTroopNames, TroopName} from "@src/shared/models/game/Troop";
+import {AllTroopNames, AllZeroTroops, TroopName} from '@src/shared/models/game/Troop';
 
 export type TroopsCount = {
   [key in TroopName]?: number;
@@ -32,12 +32,25 @@ export function subtractTroops(troops1: TroopsCount, troops2: TroopsCount): Troo
 }
 
 export function ensureNoNegativeTroops(troops: TroopsCount): TroopsCount {
+  return getMaxTroops(troops, AllZeroTroops)
+}
+
+export function getMaxTroops(troops1: TroopsCount, troops2: TroopsCount): TroopsCount {
   const result: TroopsCount = {};
 
-  // Use AllTroopNames to iterate over all defined troop names
+  // Iterate over all defined troop names in AllTroopNames
   for (const troop of AllTroopNames) {
-    const count = troops[troop] ?? 0; // Assume 0 if key doesn't exist
-    result[troop] = Math.max(count,0);    // Subtract counts
+    const count1 = troops1[troop]; // Access value in troops1 (can be undefined)
+    const count2 = troops2[troop]; // Access value in troops2 (can be undefined)
+
+    // Logic to take the minimum defined value or defined value if the other is undefined
+    if (count1 === undefined) {
+      result[troop] = count2;
+    } else if (count2 === undefined) {
+      result[troop] = count1;
+    } else {
+      result[troop] = Math.max(count1, count2);
+    }
   }
 
   return result;
