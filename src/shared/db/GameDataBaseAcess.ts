@@ -236,119 +236,82 @@ export class GameDataBaseAccess {
     getLogs: async (
       pagination: LogPaginationParams,
       filter?: LogFilterParams
-    ): Promise<{ logs: Log[]; hasMore: boolean; nextCursor?: string }> => {
-      const { limit = 50, cursor, direction = 'desc' } = pagination;
-      const logs: Log[] = [];
-      let hasMore = false;
-      let nextCursor: string | undefined;
+    ): Promise<{ logs: Log[]; hasMore: boolean}> => {
+      const { limit = 50, direction = 'desc' } = pagination;
+      let allLogs: Log[] = [];
       
-      // Map 'asc'/'desc' to valid IDBCursorDirection values
-      const cursorDirection: IDBCursorDirection = direction === 'asc' ? 'next' : 'prev';
-      
-      // Determine which index to use based on filter
-      let index: ReturnType<IDBPObjectStore<DatabaseSchema, any, 'logs', 'readonly'>['index']> | null = null;
-      let range: IDBKeyRange | null = null;
-      
+      // Use the appropriate index for filtering directly from the database
       if (filter?.severity) {
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-severity');
-        range = IDBKeyRange.only(filter.severity);
+        allLogs = await this.db.getAllFromIndex('logs', 'by-severity', filter.severity);
       } else if (filter?.type) {
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-type');
-        range = IDBKeyRange.only(filter.type);
+        allLogs = await this.db.getAllFromIndex('logs', 'by-type', filter.type);
       } else if (filter?.sourceVillage) {
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-village');
-        range = IDBKeyRange.only(filter.sourceVillage);
+        allLogs = await this.db.getAllFromIndex('logs', 'by-village', filter.sourceVillage);
       } else if (filter?.startTimestamp && filter?.endTimestamp) {
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-timestamp');
-        range = IDBKeyRange.bound(filter.startTimestamp, filter.endTimestamp);
+        allLogs = await this.db.getAllFromIndex(
+          'logs', 
+          'by-timestamp', 
+          IDBKeyRange.bound(filter.startTimestamp, filter.endTimestamp)
+        );
       } else if (filter?.startTimestamp) {
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-timestamp');
-        range = IDBKeyRange.lowerBound(filter.startTimestamp);
+        allLogs = await this.db.getAllFromIndex(
+          'logs', 
+          'by-timestamp', 
+          IDBKeyRange.lowerBound(filter.startTimestamp)
+        );
       } else if (filter?.endTimestamp) {
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-timestamp');
-        range = IDBKeyRange.upperBound(filter.endTimestamp);
+        allLogs = await this.db.getAllFromIndex(
+          'logs', 
+          'by-timestamp', 
+          IDBKeyRange.upperBound(filter.endTimestamp)
+        );
       } else {
-        // Default to timestamp index for chronological ordering
-        index = this.db.transaction('logs', 'readonly').objectStore('logs').index('by-timestamp');
+        // Get all logs if no filter is specified
+        console.log("get_all_logs");
+        allLogs = await this.db.getAll('logs');
       }
       
-      // Get cursor for pagination
-      let cursorPosition: Awaited<ReturnType<typeof index.openCursor>> = null;
-      
-      if (cursor) {
-        const cursorLog = await this.logsDb.getLog(cursor);
-        if (cursorLog) {
-          if (index) {
-            // Position cursor based on the index being used
-            if (index.name === 'by-severity') {
-              cursorPosition = await index.openCursor(IDBKeyRange.only(cursorLog.severity), cursorDirection);
-            } else if (index.name === 'by-type') {
-              cursorPosition = await index.openCursor(IDBKeyRange.only(cursorLog.type), cursorDirection);
-            } else if (index.name === 'by-village') {
-              cursorPosition = await index.openCursor(IDBKeyRange.only(cursorLog.sourceVillage), cursorDirection);
-            } else if (index.name === 'by-timestamp') {
-              cursorPosition = await index.openCursor(IDBKeyRange.only(cursorLog.timestamp), cursorDirection);
-            }
-            
-            // Advance to the cursor position
-            while (cursorPosition && cursorPosition.value.id !== cursor) {
-              await cursorPosition.continue();
-            }
-            
-            // Move to the next item after the cursor
-            if (cursorPosition) {
-              await cursorPosition.continue();
-            }
+      // Apply additional filters that couldn't be applied via indexes
+      if (filter) {
+        allLogs = allLogs.filter(log => {
+          let include = true;
+          
+          if (filter.severity && log.severity !== filter.severity) {
+            include = false;
           }
-        }
-      } else {
-        // Start from the beginning or end based on direction
-        cursorPosition = await index?.openCursor(range, cursorDirection);
+          
+          if (filter.type && log.type !== filter.type) {
+            include = false;
+          }
+          
+          if (filter.sourceVillage && log.sourceVillage !== filter.sourceVillage) {
+            include = false;
+          }
+          
+          if (filter.startTimestamp && log.timestamp < filter.startTimestamp) {
+            include = false;
+          }
+          
+          if (filter.endTimestamp && log.timestamp > filter.endTimestamp) {
+            include = false;
+          }
+          
+          return include;
+        });
       }
       
-      // Collect logs
-      let count = 0;
-      while (cursorPosition && count < limit) {
-        // Apply additional filters that couldn't be applied via indexes
-        let includeLog = true;
-        
-        if (filter?.severity && cursorPosition.value.severity !== filter.severity) {
-          includeLog = false;
-        }
-        
-        if (filter?.type && cursorPosition.value.type !== filter.type) {
-          includeLog = false;
-        }
-        
-        if (filter?.sourceVillage && cursorPosition.value.sourceVillage !== filter.sourceVillage) {
-          includeLog = false;
-        }
-        
-        if (filter?.startTimestamp && cursorPosition.value.timestamp < filter.startTimestamp) {
-          includeLog = false;
-        }
-        
-        if (filter?.endTimestamp && cursorPosition.value.timestamp > filter.endTimestamp) {
-          includeLog = false;
-        }
-        
-        if (includeLog) {
-          logs.push(cursorPosition.value);
-          count++;
-        }
-        
-        await cursorPosition.continue();
-      }
+      // Sort logs by timestamp
+      allLogs.sort((a, b) => {
+        return direction === 'asc' 
+          ? a.timestamp - b.timestamp 
+          : b.timestamp - a.timestamp;
+      });
       
-      // Check if there are more logs
-      hasMore = cursorPosition !== null;
-      
-      // Set the next cursor if there are more logs
-      if (hasMore && logs.length > 0) {
-        nextCursor = logs[logs.length - 1].id;
-      }
-      
-      return { logs, hasMore, nextCursor };
+      // Apply limit
+      const logs = allLogs.slice(0, limit);
+      const hasMore = allLogs.length > limit;
+
+      return { logs, hasMore};
     },
 
     /**
@@ -373,80 +336,71 @@ export class GameDataBaseAccess {
      */
     deleteLogsByFilter: async (filter: LogFilterParams): Promise<number> => {
       let count = 0;
-      const tx = this.db.transaction('logs', 'readwrite');
-      const store = tx.objectStore('logs');
+      let logsToDelete: Log[] = [];
       
-      // Determine which index to use based on filter
-      let index: ReturnType<IDBPObjectStore<DatabaseSchema, any, 'logs', 'readwrite'>['index']> | null = null;
-      let range: IDBKeyRange | null = null;
-      
+      // Get logs that match the filter using the same approach as getLogs
       if (filter.severity) {
-        index = store.index('by-severity');
-        range = IDBKeyRange.only(filter.severity);
+        logsToDelete = await this.db.getAllFromIndex('logs', 'by-severity', filter.severity);
       } else if (filter.type) {
-        index = store.index('by-type');
-        range = IDBKeyRange.only(filter.type);
+        logsToDelete = await this.db.getAllFromIndex('logs', 'by-type', filter.type);
       } else if (filter.sourceVillage) {
-        index = store.index('by-village');
-        range = IDBKeyRange.only(filter.sourceVillage);
+        logsToDelete = await this.db.getAllFromIndex('logs', 'by-village', filter.sourceVillage);
       } else if (filter.startTimestamp && filter.endTimestamp) {
-        index = store.index('by-timestamp');
-        range = IDBKeyRange.bound(filter.startTimestamp, filter.endTimestamp);
+        logsToDelete = await this.db.getAllFromIndex(
+          'logs', 
+          'by-timestamp', 
+          IDBKeyRange.bound(filter.startTimestamp, filter.endTimestamp)
+        );
       } else if (filter.startTimestamp) {
-        index = store.index('by-timestamp');
-        range = IDBKeyRange.lowerBound(filter.startTimestamp);
+        logsToDelete = await this.db.getAllFromIndex(
+          'logs', 
+          'by-timestamp', 
+          IDBKeyRange.lowerBound(filter.startTimestamp)
+        );
       } else if (filter.endTimestamp) {
-        index = store.index('by-timestamp');
-        range = IDBKeyRange.upperBound(filter.endTimestamp);
+        logsToDelete = await this.db.getAllFromIndex(
+          'logs', 
+          'by-timestamp', 
+          IDBKeyRange.upperBound(filter.endTimestamp)
+        );
       } else {
-        // No specific filter, use the main store
-        index = null;
+        // Get all logs if no specific filter
+        logsToDelete = await this.db.getAll('logs');
       }
       
-      // Define a type that works for both store and index cursors
-      let cursor: Awaited<ReturnType<typeof store.openCursor>> | Awaited<ReturnType<NonNullable<typeof index>['openCursor']>> | null;
+      // Apply additional filters that couldn't be applied via indexes
+      logsToDelete = logsToDelete.filter(log => {
+        let shouldDelete = true;
+        
+        if (filter.severity && log.severity !== filter.severity) {
+          shouldDelete = false;
+        }
+        
+        if (filter.type && log.type !== filter.type) {
+          shouldDelete = false;
+        }
+        
+        if (filter.sourceVillage && log.sourceVillage !== filter.sourceVillage) {
+          shouldDelete = false;
+        }
+        
+        if (filter.startTimestamp && log.timestamp < filter.startTimestamp) {
+          shouldDelete = false;
+        }
+        
+        if (filter.endTimestamp && log.timestamp > filter.endTimestamp) {
+          shouldDelete = false;
+        }
+        
+        return shouldDelete;
+      });
       
-      if (index && range) {
-        cursor = await index.openCursor(range);
-      } else if (index) {
-        cursor = await index.openCursor();
-      } else {
-        cursor = await store.openCursor();
+      // Delete each log individually
+      for (const log of logsToDelete) {
+        await this.db.delete('logs', log.id);
+        count++;
       }
       
-      while (cursor) {
-        // Apply additional filters that couldn't be applied via indexes
-        let deleteLog = true;
-        
-        if (filter.severity && cursor.value.severity !== filter.severity) {
-          deleteLog = false;
-        }
-        
-        if (filter.type && cursor.value.type !== filter.type) {
-          deleteLog = false;
-        }
-        
-        if (filter.sourceVillage && cursor.value.sourceVillage !== filter.sourceVillage) {
-          deleteLog = false;
-        }
-        
-        if (filter.startTimestamp && cursor.value.timestamp < filter.startTimestamp) {
-          deleteLog = false;
-        }
-        
-        if (filter.endTimestamp && cursor.value.timestamp > filter.endTimestamp) {
-          deleteLog = false;
-        }
-        
-        if (deleteLog) {
-          await cursor.delete();
-          count++;
-        }
-        
-        await cursor.continue();
-      }
-      
-      await tx.done;
       return count;
     }
   };

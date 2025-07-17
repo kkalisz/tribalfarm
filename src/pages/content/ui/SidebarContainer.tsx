@@ -34,7 +34,6 @@ export const SidebarContainer = () => {
                     <RightSidebar
                         rightSidebarVisible={rightSidebar.visible}
                         setRightSidebarVisible={rightSidebar.setVisible}
-                        logs={[]}
                     />
                 </>
             )}

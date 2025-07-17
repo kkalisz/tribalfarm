@@ -48,8 +48,8 @@ export const SettingsContainer: React.FC<SettingsContainerProps> = ({
   };
 
   return (
-    <>
-      <Flex alignItems="flex-end" width="100%">
+    <Box display="flex" flexDirection="column" height="100%" overflow="auto">
+      <Flex alignItems="flex-end" width="100%" mb={2} >
         <Box flex="1">
           <VillageSelector
             selectedVillageId={selectedVillage?.villageId}
@@ -73,9 +73,11 @@ export const SettingsContainer: React.FC<SettingsContainerProps> = ({
           </TribalButton>
         </Flex>
       </Flex>
-      {selectedVillage && (
-        <VillageSettings village={selectedVillage} />
-      )}
-    </>
+      <Box flex="1" overflow="auto">
+        {selectedVillage && (
+          <VillageSettings village={selectedVillage} />
+        )}
+      </Box>
+    </Box>
   );
 };

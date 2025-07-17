@@ -120,15 +120,28 @@ export const TribalTabPanels: FC<TabPanelsProps> = ({ children, ...rest }) => {
  * TribalTabPanel Component
  * 
  * Individual tab panel with Tribal Wars styling.
+ * 
+ * @param noPadding - If true, removes padding from the panel
+ * @param noBorder - If true, removes border from the panel
  */
-export const TribalTabPanel: FC<TabPanelProps> = ({ children, ...rest }) => {
+interface TribalTabPanelProps extends TabPanelProps {
+  noPadding?: boolean;
+  noBorder?: boolean;
+}
+
+export const TribalTabPanel: FC<TribalTabPanelProps> = ({ 
+  children, 
+  noPadding = false, 
+  noBorder = false, 
+  ...rest 
+}) => {
   return (
     <TabPanel
       borderRadius="none"
       bg="tribal.cardPrimary"
-      p={3}
+      p={noPadding ? 0 : 3}
       color="tribal.primaryText"
-      borderWidth="2px"
+      borderWidth={noBorder ? "0px" : "2px"}
       borderColor="tribal.primaryBorder"
       {...rest}
     >
@@ -200,7 +213,7 @@ export const TribalTabs: FC<TribalTabsProps> = ({
       size={size}
       {...rest}
     >
-      <Box>
+      <Box width="100%" height="100%" display="flex" flexDirection="column" overflow="inherit" {...rest.style && { style: rest.style }} {...rest.sx && { sx: rest.sx }}>
         {children}
       </Box>
     </Tabs>
