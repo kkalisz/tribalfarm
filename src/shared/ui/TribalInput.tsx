@@ -48,7 +48,7 @@ const TribalInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, TribalInp
       py: (variant as "standard" | "textarea") === "textarea" ? 2 : undefined,
     },
     sm: {
-      height: (variant as "standard" | "textarea") === "textarea" ? "auto" : "30px",
+      height: (variant as "standard" | "textarea") === "textarea" ? "auto" : "32px",
       fontSize: "xs",
       px: 2,
       py: (variant as "standard" | "textarea") === "textarea" ? 1 : undefined,

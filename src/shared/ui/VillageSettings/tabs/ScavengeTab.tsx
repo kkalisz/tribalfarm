@@ -130,10 +130,6 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
             Save Settings
           </TribalButton>
         </HStack>
-
-        <Tooltip label={"sdfsf"}>
-          sdfsdfsd
-        </Tooltip>
         <HStack spacing={4} align="start">
           <Box>
             <TroopCountsForm

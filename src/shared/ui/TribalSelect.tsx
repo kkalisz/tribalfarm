@@ -36,7 +36,7 @@ const TribalSelect: FC<TribalSelectProps> = forwardRef<TribalSelectProps, 'selec
       px: 3,
     },
     sm: {
-      height: "30px",
+      height: "32px",
       fontSize: "xs",
       px: 2,
     },

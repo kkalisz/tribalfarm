@@ -71,6 +71,46 @@ const theme = extendTheme({
         },
       },
     },
+    Select: {
+      sizes: {
+        md: {
+          field: {
+            h: '32px',
+          },
+        },
+      },
+    },
+    Table: {
+      baseStyle: {
+        th: {
+          borderColor: 'tribal.primaryBorder',
+          borderWidth: '1px',
+        },
+        td: {
+          borderColor: 'tribal.accent',
+          borderWidth: '1px',
+        },
+        tr: {
+          borderColor: 'tribal.accent',
+          borderWidth: '1px',
+        },
+        caption: {
+          color: 'tribal.secondaryText',
+        },
+      },
+      variants: {
+        simple: {
+          th: {
+            borderBottom: '2px solid',
+            borderColor: 'tribal.primaryBorder',
+          },
+          td: {
+            borderBottom: '1px solid',
+            borderColor: 'tribal.accent',
+          },
+        },
+      },
+    },
   },
   styles: {
     global: () => ({

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { 
   Box, 
   Text, 
@@ -12,12 +12,17 @@ import {
   Select, 
   HStack, 
   Badge,
-  Flex
+  Flex,
+  useToast
 } from "@chakra-ui/react";
 import { useGameDatabase } from '@src/shared/contexts/StorageContext';
 import { useAsync } from '@src/shared/hooks/useAsync';
 import { Log, LogSeverity } from '@src/shared/log/Log';
 import { LogFilterParams } from '@src/shared/db/logs';
+import TribalInput from '@src/shared/ui/TribalInput';
+import TribalSelect from '@src/shared/ui/TribalSelect';
+import TribalButton from '@src/shared/ui/TribalButton';
+import TribalCard from '@src/shared/ui/TribalCard';
 
 // Helper function to format timestamp
 const formatTimestamp = (timestamp: number): string => {
@@ -43,6 +48,7 @@ const getSeverityColor = (severity: LogSeverity): string => {
 
 export const LogsPanel: React.FC = () => {
   const gameDatabase = useGameDatabase();
+  const toast = useToast();
   const [searchText, setSearchText] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<LogSeverity | "">("");
   
@@ -55,14 +61,22 @@ export const LogsPanel: React.FC = () => {
   }, [severityFilter]);
 
   // Fetch logs with filter
-  const { data: logsData, loading, error } = useAsync(() => {
+  const { data: logsData, loading, error, execute: refreshLogs } = useAsync(() => {
     return gameDatabase.logsDb.getLogs({
       limit: 100,
       direction: 'desc'
     }, filterParams);
   }, [filterParams]);
+  
+  const handleDeleteAllLogs = useCallback(async () => {
+    try {
+      await gameDatabase.logsDb.deleteAllLogs();
+      await refreshLogs();;
+    } catch (error) {
+      console.log(error);
+    }
+  }, [gameDatabase, refreshLogs, toast]);
 
-  // Apply text search filter on client side
   const filteredLogs = useMemo(() => {
     if (!logsData?.logs) return [];
     
@@ -77,29 +91,26 @@ export const LogsPanel: React.FC = () => {
   }, [logsData, searchText]);
 
   return (
-    <Box 
-      p={4} 
-      display="flex" 
+    <HStack
+      display="flex"
       flexDirection="column" 
       height="100%" 
     >
-      <Text fontWeight="bold" mb={4}>Logs</Text>
-      
-      {/* Search and Filter Controls */}
-      <HStack spacing={4} mb={4}>
-        <Input
+      <Flex justify="space-between" width="100%" gap={2}>
+        <TribalInput
+          flex="1"
+          size="sm"
           placeholder="Search logs..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          size="sm"
-          flex="1"
         />
-        <Select
+        <TribalSelect
+          size="sm"
+          width="auto"
+          minWidth="150px"
           placeholder="Filter by severity"
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value as LogSeverity | "")}
-          size="sm"
-          width="200px"
         >
           <option value="">All Severities</option>
           {Object.values(LogSeverity).map((severity) => (
@@ -107,20 +118,20 @@ export const LogsPanel: React.FC = () => {
               {severity}
             </option>
           ))}
-        </Select>
-      </HStack>
+        </TribalSelect>
+        <TribalButton
+          onClick={handleDeleteAllLogs}
+          whiteSpace="nowrap"
+          width="auto"
+        >
+          Delete All Logs
+        </TribalButton>
+      </Flex>
       
       {/* Logs Table Container - Takes remaining height */}
-      <Box 
-        flex="1" 
-        bg="tribal.cardSecondary" 
-        borderRadius="md" 
-        fontSize="sm" 
-        display="flex" 
-        flexDirection="column" 
-        overflow="auto"
-        height="100%"
-        sx={{ overflow: "auto !important" }}
+      <TribalCard
+        contentPadding="0px"
+        style={{ flex: "1", flexDirection: "column", overflow: "auto", width: "100%", height: "100%", padding: "0px" }}
       >
         {loading ? (
           <Flex justify="center" align="center" p={4}>
@@ -156,7 +167,7 @@ export const LogsPanel: React.FC = () => {
               <Tbody>
                 {filteredLogs.map((log) => (
                   <Tr key={log.id}>
-                    <Td width="150px" whiteSpace="nowrap">{formatTimestamp(log.timestamp)}</Td>
+                    <Td width="150px" fontSize="xs" whiteSpace="nowrap">{formatTimestamp(log.timestamp)}</Td>
                     <Td width="100px">
                       <Badge colorScheme={getSeverityColor(log.severity)}>
                         {log.severity}
@@ -173,7 +184,7 @@ export const LogsPanel: React.FC = () => {
             </Table>
           </Box>
         )}
-      </Box>
-    </Box>
+      </TribalCard>
+    </HStack>
   );
 };
