@@ -37,15 +37,22 @@ export const StorageProvider: React.FC<SettingsStorageProviderProps> = ({
 
   // Create the settings service instance
   const settingsService = useMemo(() => {
-    const domainToUse = domain || gameUrlInfo.fullDomain || "";
+    const domainToUse = domain ?? gameUrlInfo.fullDomain ?? "";
     return new SettingsStorageService(domainToUse);
   }, [domain, gameUrlInfo.fullDomain]);
 
-   useEffect(() => {
-    const domainToUse = domain || gameUrlInfo.fullDomain || "";
-    if(domainToUse){
-      const dataBase = new ProxyIDBPDatabase(new GameDatabaseClientSync(domainToUse));
+  const createDb = async (domain: string) => {
+      const clientSync = new GameDatabaseClientSync(domain)
+      await clientSync.init();
+      const dataBase = new ProxyIDBPDatabase(clientSync);
       setGameDatabase(new GameDataBaseAccess(dataBase)); // Update state if still mounted
+
+  }
+
+   useEffect(() => {
+    const domainToUse = domain ?? gameUrlInfo.fullDomain ?? "";
+    if(domainToUse){
+      createDb(domainToUse)
     }
     }, [domain, gameUrlInfo.fullDomain]);
 

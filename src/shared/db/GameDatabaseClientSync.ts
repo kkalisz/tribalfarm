@@ -32,10 +32,9 @@ export class GameDatabaseClientSync {
         fullDomain: this.fullDomain,
       }, (response) => {
         if (chrome.runtime.lastError) {
-          console.log(chrome.runtime.lastError + ` db_init`);
-        }
-        if (!response || !response.success) {
-          reject(new Error(response?.error || 'Unknown error during db_init'));
+          reject(new Error(chrome.runtime.lastError.message+ " db_init"));
+        } else if (!response?.success) {
+          reject(new Error(response?.error ?? 'Unknown error during db_init'));
         } else {
           resolve();
         }
@@ -44,15 +43,15 @@ export class GameDatabaseClientSync {
   }
 
 
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sendMessage<T = any>(payload: DBSyncRequest): Promise<T> {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(payload, (response: DBSyncResponse) => {
         if (chrome.runtime.lastError) {
-          console.log(chrome.runtime.lastError+` ${payload.operation}`);
-        }
-        if (!response || !response.success) {
-          reject(new Error(response?.error || 'Unknown error'));
+          reject(new Error(chrome.runtime.lastError.message + ` ${payload.operation} -> ${payload.store}`));
+        } else if (!response?.success) {
+          reject(new Error(response?.error ?? `Unknown error during ${payload.operation} -> ${payload.store}`));
         } else {
           resolve(response.value as T);
         }
@@ -154,3 +153,4 @@ export class GameDatabaseClientSync {
     });
   }
 }
+

@@ -57,6 +57,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             style={{height: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}
           >
             <TribalTabs
+              isLazy={true}
               style={{display: "flex", flexDirection: "column", height: "100%", overflow: "hidden"}}
               sx={{display: "flex !important", flexDirection: "column !important", height: "100% !important"}}
               index={tabIndex}

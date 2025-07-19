@@ -17,7 +17,11 @@ export class GameDatabaseBackgroundSync<T> {
   ) {
     this.messageListener = (message, sender, sendResponse) => {
       this.onMessage(message, sender, sendResponse);
-      return true; // important: keep message channel open for async response
+      const messageResponse = !(message.type !== 'db_sync' || message.fullDomain !== this.fullDomain);
+      console.log(`messageResponse ${messageResponse} ${message.type} -> ${JSON.stringify(message)}`, );
+      return messageResponse;
+
+
     };
 
     this.attachListener();

@@ -3,7 +3,7 @@ import {
   Box,
   VStack,
   HStack,
-  FormControl, Tooltip,
+  FormControl,
 } from '@chakra-ui/react';
 import TribalText from "@src/shared/ui/TribalText";
 import TribalCheckbox from "@src/shared/ui/TribalCheckbox";
