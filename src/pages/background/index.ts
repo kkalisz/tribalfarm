@@ -103,8 +103,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (!playerServiceCache.has(fullDomain)) {
       logInfo('Creating new PlayserService for ', fullDomain, ' tab ', tabId, '');
 
-      const settings = new SettingsStorageService(message.fullDomain);
-
       const database = await ensureDatabase(fullDomain)
       const gameDatabaseAccess = database.databaseAccess;
       const playerSettings = await gameDatabaseAccess.settingDb.getPlayerSettings();
@@ -121,7 +119,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const activeTabMessenger = new TabMessenger(tabId)
       const scheduler: ActionScheduler = new ActionScheduler()
 
-      const playerService = new PlayerService(settings, playerSettings, serverConfig, activeTabMessenger, scheduler, database.databaseAccess, tabId);
+      const playerService = new PlayerService(playerSettings, serverConfig, activeTabMessenger, scheduler, database.databaseAccess, tabId);
       playerServiceCache.set(fullDomain, playerService);
       playerService.registerHandler(SCAVENGE_VILLAGE_ACTION, new ScavengeVillageAction())
       playerService.registerHandler(GET_OVERVIEW_ACTION, new GetOverviewAction())

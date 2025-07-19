@@ -101,10 +101,12 @@ const theme = extendTheme({
       variants: {
         simple: {
           th: {
+            padding: '4px',
             borderBottom: '2px solid',
             borderColor: 'tribal.primaryBorder',
           },
           td: {
+            padding: '4px',
             borderBottom: '1px solid',
             borderColor: 'tribal.accent',
           },

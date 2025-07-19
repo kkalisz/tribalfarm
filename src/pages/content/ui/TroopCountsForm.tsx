@@ -11,6 +11,7 @@ interface TroopCountsFormProps {
   initialCounts?: TroopsCount;
   onChange: (counts: TroopsCount) => void;
   title?: string;
+  helpText?: string;
   availableTroops?: TroopsCount;
   troopsToHide?: TroopName[];
   troopsToShow?: TroopName[];
@@ -22,7 +23,8 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
   title = "Troop Counts",
   availableTroops,
   troopsToHide = [],
-  troopsToShow = []
+  troopsToShow = [],
+  helpText,
 }) => {
   const [counts, setCounts] = useState<TroopsCount>(initialCounts);
 
@@ -92,7 +94,7 @@ export const TroopCountsForm: React.FC<TroopCountsFormProps> = ({
   const width = availableTroops ? "140px" : "90px";
 
   return (
-    <TribalCard title={title}>
+    <TribalCard title={title} helpText={helpText}>
       <Box width={width}>
         {visibleTroops.map((name) => (
           <Flex 

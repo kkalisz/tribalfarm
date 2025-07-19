@@ -8,6 +8,8 @@ export enum LogSeverity {
   ERROR = 'ERROR',
 }
 
+export type LogType = "action" | "scavenge" | "farm" | "build" | "recruit" | string
+
 /**
  * Interface representing a log entry in the system
  */
@@ -30,7 +32,7 @@ export interface Log {
   /**
    * Type/category of the log for filtering purposes
    */
-  type: string;
+  type: LogType;
   
   /**
    * Timestamp when the log was created (milliseconds since epoch)

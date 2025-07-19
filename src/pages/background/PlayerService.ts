@@ -1,4 +1,3 @@
-import { SettingsStorageService } from "@src/shared/services/settingsStorage";
 import { PlayerSettings } from "@src/shared/hooks/usePlayerSettings";
 import {
   BackendActionContext,
@@ -8,7 +7,7 @@ import { TabMessenger } from "@src/shared/actions/content/core/TabMessenger";
 import { ActionScheduler } from "@src/shared/actions/backend/core/ActionScheduler";
 import { MessengerWrapper } from "@src/shared/actions/content/core/MessengerWrapper";
 import { BackendAction } from "@src/shared/actions/backend/core/BackendAction";
-import {logError, logInfo} from "@src/shared/helpers/sendLog";
+import {logInfo} from "@src/shared/helpers/sendLog";
 import MessageSender = chrome.runtime.MessageSender;
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {ServerConfig} from "@pages/background/serverConfig";
@@ -17,10 +16,37 @@ import {LoggerImpl} from "@src/shared/log/LoggerImpl";
 export class PlayerService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handlers: Record<string, BackendAction<any, any>> = {};
-  private actionContext: BackendActionContext;
+  private readonly actionContext: BackendActionContext;
+
+  private readonly actionExecutor: ((type: string, action: Record<any, any>) => Promise<void>) = async (
+    type: string,
+    action: Record<any, any>
+  ): Promise<void> => {
+    const handler = this.handlers[type];
+    if (!handler) {
+      this.actionContext.logger.logError({
+        type: "action",
+        content: `No handler found for action type: ${type}`,
+      });
+      return;
+    }
+
+    try {
+      this.actionContext.logger.logInfo({
+        type: "action",
+        content: `Executing action of type: ${type}`,
+      });
+
+      await handler.execute(this.actionContext, action);
+    } catch (error) {
+      this.actionContext.logger.logError({
+        type: "action",
+        content: `Error while executing action of type: ${type}. Error: ${error}`,
+      });
+    }
+  };
 
   constructor(
-    private settings: SettingsStorageService,
     private playerSettings: PlayerSettings,
     private serverConfig: ServerConfig,
     private tabMessanger: TabMessenger,
@@ -28,8 +54,6 @@ export class PlayerService {
     private database: GameDataBaseAccess,
     private mainTabId: number
   ) {
-    // Explicitly declare actionContext in the class (if not done already)
-    console.log(JSON.stringify(this.serverConfig, null, 2))
     this.actionContext = {
       helpers: new BackendActionHelpers(this.database),
       messenger: new MessengerWrapper(this.tabMessanger),
@@ -41,20 +65,7 @@ export class PlayerService {
     };
 
     // Set up the executor for the action scheduler
-    this.actionScheduler.setExecutor(
-      async (type: string, params: unknown): Promise<void> => {
-        const handler = this.handlers[type]; // Safely access handlers
-        if (!handler) {
-          logError(`No handler for given action type: ${type}`);
-          throw new Error(`Handler not found for action type: ${type}`);
-        }
-        await handler.execute(this.actionContext, params); // Execute the action
-      }
-    );
-  }
-
-  registerStartHandlers(){
-
+    this.actionScheduler.setExecutor(this.actionExecutor);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,19 +77,13 @@ export class PlayerService {
   async onMessage(message: any, sender: MessageSender, sendResponse: (response?: any) => void): Promise<boolean> {
     const type = message.type;
     if(type !== "ui_action"){
-      logInfo(`we are not handling action different than "ui_action": ${type}`); // Correct
+      logInfo(`we are not handling action different than "ui_action": ${type}`);
       return false
     }
 
-    const actionType = message.payload.type
-    const handler = this.handlers[actionType];
-    if(!handler){
-      logError(`no handler for given action type: ${actionType}`); // Correct
-      return false
-    }
-    const actionContent = message.payload.parameters;
-    logInfo(`start execute action ${message.payload.action}`)
-    handler.execute(this.actionContext, actionContent);
+    this.actionExecutor(
+      message.payload.type,
+      message.payload.parameters)
     return false;
   }
 }

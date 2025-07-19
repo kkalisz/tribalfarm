@@ -135,7 +135,8 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
             <TroopCountsForm
               initialCounts={troopsLimit}
               onChange={setTroopsLimit}
-              title="Locked"
+              title="Limit"
+              helpText="Limit the number of troops that can be scavenged per run."
               troopsToHide={troopsToHide}
             />
           </Box>
@@ -144,6 +145,7 @@ export const ScavengeTab: React.FC<ScavengeTabProps> = ({ village }) => {
               initialCounts={troopsExcluded}
               onChange={setTroopsExcluded}
               title="Excluded"
+              helpText="Troops that will never be used for scavenging."
               troopsToHide={troopsToHide}
             />
           </Box>

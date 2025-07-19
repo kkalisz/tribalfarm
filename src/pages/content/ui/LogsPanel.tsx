@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, {useState, useMemo, useCallback, useRef} from "react";
 import { 
   Box, 
   Text, 
@@ -13,7 +13,8 @@ import {
   HStack, 
   Badge,
   Flex,
-  useToast
+  useToast,
+  Tooltip
 } from "@chakra-ui/react";
 import { useGameDatabase } from '@src/shared/contexts/StorageContext';
 import { useAsync } from '@src/shared/hooks/useAsync';
@@ -27,7 +28,7 @@ import TribalCard from '@src/shared/ui/TribalCard';
 // Helper function to format timestamp
 const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp);
-  return date.toLocaleString();
+  return date.toLocaleTimeString();
 };
 
 // Helper function to get severity badge color
@@ -51,7 +52,8 @@ export const LogsPanel: React.FC = () => {
   const toast = useToast();
   const [searchText, setSearchText] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<LogSeverity | "">("");
-  
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Create filter params based on severity filter
   const filterParams: LogFilterParams | undefined = useMemo(() => {
     if (severityFilter) {
@@ -67,7 +69,7 @@ export const LogsPanel: React.FC = () => {
       direction: 'desc'
     }, filterParams);
   }, [filterParams]);
-  
+
   const handleDeleteAllLogs = useCallback(async () => {
     try {
       await gameDatabase.logsDb.deleteAllLogs();
@@ -79,19 +81,20 @@ export const LogsPanel: React.FC = () => {
 
   const filteredLogs = useMemo(() => {
     if (!logsData?.logs) return [];
-    
+
     if (!searchText) return logsData.logs;
-    
+
     const lowerSearchText = searchText.toLowerCase();
     return logsData.logs.filter(log => 
       log.content.toLowerCase().includes(lowerSearchText) ||
       log.type.toLowerCase().includes(lowerSearchText) ||
-      (log.sourceVillage?.toString() || "").includes(lowerSearchText)
+      (log.sourceVillage?.toString() ?? "").includes(lowerSearchText)
     );
   }, [logsData, searchText]);
 
   return (
     <HStack
+      ref={containerRef}
       display="flex"
       flexDirection="column" 
       height="100%" 
@@ -127,25 +130,28 @@ export const LogsPanel: React.FC = () => {
           Delete All Logs
         </TribalButton>
       </Flex>
-      
+
       {/* Logs Table Container - Takes remaining height */}
       <TribalCard
         contentPadding="0px"
         style={{ flex: "1", flexDirection: "column", overflow: "auto", width: "100%", height: "100%", padding: "0px" }}
       >
-        {loading ? (
+        {loading && (
           <Flex justify="center" align="center" p={4}>
             <Text>Loading logs...</Text>
           </Flex>
-        ) : error ? (
+        )}
+        { error && (
           <Flex justify="center" align="center" p={4}>
             <Text color="red.500">Error loading logs: {error.message}</Text>
           </Flex>
-        ) : filteredLogs.length === 0 ? (
+        )}
+        {filteredLogs.length === 0 && (
           <Flex justify="center" align="center" p={4}>
             <Text color="gray.500">No logs available.</Text>
           </Flex>
-        ) : (
+        )}
+        {!!filteredLogs.length && (
           <Box 
             width="100%" 
             height="100%" 
@@ -157,8 +163,8 @@ export const LogsPanel: React.FC = () => {
             <Table variant="simple" size="sm" layout="fixed" width="100%">
               <Thead position="sticky" top={0} bg="tribal.cardSecondary" zIndex={1}>
                 <Tr>
-                  <Th width="150px">Timestamp</Th>
-                  <Th width="100px">Severity</Th>
+                  <Th width="70px">Time</Th>
+                  <Th width="24px">S</Th>
                   <Th width="120px">Type</Th>
                   <Th width="100px">Village ID</Th>
                   <Th>Content</Th>
@@ -167,11 +173,19 @@ export const LogsPanel: React.FC = () => {
               <Tbody>
                 {filteredLogs.map((log) => (
                   <Tr key={log.id}>
-                    <Td width="150px" fontSize="xs" whiteSpace="nowrap">{formatTimestamp(log.timestamp)}</Td>
-                    <Td width="100px">
-                      <Badge colorScheme={getSeverityColor(log.severity)}>
-                        {log.severity}
-                      </Badge>
+                    <Td width="70px" fontSize="xs" whiteSpace="nowrap">{formatTimestamp(log.timestamp)}</Td>
+                    <Td width="24px" textAlign="center">
+                      <Tooltip label={log.severity} hasArrow  portalProps={{ containerRef: containerRef}}>
+                        <Badge 
+                          colorScheme={getSeverityColor(log.severity)} 
+                          borderRadius="full" 
+                          display="inline-flex"
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          {log.severity.charAt(0)}
+                        </Badge>
+                      </Tooltip>
                     </Td>
                     <Td width="120px">{log.type}</Td>
                     <Td width="100px">{log.sourceVillage || "-"}</Td>
