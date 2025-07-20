@@ -36,7 +36,7 @@ export class TabMessenger implements Messenger{
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private waitConditions: WaitCondition[] = [];
   // @ts-expect-error we are defining it in setupMessageListener
-  private messageListener: (message: Message, sender: chrome.runtime.MessageSender) => void;
+  messageListener: (message: Message, sender: chrome.runtime.MessageSender) => void;
   private isListening: boolean = false;
 
   /**
@@ -106,7 +106,6 @@ export class TabMessenger implements Messenger{
       }
     };
 
-    chrome.runtime.onMessage.addListener(this.messageListener);
     this.isListening = true;
   }
 

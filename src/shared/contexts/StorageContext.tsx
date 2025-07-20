@@ -46,13 +46,12 @@ export const StorageProvider: React.FC<SettingsStorageProviderProps> = ({
       await clientSync.init();
       const dataBase = new ProxyIDBPDatabase(clientSync);
       setGameDatabase(new GameDataBaseAccess(dataBase)); // Update state if still mounted
-
   }
 
    useEffect(() => {
     const domainToUse = domain ?? gameUrlInfo.fullDomain ?? "";
     if(domainToUse){
-      createDb(domainToUse)
+      createDb(domainToUse).catch(e => console.error(e));
     }
     }, [domain, gameUrlInfo.fullDomain]);
 

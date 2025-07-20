@@ -2,7 +2,7 @@ import { IDBPDatabase } from 'idb';
 import {DBSyncRequest, DBSyncResponse} from "@src/shared/db/GameDatabaseClientSync";
 
 export class GameDatabaseBackgroundSync<T> {
-  private messageListener: (
+  public messageListener: (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     message: any,
     sender: chrome.runtime.MessageSender,
@@ -20,8 +20,6 @@ export class GameDatabaseBackgroundSync<T> {
       const messageResponse = !(message.type !== 'db_sync' || message.fullDomain !== this.fullDomain);
       console.log(`messageResponse ${messageResponse} ${message.type} -> ${JSON.stringify(message)}`, );
       return messageResponse;
-
-
     };
 
     this.attachListener();
@@ -31,14 +29,14 @@ export class GameDatabaseBackgroundSync<T> {
    * Attaches the message listener to chrome.runtime.onMessage
    */
   public attachListener(): void {
-    chrome.runtime.onMessage.addListener(this.messageListener);
+    //chrome.runtime.onMessage.addListener(this.messageListener);
   }
 
   /**
    * Detaches the message listener from chrome.runtime.onMessage
    */
   public detachListener(): void {
-    chrome.runtime.onMessage.removeListener(this.messageListener);
+    //chrome.runtime.onMessage.removeListener(this.messageListener);
   }
 
   private async onMessage(

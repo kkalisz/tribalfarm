@@ -12,9 +12,12 @@ import { FILL_INPUT_ACTION } from "@src/shared/actions/content/fillInput/FillInp
 import { FillInputActionHandler } from "@src/shared/actions/content/fillInput/FillInputActionHandler";
 import { PlayerUiContext } from "@src/shared/contexts/PlayerContext";
 import { ContentMessengerWrapper } from "./ContentMessenger";
+import {MessageRouter} from '@src/shared/services/MessageRouter';
 
 // Actions that might cause page refresh
 const ACTIONS_WITH_PAGE_REFRESH = ['navigate', 'click'];
+
+export const messageRouter = new MessageRouter();
 
 /**
  * ExecutorAttacher is responsible for attaching action execution capabilities to the content page.
@@ -63,7 +66,7 @@ export class ContentActionExecutor {
     this.handleStateRestoration();
 
     // Set up message listener
-    chrome.runtime.onMessage.addListener(this.messageListener);
+    messageRouter.addListener("command", this.messageListener);
 
     // Announce that the content script is ready
     this.announceContentScriptReady();
@@ -73,7 +76,7 @@ export class ContentActionExecutor {
 
     // Return cleanup function
     return () => {
-      chrome.runtime.onMessage.removeListener(this.messageListener);
+      messageRouter.removeListener("command");
     };
   }
 
@@ -334,7 +337,7 @@ export class ContentActionExecutor {
       this.handleIncomingCommand(message);
 
       sendResponse({ status: 'processing' });
-      return true;
+      return false;
     };
   }
 

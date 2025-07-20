@@ -49,9 +49,9 @@ export class PlayerService {
   constructor(
     private playerSettings: PlayerSettings,
     private serverConfig: ServerConfig,
-    private tabMessanger: TabMessenger,
+    public tabMessanger: TabMessenger,
     private actionScheduler: ActionScheduler,
-    private database: GameDataBaseAccess,
+    public database: GameDataBaseAccess,
     private mainTabId: number
   ) {
     this.actionContext = {
