@@ -4,6 +4,7 @@ import {PlayerSettings} from "@src/shared/hooks/usePlayerSettings";
 import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {DiscordNotificationService} from '@src/shared/services/discordNotification';
+import {MessageSender} from "@src/shared/services/MessageSender";
 
 export interface PlayerUiContext {
   settings: SettingsStorageService;
@@ -12,4 +13,5 @@ export interface PlayerUiContext {
   worldConfig: WorldConfig;
   gameDatabase: GameDataBaseAccess;
   notificationService: DiscordNotificationService;
+  messenger: MessageSender;
 }

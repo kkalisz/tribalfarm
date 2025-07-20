@@ -71,7 +71,7 @@ export class GameDataBase {
   // Initialize the database (singleton behavior per instance)
   public async init(): Promise<void> {
     this.db = await openDB<DatabaseSchema>(`${this.prefix}_database`, 6, {
-      upgrade(db, oldVersion, newVersion) {
+      upgrade(db, _oldVersion, _newVersion) {
         // Create the "troopsCounts" store
         if (!db.objectStoreNames.contains('troopsCounts')) {
           db.createObjectStore('troopsCounts', {

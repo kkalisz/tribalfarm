@@ -1,6 +1,5 @@
 import {logError, logInfo} from "@src/shared/helpers/sendLog";
 import {hasValidPlayerSettings} from "@src/shared/services/hasValidPlayerSettings";
-import {SettingsStorageService} from "@src/shared/services/settingsStorage";
 import {TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
 import {PlayerService} from './PlayerService';
 import {ActionScheduler} from "@src/shared/actions/backend/core/ActionScheduler";
@@ -18,6 +17,7 @@ import {
   ScavengeAllVillagesAction
 } from "@src/shared/actions/backend/scavenge/ScavengeAllVillagesAction";
 import {MessageRouter} from '@src/shared/services/MessageRouter';
+import {DbInitMessage, DbSyncMessage} from "@src/shared/actions/content/core/types";
 
 interface DatabaseHolder {
   dbSync: GameDatabaseBackgroundSync<DatabaseSchema>;
@@ -28,7 +28,7 @@ interface DatabaseHolder {
 const playerServiceCache = new Map<string, PlayerService>();
 const databaseCache = new Map<string, DatabaseHolder>();
 
-const messageRouter = new MessageRouter();
+const messageRouter = new MessageRouter("fullDomain");
 
 async function ensureDatabase(fullDomain: string): Promise<DatabaseHolder> {
   if (!databaseCache.has(fullDomain)) {
@@ -56,12 +56,12 @@ async function ensureServerConfig(gameDatabaseAccess: GameDataBaseAccess, fullDo
       const worldConfig = await fetchWorldConfig(fullDomain)
       await gameDatabaseAccess.settingDb.saveWorldConfig(worldConfig)
     }
-    if (!basicTroopsConfig || !basicTroopsConfig.length) {
+    if (!basicTroopsConfig.length) {
       const troopsConfig = await fetchTroopInfo(fullDomain);
       console.log(`troops ${JSON.stringify(troopsConfig)}`);
       await gameDatabaseAccess.settingDb.saveTroopsConfig(troopsConfig)
     }
-    if (!basicBuildingsConfig || !basicBuildingsConfig.length) {
+    if (!basicBuildingsConfig?.length) {
       const buildingConfig = await fetchBuildingInfo(fullDomain)
       console.log(`basicBuildingsConfig ${JSON.stringify(buildingConfig)}`);
       await gameDatabaseAccess.settingDb.saveBuildingConfig(buildingConfig)
@@ -78,22 +78,7 @@ async function ensureServerConfig(gameDatabaseAccess: GameDataBaseAccess, fullDo
   }
 }
 
-messageRouter.addListener("db_init" ,async (message, sender, sendResponse) => {
-  logInfo('Message from content script:', JSON.stringify(message), 'Sender:', sender);
-  logInfo(Object.keys(message));
-  const fullDomain = message.fullDomain;
-  if (!fullDomain) {
-    logInfo('No full domain in message, skipping');
-    return false;
-  }
-  logInfo("db_init")
-  ensureDatabase(fullDomain)
-    .then(() => sendResponse({ success: true }))
-    .catch(err => sendResponse({ error: err.message }));
-  return true;
-});
-
-const createPlayerService = async (fullDomain: string, tabId: number) => {
+const ensurePlayerService = async (fullDomain: string, tabId: number) => {
   if (!playerServiceCache.has(fullDomain)) {
     logInfo('Creating new PlayserService for ', fullDomain, ' tab ', tabId, '');
 
@@ -113,7 +98,7 @@ const createPlayerService = async (fullDomain: string, tabId: number) => {
     const activeTabMessenger = new TabMessenger(tabId)
     const scheduler: ActionScheduler = new ActionScheduler()
 
-    const playerService = new PlayerService(playerSettings, serverConfig, activeTabMessenger, scheduler, database.databaseAccess, tabId);
+    const playerService = new PlayerService(playerSettings, serverConfig, activeTabMessenger, scheduler, database.databaseAccess, tabId, messageRouter.createNestedRouter(fullDomain));
     playerServiceCache.set(fullDomain, playerService);
     playerService.registerHandler(SCAVENGE_VILLAGE_ACTION, new ScavengeVillageAction())
     playerService.registerHandler(GET_OVERVIEW_ACTION, new GetOverviewAction())
@@ -126,61 +111,45 @@ const createPlayerService = async (fullDomain: string, tabId: number) => {
   return playerServiceCache.get(fullDomain)!
 }
 
-messageRouter.addListener("contentScriptReady" ,(message, sender, sendResponse) => {
+messageRouter.addListener("contentScriptReady" ,(message: DbSyncMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
   const fullDomain = message.fullDomain;
   if (!fullDomain) {
     logInfo('No full domain in message, skipping');
     return false;
   }
-  if (!(sender.tab && sender.tab.id)) {
+  if (!(sender.tab?.id)) {
     logInfo('No sender return');
     return;
   }
   const tabId = sender.tab.id;
 
-  createPlayerService(fullDomain, tabId)
+  ensurePlayerService(fullDomain, tabId)
     .then(() => sendResponse({ success: true }))
     .catch(err => sendResponse({ error: err.message }));
   return true;
 });
 
-messageRouter.addListener("ui_action" ,(message, sender, sendResponse) => {
+
+messageRouter.addListener<DbSyncMessage>("db_sync" ,(message: DbSyncMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
   const fullDomain = message.fullDomain;
   if (!fullDomain) {
     logInfo('No full domain in message, skipping');
     return false;
   }
-  playerServiceCache.get(fullDomain)?.onMessage(message, sender, sendResponse);
-  return false;
+  ensureDatabase(fullDomain)?.then( holder => holder.dbSync.onDatabaseMessage(message, sender, sendResponse))
+  return true;
 });
 
-messageRouter.addListener("status" ,(message, sender, sendResponse) => {
-  const fullDomain = message.fullDomain;
-  if (!fullDomain) {
-    logInfo('No full domain in message, skipping');
-    return false;
-  }
-  playerServiceCache.get(fullDomain)?.tabMessanger.messageListener(message, sender);
-  return false;
-});
 
-messageRouter.addListener("error" ,(message, sender, sendResponse) => {
+messageRouter.addListener<DbInitMessage>("db_init" ,(message: DbInitMessage, _sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
   const fullDomain = message.fullDomain;
   if (!fullDomain) {
     logInfo('No full domain in message, skipping');
     return false;
   }
-  playerServiceCache.get(fullDomain)?.tabMessanger.messageListener(message, sender);
-  return false;
-});
-
-messageRouter.addListener("db_sync" ,(message, sender, sendResponse) => {
-  const fullDomain = message.fullDomain;
-  if (!fullDomain) {
-    logInfo('No full domain in message, skipping');
-    return false;
-  }
-  databaseCache.get(fullDomain)?.dbSync?.messageListener(message, sender, sendResponse);
+  ensureDatabase(fullDomain)
+    .then(() => sendResponse({ success: true }))
+    .catch(err => sendResponse({ error: err.message }));
   return true;
 });
 

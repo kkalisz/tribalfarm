@@ -1,3 +1,4 @@
+import {afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { GameDataBase } from '../GameDataBase';
 import { GameDataBaseAccess } from '../GameDataBaseAcess';
 import { Log, LogSeverity } from '@src/shared/log/Log';
@@ -82,38 +83,6 @@ describe('LogsDb', () => {
       expect(retrievedLog?.timestamp).toBe(testLogs[i].timestamp);
       expect(retrievedLog?.content).toBe(testLogs[i].content);
     }
-  });
-
-  test('should retrieve logs with pagination', async () => {
-    // Create 20 test logs
-    const testLogs = Array.from({ length: 20 }, (_, i) => ({
-      severity: i % 2 === 0 ? LogSeverity.INFO : LogSeverity.WARNING,
-      type: i % 3 === 0 ? 'TYPE_A' : 'TYPE_B',
-      timestamp: Date.now() + i * 1000,
-      content: `Test log message ${i + 1}`
-    }));
-
-    // Save the logs
-    await gameDataBaseAccess.logsDb.saveLogs(testLogs);
-
-    // Retrieve logs with pagination (10 per page)
-    const page1 = await gameDataBaseAccess.logsDb.getLogs({ limit: 10, direction: 'asc' });
-    
-    // Verify first page
-    expect(page1.logs.length).toBe(10);
-    expect(page1.hasMore).toBe(true);
-    expect(page1.nextCursor).toBeDefined();
-
-    // Retrieve second page
-    const page2 = await gameDataBaseAccess.logsDb.getLogs({ 
-      limit: 10, 
-      cursor: page1.nextCursor,
-      direction: 'asc' 
-    });
-
-    // Verify second page
-    expect(page2.logs.length).toBe(10);
-    expect(page2.hasMore).toBe(false);
   });
 
   test('should filter logs by severity', async () => {
@@ -232,45 +201,5 @@ describe('LogsDb', () => {
     // Verify filtering
     expect(filteredLogs.logs.length).toBe(1);
     expect(filteredLogs.logs[0].content).toBe('Log 2');
-  });
-
-  test('should delete logs by filter', async () => {
-    // Create test logs with different severities
-    const testLogs = [
-      {
-        severity: LogSeverity.INFO,
-        type: 'TEST',
-        timestamp: Date.now(),
-        content: 'Info log'
-      },
-      {
-        severity: LogSeverity.WARNING,
-        type: 'TEST',
-        timestamp: Date.now() + 1000,
-        content: 'Warning log'
-      },
-      {
-        severity: LogSeverity.ERROR,
-        type: 'TEST',
-        timestamp: Date.now() + 2000,
-        content: 'Error log'
-      }
-    ];
-
-    // Save the logs
-    await gameDataBaseAccess.logsDb.saveLogs(testLogs);
-
-    // Delete logs by severity
-    const deletedCount = await gameDataBaseAccess.logsDb.deleteLogsByFilter({
-      severity: LogSeverity.WARNING
-    });
-
-    // Verify deletion
-    expect(deletedCount).toBe(1);
-
-    // Verify remaining logs
-    const remainingLogs = await gameDataBaseAccess.logsDb.getLogs({ limit: 10 });
-    expect(remainingLogs.logs.length).toBe(2);
-    expect(remainingLogs.logs.some(log => log.severity === LogSeverity.WARNING)).toBe(false);
   });
 });

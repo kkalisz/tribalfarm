@@ -1,52 +1,37 @@
 import { IDBPDatabase } from 'idb';
-import {DBSyncRequest, DBSyncResponse} from "@src/shared/db/GameDatabaseClientSync";
+import { MessageResponse } from "@src/shared/services/MessageSender";
+import {DbSyncMessage} from "@src/shared/actions/content/core/types";
 
 export class GameDatabaseBackgroundSync<T> {
-  public messageListener: (
+  public onDatabaseMessage: (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any,
+    message: DbSyncMessage,
     sender: chrome.runtime.MessageSender,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendResponse: (response: any) => void
-  ) => boolean;
+  ) => void;
 
 
   constructor(
-    private database: IDBPDatabase<T>,
-    private fullDomain: string,
+    private readonly database: IDBPDatabase<T>,
+    private readonly fullDomain: string
   ) {
-    this.messageListener = (message, sender, sendResponse) => {
-      this.onMessage(message, sender, sendResponse);
+    this.onDatabaseMessage = (message, sender, sendResponse) => {
+      this.onMessage(message, sendResponse);
       const messageResponse = !(message.type !== 'db_sync' || message.fullDomain !== this.fullDomain);
       console.log(`messageResponse ${messageResponse} ${message.type} -> ${JSON.stringify(message)}`, );
       return messageResponse;
     };
-
-    this.attachListener();
-  }
-
-  /**
-   * Attaches the message listener to chrome.runtime.onMessage
-   */
-  public attachListener(): void {
-    //chrome.runtime.onMessage.addListener(this.messageListener);
-  }
-
-  /**
-   * Detaches the message listener from chrome.runtime.onMessage
-   */
-  public detachListener(): void {
-    //chrome.runtime.onMessage.removeListener(this.messageListener);
   }
 
   private async onMessage(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (resp: DBSyncResponse) => void
+    message: DbSyncMessage,
+    sendResponse: (resp: MessageResponse) => void
   ) {
-    const msg = message as DBSyncRequest;
-    if (msg.type !== 'db_sync' || msg.fullDomain !== this.fullDomain) return false;
+    if (message.type !== 'db_sync' || message.fullDomain !== this.fullDomain) return false;
+
+    const msg = message.payload
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,7 +49,7 @@ export class GameDatabaseBackgroundSync<T> {
           await this.database.delete(s, msg.key!); value = undefined; break;
         case 'getAll':
           // @ts-expect-error types
-          value = await this.database.getAll(s, msg.key!, msg.count); break;
+          value = await this.database.getAll(s, msg.key, msg.count); break;
         case 'add':
           // @ts-expect-error types
           value = await this.database.add(s, msg.value, msg.key); break;
@@ -73,7 +58,7 @@ export class GameDatabaseBackgroundSync<T> {
           await this.database.clear(s); value = undefined; break;
         case 'count':
           // @ts-expect-error types
-          value = await this.database.count(s, msg.key!); break;
+          value = await this.database.count(s, msg.key); break;
         case 'getKey':
           // @ts-expect-error types
           value = await this.database.getKey(s, msg.key!); break;
@@ -82,7 +67,7 @@ export class GameDatabaseBackgroundSync<T> {
           value = await this.database.getFromIndex(s, msg.index!, msg.key!); break;
         case 'getAllFromIndex':
           // @ts-expect-error types
-          value = await this.database.getAllFromIndex(s, msg.index!, msg.key!, msg.count); break;
+          value = await this.database.getAllFromIndex(s, msg.index!, msg.key, msg.count); break;
         default:
           throw new Error(`Unsupported operation: ${msg.operation}`);
       }

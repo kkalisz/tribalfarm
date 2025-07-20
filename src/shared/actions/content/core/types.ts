@@ -1,3 +1,4 @@
+import {DBSyncPayload} from "@src/shared/db/GameDatabaseClientSync";
 
 export interface BasePageResponse {
 
@@ -25,7 +26,7 @@ export interface Messenger {
 
 
 export interface BaseMessage {
-  type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack' | 'contentScriptReady';
+  type: 'command' | 'commandResponse' | 'status' | 'event' | 'error' | 'ack' | 'contentScriptReady' | 'ui_action' | 'db_init' | "db_sync"
   fullDomain: string
   actionId: string;
   timestamp: string;
@@ -54,7 +55,7 @@ export interface StatusMessage extends BaseMessage {
 
 export interface GenericStatusPayload<RESPONSE extends BasePageResponse>  {
   status: 'in-progress' | 'done' | 'error';
-  details?: RESPONSE | undefined;
+  details?: RESPONSE ;
   statusMessage?: string;
 }
 
@@ -97,4 +98,22 @@ export interface AckMessage extends BaseMessage {
   };
 }
 
-export type Message = CommandMessage | StatusMessage | EventMessage | ErrorMessage | AckMessage | ContentScriptReadyMessage;
+export interface UiActionMessage extends BaseMessage {
+  type: 'ui_action';
+  payload: {
+    type: string;
+    parameters: Record<string, any>;
+  };
+}
+export interface DbInitMessage extends BaseMessage {
+  type: 'db_init';
+}
+
+export interface DbSyncMessage extends BaseMessage {
+  type: 'db_sync';
+  payload: DBSyncPayload;
+}
+
+
+
+export type Message = CommandMessage | StatusMessage | EventMessage | ErrorMessage | AckMessage | ContentScriptReadyMessage | DbInitMessage | DbSyncMessage | UiActionMessage;

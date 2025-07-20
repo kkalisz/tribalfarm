@@ -8,7 +8,6 @@ import {
   Messenger
 } from '@src/shared/actions/content/core/types';
 import {logInfo} from "@src/shared/helpers/sendLog";
-import {MessengerWrapper} from "@src/shared/actions/content/core/MessengerWrapper";
 
 interface PendingRequest {
   resolve: (value: Record<string, unknown>) => void;
@@ -33,7 +32,7 @@ interface WaitCondition {
  */
 export class TabMessenger implements Messenger{
   private readonly tabId: number;
-  private pendingRequests: Map<string, PendingRequest> = new Map();
+  private readonly pendingRequests: Map<string, PendingRequest> = new Map();
   private waitConditions: WaitCondition[] = [];
   // @ts-expect-error we are defining it in setupMessageListener
   messageListener: (message: Message, sender: chrome.runtime.MessageSender) => void;
@@ -65,8 +64,6 @@ export class TabMessenger implements Messenger{
     this.messageListener = (message: Message, sender: chrome.runtime.MessageSender) => {
       // Only process messages from our tab
       if (sender.tab?.id !== this.tabId) return;
-
-      //logInfo(`TabMessenger received message from tab ${this.tabId}:`, JSON.stringify(message));
 
       // Handle responses to pending requests
       if ((message.type === 'status' || message.type === 'error') && message.actionId) {
@@ -224,21 +221,3 @@ export class TabMessenger implements Messenger{
     this.waitConditions = [];
   }
 }
-
-// /**
-//  * Helper function to orchestrate a sequence of operations on a tab
-//  * @param tabId The ID of the tab to orchestrate
-//  * @param fn A function that uses the TabMessenger to perform operations
-//  * @returns A promise that resolves when the orchestration is complete
-//  */
-// export async function orchestrateOnTab<T>(
-//   tabId: number,
-//   fn: (messenger: MessengerWrapper) => Promise<T>
-// ): Promise<T> {
-//   const messenger = new MessengerWrapper(new TabMessenger(tabId));
-//   try {
-//     return await fn(messenger);
-//   } finally {
-//     messenger.dispose();
-//   }
-// }

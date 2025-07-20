@@ -1,4 +1,4 @@
-import {BasePageResponse, CommandMessage, GenericStatusPayload, Message} from "@src/shared/actions/content/core/types";
+import {BasePageResponse, CommandMessage, GenericStatusPayload} from "@src/shared/actions/content/core/types";
 import {StateManager} from "./StateManager";
 import { ActionExecutor } from "@src/shared/actions/content/core/AcitionExecutor";
 import { PageStatusActionHandler } from "@src/shared/actions/content/pageStatus/PageStatusActionHandler";
@@ -11,29 +11,23 @@ import { ClickActionHandler } from "@src/shared/actions/content/click/ClickActio
 import { FILL_INPUT_ACTION } from "@src/shared/actions/content/fillInput/FillInputAction";
 import { FillInputActionHandler } from "@src/shared/actions/content/fillInput/FillInputActionHandler";
 import { PlayerUiContext } from "@src/shared/contexts/PlayerContext";
-import { ContentMessengerWrapper } from "./ContentMessenger";
 import {MessageRouter} from '@src/shared/services/MessageRouter';
 
 // Actions that might cause page refresh
 const ACTIONS_WITH_PAGE_REFRESH = ['navigate', 'click'];
 
-export const messageRouter = new MessageRouter();
-
-/**
- * ExecutorAttacher is responsible for attaching action execution capabilities to the content page.
- * It handles command execution, state management, and communication with the service worker.
- */
 export class ContentActionExecutor {
-  private fullDomain: string;
+  private readonly messageRouter = new MessageRouter();
+
+  private readonly fullDomain: string;
   public contentPageContext: PlayerUiContext;
-  private actionExecutor: ActionExecutor;
-  private messenger: ContentMessengerWrapper;
+  private readonly actionExecutor: ActionExecutor;
   public stateManager: StateManager;
-  private messageListener: (
+  private readonly messageListener: (
     message: CommandMessage,
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: Record<string, unknown>) => void
-  ) => Promise<boolean>;
+  ) => boolean;
 
   /**
    * Creates a new ExecutorAttacher instance.
@@ -44,12 +38,6 @@ export class ContentActionExecutor {
     this.actionExecutor = new ActionExecutor();
     this.fullDomain = contentPageContext.gameUrlInfo.fullDomain ?? "";
     this.stateManager = new StateManager(this.fullDomain);
-
-    this.messenger = new ContentMessengerWrapper({
-      sendMessage: (message: Message) => {
-        chrome.runtime.sendMessage(message);
-      }
-    });
 
     this.messageListener = this.createMessageListener();
   }
@@ -66,7 +54,7 @@ export class ContentActionExecutor {
     this.handleStateRestoration();
 
     // Set up message listener
-    messageRouter.addListener("command", this.messageListener);
+    this.messageRouter.addListener("command", this.messageListener);
 
     // Announce that the content script is ready
     this.announceContentScriptReady();
@@ -76,7 +64,7 @@ export class ContentActionExecutor {
 
     // Return cleanup function
     return () => {
-      messageRouter.removeListener("command");
+      this.messageRouter.removeListener("command");
     };
   }
 
@@ -121,7 +109,6 @@ export class ContentActionExecutor {
   private executeCommand(command: CommandMessage, isRestored: boolean = false): Promise<GenericStatusPayload<BasePageResponse>> {
     const actionContext: ActionContext = {
       isCurrentActionRestored: isRestored,
-      messenger: this.messenger,
       actionId: command.actionId,
       ...this.contentPageContext,
     };
@@ -149,7 +136,7 @@ export class ContentActionExecutor {
         this.stateManager.addLog(`${successLogPrefix}: ${result.status}`);
 
         // Send status update to service worker
-        this.messenger.sendMessage({
+        this.contentPageContext.messenger.sendMessage({
           type: 'status',
           fullDomain: fullDomain,
           actionId: command.actionId,
@@ -170,7 +157,7 @@ export class ContentActionExecutor {
         this.stateManager.addLog(`Command failed: ${error.message}`);
 
         // Send error to service worker
-        this.messenger.sendMessage({
+        this.contentPageContext.messenger.sendMessage({
           type: 'error',
           fullDomain: fullDomain,
           actionId: command.actionId,
@@ -321,22 +308,15 @@ export class ContentActionExecutor {
     message: CommandMessage, 
     sender: chrome.runtime.MessageSender, 
     sendResponse: (response?: Record<string, unknown>) => void
-  ) => Promise<boolean> {
-    return async (
+  ) => boolean {
+    return (
       message: CommandMessage, 
-      sender: chrome.runtime.MessageSender, 
-      sendResponse: (response?: Record<string, unknown>) => void
+      _sender: chrome.runtime.MessageSender,
+      _sendResponse: (response?: Record<string, unknown>) => void
     ) => {
-      console.log('Received message:', message);
-
-      if (message.type !== 'command') {
-        return false;
+      if (message.type === 'command') {
+        this.handleIncomingCommand(message);
       }
-
-      console.log('Received command:', message);
-      this.handleIncomingCommand(message);
-
-      sendResponse({ status: 'processing' });
       return false;
     };
   }
@@ -399,7 +379,7 @@ export class ContentActionExecutor {
    * @param command The command message
    */
   private sendNavigationStartedStatus(command: CommandMessage): void {
-    this.messenger.sendMessage({
+    this.contentPageContext.messenger.sendMessage({
       fullDomain: this.fullDomain,
       type: 'status',
       actionId: command.actionId,
@@ -420,7 +400,7 @@ export class ContentActionExecutor {
    * @param message The message to include in the status
    */
   private sendPausedCommandStatus(command: CommandMessage, message: string): void {
-    this.messenger.sendMessage({
+    this.contentPageContext.messenger.sendMessage({
       type: 'status',
       fullDomain: this.fullDomain,
       actionId: command.actionId,
@@ -442,7 +422,7 @@ export class ContentActionExecutor {
    * @param details Additional details to include in the status
    */
   private sendCommandCompletionStatus(command: CommandMessage, details: Record<string, unknown>): void {
-    this.messenger.sendMessage({
+    this.contentPageContext.messenger.sendMessage({
       type: 'status',
       fullDomain: this.fullDomain,
       actionId: command.actionId,
@@ -459,7 +439,7 @@ export class ContentActionExecutor {
    * Announces that the content script is ready.
    */
   private announceContentScriptReady(): void {
-    this.messenger.sendMessage({
+    this.contentPageContext.messenger.sendMessage({
       actionId: "-1",
       type: 'contentScriptReady',
       fullDomain: this.fullDomain,
@@ -476,10 +456,10 @@ export class ContentActionExecutor {
 
       const state = this.stateManager.getState();
 
-      this.messenger.sendMessage({
+      this.contentPageContext.messenger.sendMessage({
         type: 'event',
         fullDomain: this.fullDomain,
-        actionId: state.currentCommand?.actionId || 'none',
+        actionId: state.currentCommand?.actionId ?? '',
         timestamp: new Date().toISOString(),
         payload: {
           eventType: 'stateChange',
@@ -492,10 +472,15 @@ export class ContentActionExecutor {
   }
 
   public async sendUiActionRequest<T =  any>(payload: { type: string, parameters: T }): Promise<void> {
-    await chrome.runtime.sendMessage({
+    this.contentPageContext.messenger.sendMessage({
       type: "ui_action",
       fullDomain: this.fullDomain,
-      payload: payload,
+      actionId: "",
+      timestamp: new Date().toISOString(),
+      payload: {
+        type: payload.type,
+        parameters: payload.parameters as Record<string, any>
+      },
     });
   }
 }

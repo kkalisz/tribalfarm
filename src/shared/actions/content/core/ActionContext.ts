@@ -1,8 +1,8 @@
 import {PlayerUiContext} from "@src/shared/contexts/PlayerContext";
-import {ContentMessengerWrapper} from "@pages/content/execute/ContentMessenger";
+import {MessageSender} from "@src/shared/services/MessageSender";
 
 export interface ActionContext extends PlayerUiContext{
-    messenger: ContentMessengerWrapper
+    messenger: MessageSender
     isCurrentActionRestored: boolean;
     actionId: string;
 }

@@ -1,4 +1,4 @@
-import {IDBPDatabase, IDBPObjectStore} from 'idb';
+import {IDBPDatabase} from 'idb';
 import { PlayerSettings } from '@src/shared/hooks/usePlayerSettings';
 import { WorldConfig } from '@src/shared/models/game/WorldConfig';
 import { v4 as uuidv4 } from 'uuid';
