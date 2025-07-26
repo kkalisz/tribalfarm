@@ -104,6 +104,7 @@ export class PlayerService {
     private readonly actionScheduler: ActionScheduler,
     public database: GameDataBaseAccess,
     private readonly mainTabId: number,
+    private logger: Logger,
     messageRouter: MessageRouter,
   ) {
     this.actionContext = {
@@ -113,7 +114,7 @@ export class PlayerService {
       scheduler: this.actionScheduler,
       serverConfig: this.serverConfig,
       gameDatabase: this.database,
-      logger: new LoggerImpl(database)
+      logger: this.logger
     };
 
     messageRouter.addListener<UiActionMessage>("ui_action", (message: UiActionMessage, sender: MessageSender, sendResponse: (response?: any) => void) => {

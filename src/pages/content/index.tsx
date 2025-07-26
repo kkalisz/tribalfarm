@@ -22,6 +22,7 @@ import {PlayerUiContext} from '@src/shared/contexts/PlayerContext';
 import {BotCheckStatus} from '@pages/content/helpers/BotCheckStatus';
 import {logError} from '@src/shared/helpers/sendLog';
 import {DiscordNotificationService} from '@src/shared/services/discordNotification';
+import {ChromeRuntimeMessageSender} from '@src/shared/services/MessageSender';
 
 
 let attachExecutor: ContentActionExecutor | null = null;
@@ -147,7 +148,8 @@ export async function initializeContentScript(gameUrlInfo: GameUrlInfo) {
     playerSettings: playerSettings,
     worldConfig: worldConfig,
     gameDatabase: gameDatabase,
-    notificationService: discordNotification
+    notificationService: discordNotification,
+    messenger: new ChromeRuntimeMessageSender(),
   }
 
   try {

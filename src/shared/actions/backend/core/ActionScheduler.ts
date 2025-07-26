@@ -104,7 +104,8 @@ export class ActionScheduler {
       return this.scheduleTaskWithOptions(typeOrOptions);
     }
     return this.scheduleTaskWithOptions({
-      type: typeOrOptions
+      type: typeOrOptions,
+      exclusive: true,
     })
   }
 

@@ -9,8 +9,8 @@ export function getGameUrlInfo(url: string): GameUrlInfo {
     const parsed = new URL(url);
     const hostname = parsed.hostname;
 
-    // Regex to match subdomains like pl1, pl123, etc. on plemiona.pl
-    const match = hostname.match(/^(pl\d+)\.plemiona\.pl$/);
+    // Regex to match subdomains that start with "pl" on plemiona.pl
+    const match = hostname.match(/^(pl[a-zA-Z0-9]+)\.plemiona\.pl$/);
 
     if (match) {
       const subdomain = match[1];

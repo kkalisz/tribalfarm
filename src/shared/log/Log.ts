@@ -8,7 +8,7 @@ export enum LogSeverity {
   ERROR = 'ERROR',
 }
 
-export type LogType = "action" | "scavenge" | "farm" | "build" | "recruit" | string
+export type LogType = "action" | "scavenge" | "farm" | "build" | "recruit" | "infra" | string
 
 /**
  * Interface representing a log entry in the system
