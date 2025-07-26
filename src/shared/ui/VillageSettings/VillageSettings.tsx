@@ -31,7 +31,7 @@ export const VillageSettings: React.FC<VillageSettingsProps> = ({ village }) => 
   };
 
   return (
-    <Box width="100%">
+    <Box width="100%" key={village.villageId}>
       <TribalTabs 
         index={tabIndex} 
         onChange={handleTabsChange}
