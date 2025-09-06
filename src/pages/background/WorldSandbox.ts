@@ -1,4 +1,3 @@
-import {logError, logInfo} from "@src/shared/helpers/sendLog";
 import {hasValidPlayerSettings} from "@src/shared/services/hasValidPlayerSettings";
 import {TabMessenger} from "@src/shared/actions/content/core/TabMessenger";
 import {PlayerService} from './PlayerService';
@@ -66,7 +65,11 @@ export class WorldSandbox {
         .catch(err => sendResponse({ error: err.message }));
       return true;
     });
+  }
 
+  invalidate(){
+    this.playerServices?.onInvalidate()
+    this.playerServices = null;
   }
 
   async ensureDatabase(fullDomain: string): Promise<DatabaseHolder> {

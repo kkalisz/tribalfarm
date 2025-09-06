@@ -10,9 +10,8 @@ import { BackendAction } from "@src/shared/actions/backend/core/BackendAction";
 import MessageSender = chrome.runtime.MessageSender;
 import {GameDataBaseAccess} from "@src/shared/db/GameDataBaseAcess";
 import {ServerConfig} from "@pages/background/serverConfig";
-import {LoggerImpl} from "@src/shared/log/LoggerImpl";
 import {MessageRouter} from "@src/shared/services/MessageRouter";
-import {Message, UiActionMessage} from "@src/shared/actions/content/core/types";
+import {BaseMessage, Message, UiActionMessage} from "@src/shared/actions/content/core/types";
 import {Logger} from "@src/shared/log/Logger";
 
 export class PlayerService {
@@ -105,7 +104,7 @@ export class PlayerService {
     public database: GameDataBaseAccess,
     private readonly mainTabId: number,
     private logger: Logger,
-    messageRouter: MessageRouter,
+    private messageRouter: MessageRouter,
   ) {
     this.actionContext = {
       helpers: new BackendActionHelpers(this.database),
@@ -146,5 +145,10 @@ export class PlayerService {
       message.payload.type,
       message.payload.parameters)
     return false;
+  }
+
+  public onInvalidate(): void {
+    this.messageRouter.stopListening()
+    this.actionScheduler.stop()
   }
 }

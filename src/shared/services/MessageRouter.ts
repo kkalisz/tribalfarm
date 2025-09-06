@@ -39,8 +39,9 @@ export class MessageRouter {
   constructor(
     propertyName: string = 'type', 
     onMissingHandler?: (router: MessageRouter, value: string) => MessageHandler<any> | undefined,
-    isNested?: boolean
-  ) {
+    private isNested?: boolean,
+    private onStopListening?: () => void,
+) {
     this.onMissingHandler = onMissingHandler;
     this.propertyName = propertyName;
     if(isNested){
@@ -110,6 +111,14 @@ export class MessageRouter {
     this.handlers.delete(value);
   }
 
+  removeAllListeners(): void {
+    this.handlers.clear();
+  }
+
+  stopListening(): void {
+
+  }
+
   /**
    * Processes messages received by this router.
    * This method follows the MessageHandler.call signature to maintain compatibility.
@@ -160,16 +169,18 @@ export class MessageRouter {
   /**
    * Creates a nested router for handling messages with a specific property value.
    * The nested router inherits the onMissingHandler from the parent router.
-   * 
+   *
    * @param propertyValue The value of the property to filter messages by
    * @param propertyType The name of the property to filter messages by in the nested router
    * @returns A new MessageRouter instance
    */
   createNestedRouter(propertyValue: string, propertyType: string): MessageRouter {
-    const nestedRouter = new MessageRouter(propertyType, undefined, true);
-    
+    const nestedRouter = new MessageRouter(propertyType, undefined, true, () => {
+      this.removeListener(propertyValue);
+    });
+
     // Create an inline handler that directly calls the nested router's call method
-    const listener =(message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void): boolean => {
+    const listener = (message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void): boolean => {
       return nestedRouter.call(message, sender, sendResponse);
     }
     this.addListener(propertyValue, listener)

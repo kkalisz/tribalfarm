@@ -7,7 +7,15 @@ const playerServiceCache = new Map<string, WorldSandbox>();
 
 const messageRouter = new MessageRouter("fullDomain", (router: MessageRouter, value: string): MessageHandler<any> => {
   const nestedRouter = router.createNestedRouter(value, "type");
-  playerServiceCache.set(value,new WorldSandbox(value, nestedRouter));
+  const worldSandbox = new WorldSandbox(value, nestedRouter);
+  playerServiceCache.set(value,worldSandbox);
+  nestedRouter.addListener("invalidate" ,(message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
+    worldSandbox.invalidate()
+    router.removeListener(value)
+    playerServiceCache.delete(value)
+
+    return false;
+  });
   return (message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void): boolean => {
     return nestedRouter.call(message, sender, sendResponse);
   }
