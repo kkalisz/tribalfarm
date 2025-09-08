@@ -483,4 +483,18 @@ export class ContentActionExecutor {
       },
     });
   }
+
+  public async sendUiActionRequestWithResponse<T =  any, R = any>(payload: { type: string, parameters?: T }): Promise<R> {
+    const result = await this.contentPageContext.messenger.send({
+      type: "ui_action",
+      fullDomain: this.fullDomain,
+      actionId: "",
+      timestamp: new Date().toISOString(),
+      payload: {
+        type: payload.type,
+        parameters: payload.parameters as Record<string, any>
+      },
+    });
+    return result as R;
+  }
 }

@@ -13,7 +13,7 @@ import TribalButton from "@src/shared/ui/TribalButton";
 import { BaseVillageInfo } from "@src/shared/models/game/BaseVillageInfo";
 import { ScavengeSettings } from "@src/shared/models/game/ScavengeSettings";
 import { ScavengeCalculationMode } from "@src/shared/actions/backend/scavenge/calculateScavenge";
-import TroopCountsForm from "@src/pages/content/ui/TroopCountsForm";
+import TroopCountsForm from "@pages/content/ui/TroopCountsForm";
 import { useAsync } from "@src/shared/hooks/useAsync";
 import { useGameDatabase } from "@src/shared/contexts/StorageContext";
 import {TroopsCount} from "@src/shared/models/game/TroopCount";

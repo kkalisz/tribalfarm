@@ -13,7 +13,7 @@ import {SCAVENGE_VILLAGE_ACTION} from "@src/shared/actions/backend/scavenge/Scav
 import {playSound} from "@pages/content/helpers/playSound";
 import { useActionExecutorContext } from '@src/shared/contexts/ActionExecutorContext';
 import { useStateManagerField } from '@pages/content/hooks/useStateManagerField';
-import BlinkingButton from '@pages/content/ui/components/BlinkingButton';
+import BlinkingButton from '@src/shared/ui/BlinkingButton';
 import {SettingsSwitch} from "@src/shared/SettingsSwitch";
 
 interface LeftSidebarProps {

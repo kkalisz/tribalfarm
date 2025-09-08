@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import {Box} from '@chakra-ui/react';
 import { BaseVillageInfo } from "@src/shared/models/game/BaseVillageInfo";
-import { ScavengeTab } from "./tabs/ScavengeTab";
-import { FarmingTab } from "./tabs/FarmingTab";
-import { BuildingTab } from "./tabs/BuildingTab";
-import { RecruitmentTab } from "./tabs/RecruitmentTab";
-import { DefenceTab } from "./tabs/DefenceTab";
 import barracks from '@assets/img/barracks.webp';
 import barracks1 from '@assets/img/barracks1.webp';
 import main from '@assets/img/main.webp';
@@ -18,6 +13,11 @@ import {
   TribalTabPanel,
   TribalSimpleTabList, TribalIconTab
 } from '@src/shared/ui/TribalTabs';
+import {ScavengeTab} from "@pages/content/ui/villageSettings/tabs/ScavengeTab";
+import {FarmingTab} from "@pages/content/ui/villageSettings/tabs/FarmingTab";
+import {RecruitmentTab} from "@pages/content/ui/villageSettings/tabs/RecruitmentTab";
+import {DefenceTab} from "@pages/content/ui/villageSettings/tabs/DefenceTab";
+import {BuildingTab} from "@pages/content/ui/villageSettings/tabs/BuildingTab";
 
 interface VillageSettingsProps {
   village: BaseVillageInfo;

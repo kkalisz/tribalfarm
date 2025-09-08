@@ -7,7 +7,7 @@ import {useQueryParams} from "@src/shared/hooks/useQueryParams";
 import {useAsync} from "@src/shared/hooks/useAsync";
 import {useGameDatabase} from "@src/shared/contexts/StorageContext";
 import findVillageById from "@src/shared/models/helpers/findVillageById";
-import {VillageSettings} from "@src/shared/ui/VillageSettings";
+import {VillageSettings} from "@pages/content/ui/villageSettings";
 
 interface SettingsContainerProps {
   isOpen: boolean;
