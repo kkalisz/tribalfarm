@@ -2,6 +2,7 @@ import { logInfo} from "@src/shared/helpers/sendLog";
 import {MessageHandler, MessageRouter} from '@src/shared/services/MessageRouter';
 import {WorldSandbox} from '@pages/background/WorldSandbox';
 import {BaseMessage} from '@src/shared/actions/content/core/types';
+import {INVALIDATE_PLAYER_SERVICE} from "@pages/background/BackgroundCommands";
 
 const playerServiceCache = new Map<string, WorldSandbox>();
 
@@ -9,11 +10,12 @@ const messageRouter = new MessageRouter("fullDomain", (router: MessageRouter, va
   const nestedRouter = router.createNestedRouter(value, "type");
   const worldSandbox = new WorldSandbox(value, nestedRouter);
   playerServiceCache.set(value,worldSandbox);
-  nestedRouter.addListener("invalidate" ,(message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
+  nestedRouter.addListener(INVALIDATE_PLAYER_SERVICE ,(message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
     worldSandbox.invalidate()
     router.removeListener(value)
     playerServiceCache.delete(value)
 
+    sendResponse({success: true})
     return false;
   });
   return (message: BaseMessage, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void): boolean => {

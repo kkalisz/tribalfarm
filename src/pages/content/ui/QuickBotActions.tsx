@@ -9,32 +9,43 @@ import {TribalSimpleTabList, TribalTab, TribalTabPanel, TribalTabPanels, TribalT
 import TribalButton from "@src/shared/ui/TribalButton";
 import {ContentActionExecutor} from "@pages/content/execute/ContentActionExecutor";
 import {INVALIDATE_PLAYER_SERVICE} from "@pages/background/BackgroundCommands";
+import TribalIconButton from "@src/shared/ui/TribalIconButton";
+import green from '@assets/img/green.webp';
+import red from '@assets/img/red.webp';
+
 
 interface QuickBotActionsProps {
   actionExecutor: ContentActionExecutor;
 }
 
 export const QuickBotActions: React.FC<QuickBotActionsProps> = ({
-                                                            actionExecutor,
-                                                          }) => {
+  actionExecutor,
+}) => {
+  const [isAttached, setIsAttached] = useState(false);
 
-  const onReattach = useCallback(() => {
-    const ressult = actionExecutor.sendUiActionRequestWithResponse({
-      type: INVALIDATE_PLAYER_SERVICE,
-    });
-  },[]);
+  const checkStatus = useCallback(async () => {
+
+  },[])
+
+  const onReattach = useCallback(async () => {
+    // const invalidateResult = await actionExecutor.sendUiActionRequestWithResponse({
+    //   type: INVALIDATE_PLAYER_SERVICE,
+    // });
+
+    const result = await actionExecutor.retrieveContentScriptData();
+    setIsAttached(result.currenTabId === result.mainTabId);
+  }, []);
 
   return (
     <Box
       height="100vh"
-      width="50%"
       display="flex"
       flexDirection="column"
       overflow="hidden"
-      sx={{display: "flex !important", flexDirection: "column !important", height: "100vh !important"}}
+      sx={{display: "flex", flexDirection: "column", height: "100vh"}}
     >
-      <TribalButton onClick={onReattach} pointerEvents="auto" >
-      </TribalButton>
+      <TribalIconButton onClick={onReattach} pointerEvents="auto" iconSrc={ isAttached ? green : red }>
+      </TribalIconButton>
     </Box>
   );
 };

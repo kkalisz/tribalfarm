@@ -73,7 +73,7 @@ export const LogsPanel: React.FC = () => {
   const handleDeleteAllLogs = useCallback(async () => {
     try {
       await gameDatabase.logsDb.deleteAllLogs();
-      await refreshLogs();;
+      await refreshLogs();
     } catch (error) {
       console.log(error);
     }

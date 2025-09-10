@@ -37,6 +37,8 @@ export interface ContentScriptReadyMessage extends BaseMessage {
   type: 'contentScriptReady';
 }
 
+export interface ContentScriptReadyResponse { mainTabId: number, currenTabId: number}
+
 export interface CommandMessage extends BaseMessage {
   type: 'command';
   payload: {
@@ -113,7 +115,5 @@ export interface DbSyncMessage extends BaseMessage {
   type: 'db_sync';
   payload: DBSyncPayload;
 }
-
-
 
 export type Message = CommandMessage | StatusMessage | EventMessage | ErrorMessage | AckMessage | ContentScriptReadyMessage | DbInitMessage | DbSyncMessage | UiActionMessage;

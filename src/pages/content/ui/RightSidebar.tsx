@@ -6,6 +6,8 @@ import {SettingsContainer} from "@pages/content/ui/SettingsContainer";
 import {LogsPanel} from "./LogsPanel";
 import {SidebarSettingsPanel} from "./SidebarSettingsPanel";
 import {TribalSimpleTabList, TribalTab, TribalTabPanel, TribalTabPanels, TribalTabs} from '@src/shared/ui/TribalTabs';
+import {QuickBotActions} from "@pages/content/ui/QuickBotActions";
+import {useActionExecutorContext} from "@src/shared/contexts/ActionExecutorContext";
 
 interface RightSidebarProps {
   rightSidebarVisible: boolean;
@@ -18,6 +20,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
                                                           }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const handleTabsChange = (index: number) => setTabIndex(index);
+  const actionExecutor = useActionExecutorContext();
 
   return (
     <Box
@@ -33,6 +36,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       sx={{display: "flex !important", flexDirection: "column !important", height: "100vh !important"}}
     >
       <Flex p={2} justifyContent="flex-end" pointerEvents="none">
+        <QuickBotActions actionExecutor={actionExecutor}></QuickBotActions>
         <SidebarToggleButton
           isVisible={rightSidebarVisible}
           onClick={() => setRightSidebarVisible(!rightSidebarVisible)}

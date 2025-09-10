@@ -17,12 +17,13 @@ import {
 } from "@src/shared/actions/backend/scavenge/ScavengeAllVillagesAction";
 import { MessageRouter} from '@src/shared/services/MessageRouter';
 import {
-  ContentScriptReadyMessage,
+  ContentScriptReadyMessage, ContentScriptReadyResponse,
   DbInitMessage,
   DbSyncMessage
 } from '@src/shared/actions/content/core/types';
 import {Logger} from '@src/shared/log/Logger';
 import {LoggerImpl} from '@src/shared/log/LoggerImpl';
+import {MessageResponse, sendTypedResponse} from "@src/shared/services/MessageSender";
 
 
 interface DatabaseHolder {
@@ -38,7 +39,8 @@ export class WorldSandbox {
   private databaseHolder: DatabaseHolder| null = null
 
   constructor(private readonly fullDomain: string, private readonly messageRouter: MessageRouter) {
-    messageRouter.addListener<ContentScriptReadyMessage>("contentScriptReady" ,(message: ContentScriptReadyMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
+    messageRouter.addTypedListener<ContentScriptReadyMessage, ContentScriptReadyResponse>("contentScriptReady" ,(message: ContentScriptReadyMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: MessageResponse<ContentScriptReadyResponse>) => void) => {
+      console.log(` -> 232223}`)
       if (!(sender.tab?.id)) {
         this.databaseHolder?.logger?.logWarning({ type: "infra", content: `No sender tab` });
         return false;
@@ -47,10 +49,12 @@ export class WorldSandbox {
 
       this.ensurePlayerService(fullDomain, tabId)
         .then(() => sendResponse({ success: true }))
-        .catch(err => sendResponse({ error: err.message }));
-      return true;
-    });
+        .catch(err => sendResponse({ success: false, error: err.message }));
+      console.log(` -> 2333}`)
 
+      sendResponse({ value: { mainTabId: this.playerServices?.tabMessanger.getTabId() ?? -1, currenTabId: sender.tab?.id }, success: true })
+      return false;
+    });
 
     messageRouter.addListener("db_sync" ,(message: DbSyncMessage, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void) => {
       this.ensureDatabase(fullDomain)?.then( holder => holder.dbSync.onDatabaseMessage(message, sender, sendResponse))

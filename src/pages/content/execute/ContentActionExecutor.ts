@@ -1,4 +1,4 @@
-import {BasePageResponse, CommandMessage, GenericStatusPayload} from "@src/shared/actions/content/core/types";
+import {BasePageResponse, CommandMessage, ContentScriptReadyResponse, GenericStatusPayload} from "@src/shared/actions/content/core/types";
 import {StateManager} from "./StateManager";
 import { ActionExecutor } from "@src/shared/actions/content/core/AcitionExecutor";
 import { PageStatusActionHandler } from "@src/shared/actions/content/pageStatus/PageStatusActionHandler";
@@ -246,7 +246,7 @@ export class ContentActionExecutor {
     // For navigate commands, we're already at the destination, so mark as complete
     if (action === 'navigate' || action === 'navigateToScreenAction') {
       this.handleNavigationAfterReload(restoredCommand);
-    } 
+    }
     // For click commands that caused a reload, we'll consider them done
     else if (action === 'click') {
       this.handleClickAfterReload(restoredCommand);
@@ -305,12 +305,12 @@ export class ContentActionExecutor {
    * @returns A function that handles messages
    */
   private createMessageListener(): (
-    message: CommandMessage, 
-    sender: chrome.runtime.MessageSender, 
+    message: CommandMessage,
+    sender: chrome.runtime.MessageSender,
     sendResponse: (response?: Record<string, unknown>) => void
   ) => boolean {
     return (
-      message: CommandMessage, 
+      message: CommandMessage,
       _sender: chrome.runtime.MessageSender,
       _sendResponse: (response?: Record<string, unknown>) => void
     ) => {
@@ -447,6 +447,16 @@ export class ContentActionExecutor {
     });
   }
 
+  public async retrieveContentScriptData(): Promise<ContentScriptReadyResponse> {
+    const result = await this.contentPageContext.messenger.send<ContentScriptReadyResponse>({
+      actionId: "-1",
+      type: 'contentScriptReady',
+      fullDomain: this.fullDomain,
+      timestamp: new Date().toISOString()
+    });
+    return result;
+  }
+
   /**
    * Sets up a handler for the beforeunload event to save state before page unload.
    */
@@ -471,7 +481,7 @@ export class ContentActionExecutor {
     });
   }
 
-  public async sendUiActionRequest<T =  any>(payload: { type: string, parameters: T }): Promise<void> {
+  public async sendUiActionRequest<T = any>(payload: { type: string, parameters: T }): Promise<void> {
     this.contentPageContext.messenger.sendMessage({
       type: "ui_action",
       fullDomain: this.fullDomain,
@@ -484,7 +494,7 @@ export class ContentActionExecutor {
     });
   }
 
-  public async sendUiActionRequestWithResponse<T =  any, R = any>(payload: { type: string, parameters?: T }): Promise<R> {
+  public async sendUiActionRequestWithResponse<T = any, R = any>(payload: { type: string, parameters?: T }): Promise<R> {
     const result = await this.contentPageContext.messenger.send({
       type: "ui_action",
       fullDomain: this.fullDomain,

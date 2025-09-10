@@ -1,9 +1,10 @@
 import {BaseMessage} from '@src/shared/actions/content/core/types';
+import {MessageResponse} from "@src/shared/services/MessageSender";
 
-export type MessageHandler<T> = (
-  message: T,
+export type MessageHandler<MESSSAGE,RESPONSE = any> = (
+  message: MESSSAGE,
   sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void
+  sendResponse: (response?: RESPONSE) => void
 ) => boolean;
 /**
  * MessageRouter is a class that routes messages to handlers based on a property value.
@@ -100,6 +101,10 @@ export class MessageRouter {
       console.warn(`Overwriting existing handler for ${this.propertyName} "${value}"`);
     }
     this.handlers.set(value, handler);
+  }
+
+  addTypedListener<T extends BaseMessage, RESPONSE>(value: string, handler: (message: T, sender: chrome.runtime.MessageSender, sendResponse: (response?: MessageResponse<RESPONSE>) => void) => boolean): void {
+    this.addListener(value, handler);
   }
 
   /**

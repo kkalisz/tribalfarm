@@ -12,15 +12,14 @@ export interface MessageSender {
   send<T = any>(message: BaseMessage | Message): Promise<T>;
 
   sendMessage(message: Message): void;
-
 }
 
 /**
  * Response interface for message operations
  */
-export interface MessageResponse {
+export interface MessageResponse<RESULT = any> {
   success: boolean;
-  value?: any;
+  value?: RESULT;
   error?: string;
 }
 
@@ -50,4 +49,8 @@ export class ChromeRuntimeMessageSender implements MessageSender {
       });
     });
   }
+}
+
+export function sendTypedResponse<TPYE>(sendResponse: (response: any) => void, response: MessageResponse<TPYE>) {
+  sendResponse(response);
 }
